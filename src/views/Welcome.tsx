@@ -1,24 +1,35 @@
 import { useState } from 'react';
 import logoUrl from '../assets/logo.svg';
+import { CourseSwitch } from '../components/CourseSwitch';
 import { ProfileFields } from '../components/ProfileFields';
 import { useLang, type Lang } from '../i18n/LangContext';
+import { COURSE, COURSES, setCourse, type CourseId } from '../lib/course';
 import { useProgress } from '../state/ProgressContext';
 
 /**
  * First-run screen.
  * Step 1: choose Hebrew or English as the interface and learning language.
- * Step 2: speaker gender and (optional) first name, so gendered Polish phrases match the learner.
- * The language is saved only at the end, because saving it closes the welcome screen.
+ * Step 2: the language to learn (Polish or Montenegrin), then speaker gender and (optional) first
+ *         name, so gendered phrases match the learner.
+ * Everything is saved only at the end, because saving the language closes the welcome screen; a
+ * course other than the loaded one reloads the page into it (the profile carries over).
  */
 export function Welcome() {
   const { setLang } = useLang();
   const { state, setProfile } = useProgress();
   const [chosen, setChosen] = useState<Lang | null>(null);
+  const [course, setCourseChoice] = useState<CourseId>(COURSE);
 
   const options: { lang: Lang; title: string; sub: string; sample: string; dir: 'rtl' | 'ltr' }[] = [
-    { lang: 'he', title: 'פולנית לדוברי עברית', sub: 'ממשק בעברית, תרגומים, תעתיק מנוקד וטיפים בעברית', sample: 'גֶ׳נְ·[קוּ]·יֶה', dir: 'rtl' },
-    { lang: 'en', title: 'Polish for English speakers', sub: 'English interface, translations, respelling and tips', sample: 'jen·KOO·yeh', dir: 'ltr' },
+    { lang: 'he', title: 'לדוברי עברית', sub: 'ממשק בעברית, תרגומים, תעתיק מנוקד וטיפים בעברית', sample: 'גֶ׳נְ·[קוּ]·יֶה', dir: 'rtl' },
+    { lang: 'en', title: 'For English speakers', sub: 'English interface, translations, respelling and tips', sample: 'jen·KOO·yeh', dir: 'ltr' },
   ];
+
+  const start = (l: Lang) => {
+    setCourse(course, false);
+    setLang(l);
+    if (course !== COURSE) location.reload();
+  };
 
   if (chosen) {
     const t = (he: string, en: string) => (chosen === 'he' ? he : en);
@@ -28,16 +39,20 @@ export function Welcome() {
         <div className="text-center">
           <p className="font-serif text-3xl font-semibold text-slate-900">{t('נעים להכיר!', 'Nice to meet you!')}</p>
           <p className="polish text-slate-500" dir="ltr">
-            Miło mi!
+            {COURSES[course].niceToMeet}
           </p>
         </div>
+        <div className="w-full max-w-md space-y-2">
+          <p className="text-sm font-bold text-slate-800">{t('מה תרצו ללמוד?', 'What would you like to learn?')}</p>
+          <CourseSwitch lang={chosen} value={course} onChange={setCourseChoice} />
+        </div>
         <div className="w-full max-w-md rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-          <ProfileFields lang={chosen} profile={state.profile} onChange={setProfile} />
+          <ProfileFields lang={chosen} profile={state.profile} onChange={setProfile} course={COURSES[course]} />
         </div>
         <div className="grid w-full max-w-md gap-2">
           <button
             type="button"
-            onClick={() => setLang(chosen)}
+            onClick={() => start(chosen)}
             className="btn-primary py-4 text-base"
           >
             {t('בואו נתחיל', "Let's start")}
@@ -54,10 +69,10 @@ export function Welcome() {
     <div className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-slate-50 px-6 py-10 text-center">
       <img src={logoUrl} alt="" className="size-24 rounded-3xl shadow-lg" />
       <div>
-        <p className="polish font-serif text-5xl font-semibold tracking-tight text-slate-900" dir="ltr">
-          Polski od zera
+        <p className="polish font-serif text-4xl leading-tight font-semibold tracking-tight text-slate-900" dir="ltr">
+          Polski<span className="text-slate-300"> · </span>Crnogorski
         </p>
-        <p className="mt-1 text-slate-500">פולנית מאפס · Polish from zero</p>
+        <p className="mt-1 text-slate-500">פולנית ומונטנגרית מאפס · Polish and Montenegrin from zero</p>
       </div>
       <div className="grid w-full max-w-md gap-3">
         {options.map((o) => (

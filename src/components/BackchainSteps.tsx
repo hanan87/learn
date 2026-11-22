@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLang } from '../i18n/LangContext';
 import { speak, RATE_CHAIN } from '../lib/tts';
@@ -21,7 +22,7 @@ export function BackchainSteps({ steps, activeIndex = -1 }: Props) {
               type="button"
               onClick={() => speak(step, RATE_CHAIN)}
               dir="ltr"
-              lang="pl"
+              lang={C.htmlLang}
               className={`polish rounded-lg px-2.5 py-1.5 text-base font-semibold ring-1 transition ${
                 activeIndex === i ? 'scale-105 bg-rose-600 text-white ring-rose-600' : 'bg-slate-50 text-slate-800 ring-slate-200 hover:bg-white'
               }`}

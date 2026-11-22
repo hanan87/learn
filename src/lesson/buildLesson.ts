@@ -1,9 +1,10 @@
-import { ALL_ITEMS, getItem, getUnit, getUnitOfItem } from '../data';
+import { ALL_ITEMS, getItem, getUnit, getUnitOfItem, UNITS } from '../data';
+import { COURSE } from '../lib/course';
 import type { LessonDef } from '../data/lessons';
 import { CONTRAST_GROUPS, type ContrastGroup, type MinimalPair } from '../data/minimalPairs';
 import { SOUND_INFO, type SoundKey } from '../data/sounds';
 import type { LearningItem, SoundTag } from '../data/types';
-import { detectSounds } from '../lib/polishPhonetics';
+import { detectSounds } from '../lib/phonetics';
 import { pick, sample, shuffle } from '../lib/random';
 import { mispronounce } from '../lib/simulate';
 import { normalize, stripDiacritics } from '../lib/text';
@@ -56,16 +57,19 @@ export function tokens(text: string): string[] {
     .filter(Boolean);
 }
 
-/** Forms of address that make good "register" blanks. */
-const REGISTER_WORDS = ['Pan', 'Pani', 'Panu', 'masz', 'ma', 'ty'];
-const REGISTER_SWAPS: Record<string, string[]> = {
-  Pan: ['Pani', 'ty'],
-  Pani: ['Pan', 'ty'],
-  Panu: ['Pani', 'ci'],
-  masz: ['ma', 'mam'],
-  ma: ['masz', 'mam'],
-  ty: ['Pan', 'Pani'],
-};
+/** Forms of address that make good "register" blanks, with the look-alikes offered next to them. */
+const REGISTER_SWAPS: Record<string, string[]> =
+  COURSE === 'cnr'
+    ? { ste: ['si', 'sam'], si: ['ste', 'sam'], Vi: ['ti', 'Vam'], ti: ['Vi', 'te'], Izvinite: ['Izvini', 'Izvoli'] }
+    : {
+        Pan: ['Pani', 'ty'],
+        Pani: ['Pan', 'ty'],
+        Panu: ['Pani', 'ci'],
+        masz: ['ma', 'mam'],
+        ma: ['masz', 'mam'],
+        ty: ['Pan', 'Pani'],
+      };
+const REGISTER_WORDS = Object.keys(REGISTER_SWAPS);
 
 /** Items used for distractors: the item's own unit, or the whole course for custom words. */
 function poolFor(item: LearningItem): LearningItem[] {
@@ -107,7 +111,7 @@ function readingStep(item: LearningItem, preferBlank: boolean): LessonStep {
 
   // Single word: recognize the correct spelling among realistic look-alikes.
   const correct = words[0] ?? item.polish;
-  const candidates = [stripDiacritics(correct.toLocaleLowerCase('pl-PL')), mispronounce(correct), ...sample(otherWords(item, pool), 3)];
+  const candidates = [stripDiacritics(correct.toLocaleLowerCase()), mispronounce(correct), ...sample(otherWords(item, pool), 3)];
   const options = [correct];
   for (const c of candidates) {
     if (options.length >= 4) break;
@@ -133,7 +137,7 @@ export function buildLesson(lesson: LessonDef): LessonStep[] {
   const tags = items.flatMap((i) => i.soundTags ?? []);
   const sounds = items.flatMap((i) => detectSounds(i.polish));
   const groupId =
-    tags.map((t) => TAG_TO_GROUP[t]).find(Boolean) ?? sounds.map((s) => SOUND_INFO[s].groupId).find(Boolean) ?? (lesson.unitId === 'u1' ? 'sz-s' : null);
+    tags.map((t) => TAG_TO_GROUP[t]).find(Boolean) ?? sounds.map((s) => SOUND_INFO[s].groupId).find(Boolean) ?? (lesson.unitId === UNITS[0].id ? CONTRAST_GROUPS[0].id : null);
   const group = groupId ? CONTRAST_GROUPS.find((g) => g.id === groupId) : null;
   if (group) steps.push(pairStep(group));
 

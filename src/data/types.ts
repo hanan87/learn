@@ -11,11 +11,12 @@
  */
 
 import type { Lang } from '../i18n/LangContext';
+import { COURSE } from '../lib/course';
 import type { Gender } from '../lib/personalize';
 
 export type Formality = 'formal' | 'casual' | 'neutral';
 
-export type CourseUnitId = 'u1' | 'u2' | 'u3' | 'u4' | 'u5' | 'u6' | 'u7' | 'u8';
+export type CourseUnitId = 'u1' | 'u2' | 'u3' | 'u4' | 'u5' | 'u6' | 'u7' | 'u8' | 'm1' | 'm2' | 'm3' | 'm4';
 export type UnitId = CourseUnitId | 'custom';
 
 /** Sound features used to group items in the Sound Lab. */
@@ -76,11 +77,18 @@ export interface Unit extends Omit<UnitSource, 'items'> {
   items: LearningItem[];
 }
 
-export const FORMALITY_LABELS: Record<Formality, { he: string; en: string }> = {
-  formal: { he: 'רשמי (Pan/Pani)', en: 'Formal (Pan/Pani)' },
-  casual: { he: 'יומיומי (ty)', en: 'Casual (ty)' },
-  neutral: { he: 'ניטרלי', en: 'Neutral' },
-};
+export const FORMALITY_LABELS: Record<Formality, { he: string; en: string }> =
+  COURSE === 'cnr'
+    ? {
+        formal: { he: 'רשמי (Vi)', en: 'Formal (Vi)' },
+        casual: { he: 'יומיומי (ti)', en: 'Casual (ti)' },
+        neutral: { he: 'ניטרלי', en: 'Neutral' },
+      }
+    : {
+        formal: { he: 'רשמי (Pan/Pani)', en: 'Formal (Pan/Pani)' },
+        casual: { he: 'יומיומי (ty)', en: 'Casual (ty)' },
+        neutral: { he: 'ניטרלי', en: 'Neutral' },
+      };
 
 /** Localized view of an item for the active language. */
 export function itemText(item: LearningItem, lang: Lang) {

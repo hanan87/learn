@@ -1,22 +1,34 @@
 import { UserRound } from 'lucide-react';
 import type { Lang } from '../i18n/LangContext';
-import { DEFAULT_NAMES, isLatinName, type Gender, type LearnerProfile } from '../lib/personalize';
+import { COURSE_INFO, type CourseInfo } from '../lib/course';
+import { isLatinName, type Gender, type LearnerProfile } from '../lib/personalize';
+
+/** Examples of gendered forms shown next to the gender choice. */
+const SAMPLES: Record<CourseInfo['id'], Record<Gender, string>> = {
+  pl: { m: 'Chciałbym · gotowy', f: 'Chciałabym · gotowa' },
+  cnr: { m: 'Htio bih · gladan', f: 'Htjela bih · gladna' },
+};
+const NAME_PHRASES: Record<CourseInfo['id'], string> = { pl: 'Mam na imię', cnr: 'Zovem se' };
 
 interface Props {
   lang: Lang;
   profile: LearnerProfile;
   onChange: (profile: Partial<LearnerProfile>) => void;
+  /** Course the texts refer to (the welcome screen shows the one being chosen). */
+  course?: CourseInfo;
 }
 
 /**
  * Gender + first-name picker. Used on the welcome screen (before the interface language is saved,
  * hence the explicit `lang` prop) and in Settings.
  */
-export function ProfileFields({ lang, profile, onChange }: Props) {
+export function ProfileFields({ lang, profile, onChange, course = COURSE_INFO }: Props) {
+  const C = course;
+  const NAME_PHRASE = NAME_PHRASES[C.id];
   const t = (he: string, en: string) => (lang === 'he' ? he : en);
   const options: [Gender, string, string][] = [
-    ['m', t('זכר', 'Male'), 'Chciałbym · gotowy'],
-    ['f', t('נקבה', 'Female'), 'Chciałabym · gotowa'],
+    ['m', t('זכר', 'Male'), SAMPLES[C.id].m],
+    ['f', t('נקבה', 'Female'), SAMPLES[C.id].f],
   ];
   const name = profile.name;
   const nonLatin = name.trim() !== '' && !isLatinName(name);
@@ -24,9 +36,9 @@ export function ProfileFields({ lang, profile, onChange }: Props) {
   return (
     <div className="space-y-3" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       <div>
-        <p className="text-sm font-bold text-slate-800">{t('אני מדבר/ת פולנית בתור:', 'I speak Polish as:')}</p>
+        <p className="text-sm font-bold text-slate-800">{t(`אני מדבר/ת ${C.name.he} בתור:`, `I speak ${C.name.en} as:`)}</p>
         <p className="text-xs text-slate-500">
-          {t('בפולנית פעלים ותארים משתנים לפי מגדר הדובר – נתאים לכם את המשפטים.', 'In Polish, verbs and adjectives change with the speaker’s gender – phrases will match yours.')}
+          {t(`${C.inLang.he} פעלים ותארים משתנים לפי מגדר הדובר – נתאים לכם את המשפטים.`, `In ${C.name.en}, verbs and adjectives change with the speaker’s gender – phrases will match yours.`)}
         </p>
       </div>
       <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t('מגדר הדובר', 'Speaker gender')}>
@@ -59,13 +71,13 @@ export function ProfileFields({ lang, profile, onChange }: Props) {
           autoComplete="given-name"
           dir="ltr"
           onChange={(e) => onChange({ name: e.target.value })}
-          placeholder={profile.gender ? DEFAULT_NAMES[profile.gender].latin : 'Dawid / Anna'}
+          placeholder={profile.gender ? C.defaultNames[profile.gender] : `${C.defaultNames.m} / ${C.defaultNames.f}`}
           className="w-full rounded-xl bg-white px-3 py-2.5 text-base ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-rose-400"
         />
         <span className={`block text-xs ${nonLatin ? 'text-amber-700' : 'text-slate-500'}`}>
           {nonLatin
-            ? t('כדי שהקול הפולני יוכל להגות את השם, כתבו אותו באותיות לטיניות (כמו בדרכון). עד אז נשתמש ב-' + DEFAULT_NAMES[profile.gender ?? 'm'].latin + '.', 'Write the name in Latin letters so the Polish voice can say it.')
-            : t('השם יופיע במשפטים כמו "Mam na imię…" ובסימולציות השיחה.', 'Your name appears in phrases like "Mam na imię…" and in the conversations.')}
+            ? t(`כדי שהקול ה${C.adjHe} יוכל להגות את השם, כתבו אותו באותיות לטיניות (כמו בדרכון). עד אז נשתמש ב-${C.defaultNames[profile.gender ?? 'm']}.`, `Write the name in Latin letters so the ${C.name.en} voice can say it.`)
+            : t(`השם יופיע במשפטים כמו "${NAME_PHRASE}…" ובסימולציות השיחה.`, `Your name appears in phrases like "${NAME_PHRASE}…" and in the conversations.`)}
         </span>
       </label>
     </div>

@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../../lib/course';
 import { useEffect, useRef, useState } from 'react';
 import { Snail, Volume2 } from 'lucide-react';
 import { getItem } from '../../data';
@@ -77,7 +78,7 @@ export function WritingStep({ step, answered, onAnswered }: StepProps<Step>) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold">{tr('כתבו בפולנית', 'Write it in Polish')}</h2>
+      <h2 className="text-xl font-bold">{tr(`כתבו ${C.inLang.he}`, `Write it ${C.inLang.en}`)}</h2>
       <div className="space-y-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
         <FormalityBadge formality={item.formality} />
         <p className="text-xl font-bold">{itemText(item, lang).meaning}</p>
@@ -97,13 +98,13 @@ export function WritingStep({ step, answered, onAnswered }: StepProps<Step>) {
         onKeyDown={(e) => e.key === 'Enter' && value.trim() && !answered && check()}
         disabled={answered}
         dir="ltr"
-        lang="pl"
+        lang={C.htmlLang}
         autoCapitalize="off"
         autoCorrect="off"
         autoComplete="off"
         spellCheck={false}
         enterKeyHint="done"
-        placeholder="Napisz po polsku…"
+        placeholder={C.writePrompt}
         className="polish w-full rounded-2xl bg-white px-4 py-4 text-2xl font-semibold ring-2 ring-slate-200 outline-none focus:ring-rose-400 disabled:bg-slate-50"
       />
       {!answered && <PolishKeyboard inputRef={inputRef} value={value} onChange={setValue} />}

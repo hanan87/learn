@@ -3,7 +3,6 @@ import { ALL_ITEMS, applyProfile, GENDERED_ITEM_IDS, getItem, getSituation, UNIT
 import { ROLEPLAYS } from '../../src/data/dialogues';
 import { LESSONS } from '../../src/data/lessons';
 import { lookupWord, splitEnding, STORIES, wordKey } from '../../src/data/stories';
-import { KASIA_COMPLIMENTS, KASIA_DEDICATION, KASIA_TITLE } from '../../src/components/KasiaAngel';
 import { BLITZ_SECONDS, blitzPool, comboMultiplier } from '../../src/lib/blitz';
 import { handsFreeQueue } from '../../src/lib/handsFreeQueue';
 import { haptic, setHapticsEnabled } from '../../src/lib/haptics';
@@ -262,19 +261,5 @@ describe('haptics', () => {
     expect(() => haptic('success')).not.toThrow();
     vi.stubGlobal('navigator', {});
     expect(() => haptic('start')).not.toThrow();
-  });
-});
-
-describe('Dla Kasi', () => {
-  it('has the dedication, the title and 8 translated compliments', () => {
-    expect(KASIA_TITLE.pl).toBe('Kasiu, jesteś moim małym aniołkiem');
-    expect(KASIA_DEDICATION.pl).toContain('Jesteś moim najpiękniejszym powodem do nauki!');
-    expect(KASIA_COMPLIMENTS).toHaveLength(8);
-    expect(KASIA_COMPLIMENTS.some((c) => c.pl === 'Kasieńko, kocham Cię najbardziej na świecie.')).toBe(true);
-    for (const c of KASIA_COMPLIMENTS) {
-      expect(c.he).toMatch(/[֐-׿]/);
-      expect(c.en).not.toMatch(/[֐-׿]/);
-    }
-    expect(new Set(KASIA_COMPLIMENTS.map((c) => c.pl)).size).toBe(8);
   });
 });

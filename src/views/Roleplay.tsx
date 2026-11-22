@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, BedDouble, Coffee, Handshake, Mic, RotateCcw, TrainFront, Trophy, User, Volume2, XCircle, type LucideIcon } from 'lucide-react';
 import { ROLEPLAYS, type Roleplay as RoleplayT, type RoleplayOption } from '../data/dialogues';
@@ -9,7 +10,7 @@ import { PolishSyllables } from '../components/PolishSyllables';
 import { PronunciationPractice } from '../components/PronunciationPractice';
 import { useLang } from '../i18n/LangContext';
 import { usePersonal } from '../hooks/usePersonal';
-import { toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from '../lib/polishPhonetics';
+import { toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from '../lib/phonetics';
 import { shuffle } from '../lib/random';
 import { speak } from '../lib/tts';
 import { useProgress } from '../state/ProgressContext';
@@ -34,6 +35,7 @@ export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void })
 
   return (
     <div className="space-y-4">
+      {STORIES.length > 0 && (
       <section className="space-y-3" data-testid="stories">
         <h2 className="text-lg font-black">{tr('סיפורים קצרים', 'Mini stories')}</h2>
         <p className="text-sm text-slate-600">
@@ -67,12 +69,13 @@ export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void })
           })}
         </ul>
       </section>
+      )}
 
       <h2 className="text-lg font-black">{tr('סימולציות שיחה', 'Conversations')}</h2>
       <p className="text-sm leading-relaxed text-slate-600">
         {tr(
-          'סימולציית שיחה קולית: הדובר הפולני מדבר, אתם בוחרים תגובה – ואז אומרים אותה בקול. השיחה מתקדמת רק כשההגייה תקינה.',
-          'Voice roleplay: the Polish speaker talks, you choose a reply – then say it aloud. The conversation moves on only when your pronunciation passes.',
+          `סימולציית שיחה קולית: הדובר ה${C.adjHe} מדבר, אתם בוחרים תגובה – ואז אומרים אותה בקול. השיחה מתקדמת רק כשההגייה תקינה.`,
+          `Voice roleplay: the ${C.name.en} speaker talks, you choose a reply – then say it aloud. The conversation moves on only when your pronunciation passes.`,
         )}
       </p>
       <ul className="grid gap-3 sm:grid-cols-2">

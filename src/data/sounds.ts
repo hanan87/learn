@@ -1,9 +1,14 @@
+import { COURSE } from '../lib/course';
+
 /**
  * Sounds tracked for the "challenging sounds" model. Each item text is scanned for these
  * sounds; every pronunciation, writing and listening outcome updates the per-sound stats.
+ * Each course has its own set; progress is stored per course, so the keys never mix.
  */
 
-export type SoundKey = 'sz' | 'cz' | 'ż/rz' | 'ś' | 'ć' | 'ź' | 'dź' | 'ń' | 'ł' | 'w' | 'ą' | 'ę' | 'y' | 'ch';
+export type PlSoundKey = 'sz' | 'cz' | 'ż/rz' | 'ś' | 'ć' | 'ź' | 'dź' | 'ń' | 'ł' | 'w' | 'ą' | 'ę' | 'y' | 'ch';
+export type CnrSoundKey = 'č' | 'ć' | 'dž' | 'đ' | 'š' | 'ž' | 'lj' | 'nj' | 'h' | 'r' | 'c' | 'ije';
+export type SoundKey = PlSoundKey | CnrSoundKey;
 
 export interface SoundInfo {
   key: SoundKey;
@@ -17,7 +22,7 @@ export interface SoundInfo {
   groupId?: string;
 }
 
-export const SOUND_INFO: Record<SoundKey, SoundInfo> = {
+export const PL_SOUND_INFO: Record<PlSoundKey, SoundInfo> = {
   sz: { key: 'sz', name: 'ש קשה', tip: 'sz: משכו את קצה הלשון אחורה לחך ועגלו את השפתיים.', nameEn: 'hard sh', tipEn: 'sz: pull the tongue tip back to the palate and round the lips.', groupId: 'sz-s' },
   cz: { key: 'cz', name: 'צ׳ קשה', tip: 'cz: לשון משוכה אחורה, שפתיים בולטות – צ׳ "עבה".', nameEn: 'hard ch', tipEn: 'cz: tongue pulled back, lips pushed forward – a "thick" ch.', groupId: 'cz-c' },
   'ż/rz': { key: 'ż/rz', name: 'ז׳ קשה', tip: 'ż / rz: לשון אחורה כמו ב-sz, עם רטט של מיתרי הקול.', nameEn: 'hard zh', tipEn: 'ż / rz: tongue back as for sz, with the vocal cords vibrating.', groupId: 'z-z' },
@@ -34,13 +39,31 @@ export const SOUND_INFO: Record<SoundKey, SoundInfo> = {
   ch: { key: 'ch', name: 'ח', tip: 'ch / h: ח רכה מהגרון.', nameEn: 'throaty h', tipEn: 'ch / h: a soft throaty h as in "loch".' },
 };
 
+export const CNR_SOUND_INFO: Record<CnrSoundKey, SoundInfo> = {
+  č: { key: 'č', name: 'צ׳ קשה', tip: 'č: קצה הלשון משוך אחורה והשפתיים בולטות קדימה – צ׳ "עבה", כמו ב-church.', nameEn: 'hard ch', tipEn: 'č: tongue tip pulled back, lips pushed forward – a "thick" ch, as in "church".', groupId: 'cnr-ch' },
+  ć: { key: 'ć', name: 'צ׳ רכה', tip: 'ć: קצה הלשון מאחורי השיניים התחתונות, גב הלשון צמוד לחך, שפתיים בחיוך – צ׳ דקה, כמעט "טְי".', nameEn: 'soft ch', tipEn: 'ć: tongue tip behind the lower teeth, middle of the tongue against the palate, smiling lips – a thin ch, almost "ty".', groupId: 'cnr-ch' },
+  dž: { key: 'dž', name: 'ג׳ קשה', tip: 'dž: כמו č אבל עם קול – ג׳ עבה כמו ב-jungle.', nameEn: 'hard j', tipEn: 'dž: like č but voiced – a thick j as in "jungle".', groupId: 'cnr-ch' },
+  đ: { key: 'đ', name: 'ג׳ רכה', tip: 'đ: כמו ć אבל עם קול – לשון קדימה וחיוך, כמעט "דְי".', nameEn: 'soft j', tipEn: 'đ: like ć but voiced – tongue forward and a smile, almost "dy".', groupId: 'cnr-ch' },
+  š: { key: 'š', name: 'ש', tip: 'š: ש עם שפתיים מעט מעוגלות. בלי הסימן s היא ס – וזה משנה מילים: šuma (יער) מול suma (סכום).', nameEn: 'sh', tipEn: 'š: sh with slightly rounded lips. Without the mark s is a plain s – and that changes words: šuma (forest) vs suma (sum).', groupId: 'cnr-sh' },
+  ž: { key: 'ž', name: 'ז׳', tip: 'ž: ז׳ כמו ב"ז׳קט" – מיקום הלשון של š, עם קול.', nameEn: 'zh', tipEn: 'ž: zh as in "measure" – the š position, with voice.', groupId: 'cnr-zh' },
+  lj: { key: 'lj', name: 'ל רכה', tip: 'lj: צליל אחד ולא שניים – ל עם גב הלשון צמוד לחך, כמו "לְי" מהירה.', nameEn: 'soft l', tipEn: 'lj: one sound, not two – an l with the middle of the tongue on the palate, a quick "ly".', groupId: 'cnr-soft' },
+  nj: { key: 'nj', name: 'נ רכה', tip: 'nj: צליל אחד – כמו ñ בספרדית, "נְי" מהירה.', nameEn: 'soft n', tipEn: 'nj: one sound – like Spanish ñ or the "ny" in "canyon".', groupId: 'cnr-soft' },
+  h: { key: 'h', name: 'ח', tip: 'h: ח רכה מהגרון, קלה יותר מ-ח עברית.', nameEn: 'throaty h', tipEn: 'h: a soft throaty h, as in Scottish "loch".' },
+  r: { key: 'r', name: 'r כתנועה', tip: 'r יכולה לשמש תנועה: ב-crno וב-Trg אין תנועה כתובה – מגלגלים r קצרה ומטעימים אותה.', nameEn: 'vowel r', tipEn: 'r can be the vowel: crno and Trg have no written vowel – roll a short r and stress it.' },
+  c: { key: 'c', name: 'צ', tip: 'c היא תמיד צ – לעולם לא ק ולא ס.', nameEn: 'ts', tipEn: 'c is always "ts" – never k and never s.' },
+  ije: { key: 'ije', name: 'ije', tip: 'ije נהגית כהברה אחת: "יֶה" (lijepo = לְיֶה·פּוֹ). זו ה"ייקאבית" – סימן ההיכר של מונטנגרית.', nameEn: 'ije', tipEn: 'ije is said as one syllable, "yeh" (lijepo = LYEH-poh). This Ijekavian ije is a hallmark of Montenegrin.' },
+};
+
+/** Sound table of the active course (only its own keys occur in its data and progress). */
+export const SOUND_INFO = (COURSE === 'cnr' ? CNR_SOUND_INFO : PL_SOUND_INFO) as Record<SoundKey, SoundInfo>;
+
 /** Thresholds for marking a sound as needing reinforcement. */
 export const WEAK_SOUND_MIN_ATTEMPTS = 3;
 export const WEAK_SOUND_ERROR_RATE = 0.35;
 export const WEAK_SOUND_MIN_AVG = 75;
 
 /** Sounds exercised by each Sound Lab contrast group. */
-export const GROUP_SOUNDS: Record<string, SoundKey[]> = {
+const PL_GROUP_SOUNDS: Record<string, SoundKey[]> = {
   'sz-s': ['sz', 'ś'],
   'cz-c': ['cz', 'ć'],
   'w-l': ['w', 'ł'],
@@ -49,3 +72,12 @@ export const GROUP_SOUNDS: Record<string, SoundKey[]> = {
   nasal: ['ą', 'ę'],
   'y-i': ['y'],
 };
+
+const CNR_GROUP_SOUNDS: Record<string, SoundKey[]> = {
+  'cnr-ch': ['č', 'ć', 'dž', 'đ'],
+  'cnr-sh': ['š'],
+  'cnr-zh': ['ž'],
+  'cnr-soft': ['lj', 'nj'],
+};
+
+export const GROUP_SOUNDS: Record<string, SoundKey[]> = COURSE === 'cnr' ? CNR_GROUP_SOUNDS : PL_GROUP_SOUNDS;

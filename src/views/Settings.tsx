@@ -1,5 +1,7 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { useRef, useState } from 'react';
-import { Download, FileJson, Mic, Moon, RotateCcw, Smartphone, Target, Upload, UserRound, Vibrate, Volume2 } from 'lucide-react';
+import { Download, FileJson, Languages, Mic, Moon, RotateCcw, Smartphone, Target, Upload, UserRound, Vibrate, Volume2 } from 'lucide-react';
+import { CourseSwitch } from '../components/CourseSwitch';
 import { ProfileFields } from '../components/ProfileFields';
 import { VoiceSettings } from '../components/VoiceSettings';
 import { haptic, hapticsSupported, setHapticsEnabled } from '../lib/haptics';
@@ -28,7 +30,7 @@ export function Settings() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `polish-learn-backup-${todayKey()}.json`;
+    a.download = `${C.id === 'cnr' ? 'montenegrin' : 'polish'}-learn-backup-${todayKey()}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -57,6 +59,16 @@ export function Settings() {
           {tr('גרסה', 'Version')} {versionLabel(lang === 'he' ? 'he-IL' : 'en-GB')}
         </p>
       </div>
+
+      <section className={card} data-testid="course-settings">
+        <h3 className="flex items-center gap-2 font-bold">
+          <Languages className="size-5 text-rose-600" /> {tr('שפת לימוד', 'Language to learn')}
+        </h3>
+        <CourseSwitch lang={lang} />
+        <p className="text-xs text-slate-500">
+          {tr('לכל שפה התקדמות משלה – אפשר לעבור ביניהן בכל רגע בלי לאבד כלום.', 'Each language keeps its own progress – switch any time without losing anything.')}
+        </p>
+      </section>
 
       <section className={card}>
         <div className="flex items-center justify-between gap-3">
@@ -92,7 +104,7 @@ export function Settings() {
             </span>
             <span className="block text-xs text-slate-500">
               {hapticsSupported()
-                ? tr('רטט עדין בהקשה על המקלדת הפולנית, בתחילת הקלטה ובתשובה נכונה או שגויה.', 'A gentle buzz on Polish keyboard taps, when recording starts and on right or wrong answers.')
+                ? tr(`רטט עדין בהקשה על המקלדת ה${C.name.he}, בתחילת הקלטה ובתשובה נכונה או שגויה.`, `A gentle buzz on ${C.name.en} keyboard taps, when recording starts and on right or wrong answers.`)
                 : tr('המכשיר או הדפדפן הזה לא תומכים ברטט (למשל iPhone).', 'This device or browser does not support vibration (e.g. iPhone).')}
             </span>
           </span>

@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../../lib/course';
 import { useState } from 'react';
 import { Lightbulb, MessageCircleQuestion, MicOff } from 'lucide-react';
 import { getItem, getSituation } from '../../data';
@@ -55,7 +56,7 @@ export function RecallStep({ step, answered, onAnswered }: StepProps<Step>) {
   return (
     <div className="space-y-4">
       <h2 className="flex items-center gap-2 text-xl font-bold">
-        <MessageCircleQuestion className="size-6 text-rose-600" /> {tr('אמרו בפולנית – מהזיכרון', 'Say it in Polish – from memory')}
+        <MessageCircleQuestion className="size-6 text-rose-600" /> {tr(`אמרו ${C.inLang.he} – מהזיכרון`, `Say it ${C.inLang.en} – from memory`)}
       </h2>
       <div className="space-y-2 rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-200">
         <FormalityBadge formality={item.formality} />

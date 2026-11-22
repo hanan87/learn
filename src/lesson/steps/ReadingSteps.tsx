@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../../lib/course';
 import { useState } from 'react';
 import { Globe2, Volume2 } from 'lucide-react';
 import { getItem } from '../../data';
@@ -73,7 +74,7 @@ export function AssembleStep({ step, answered, onAnswered }: StepProps<AssembleS
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold">{tr('הרכיבו את המשפט בפולנית', 'Build the sentence in Polish')}</h2>
+      <h2 className="text-xl font-bold">{tr(`הרכיבו את המשפט ${C.inLang.he}`, `Build the sentence ${C.inLang.en}`)}</h2>
       <ContextBox itemId={item.id} />
       <div dir="ltr" className="flex min-h-16 flex-wrap content-start gap-2 rounded-2xl border-b-2 border-slate-300 p-2">
         {chosen.map((bankIdx, pos) => (
@@ -156,7 +157,7 @@ export function FillBlankStep({ step, answered, onAnswered }: StepProps<FillStep
     <div className="space-y-4">
       <h2 className="text-xl font-bold">{tr('השלימו את המילה החסרה', 'Fill in the missing word')}</h2>
       <ContextBox itemId={item.id} />
-      <p dir="ltr" lang="pl" className="polish flex flex-wrap items-center gap-x-2 gap-y-2 text-2xl font-semibold">
+      <p dir="ltr" lang={C.htmlLang} className="polish flex flex-wrap items-center gap-x-2 gap-y-2 text-2xl font-semibold">
         {words.map((w, i) =>
           i === step.blankIndex ? (
             <span key={i} className={`inline-block min-w-20 rounded-lg border-b-4 px-2 text-center ${picked ? 'border-rose-400 text-rose-600' : 'border-slate-300 text-transparent'}`}>
@@ -212,7 +213,7 @@ export function ChooseSpellingStep({ step, answered, onAnswered }: StepProps<Spe
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold">{tr('איך כותבים את זה בפולנית?', 'How is this written in Polish?')}</h2>
+      <h2 className="text-xl font-bold">{tr(`איך כותבים את זה ${C.inLang.he}?`, `How is this written ${C.inLang.en}?`)}</h2>
       <ContextBox itemId={item.id} />
       <div dir="ltr" className="grid gap-2">
         {step.options.map((opt) => (

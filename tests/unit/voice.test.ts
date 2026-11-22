@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { ALL_ITEMS, applyProfile, getItem } from '../../src/data';
-import { KASIA_DEDICATION } from '../../src/data/kasia';
 import { STORIES } from '../../src/data/stories';
 import { buildClipCatalog, phraseWords } from '../../src/lib/clipCatalog';
 import { DEFAULT_PROFILE } from '../../src/lib/personalize';
@@ -33,10 +32,9 @@ describe('neural voice catalog', () => {
     expect(keys.has(clipKey('pl-f', 'n', 'Zgubiłam paszport'))).toBe(true);
   });
 
-  it('records story lines in each character voice, and the dedication in a male voice', () => {
+  it('records story lines in each character voice', () => {
     const line = STORIES[0].lines.find((l) => l.speaker === 'Tomek')!;
     expect(keys.has(clipKey('pl-m', 'n', line.polish))).toBe(true);
-    expect(keys.has(clipKey('pl-m', 'n', KASIA_DEDICATION.pl))).toBe(true);
     expect(keys.has(clipKey('pl-f', 'n', 'mlekiem'))).toBe(true);
   });
 

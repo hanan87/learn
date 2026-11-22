@@ -1,3 +1,4 @@
+import { COURSE_INFO } from '../lib/course';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   closeCapture,
@@ -285,7 +286,7 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
     }
     a.recogDone = false;
     const recog = new Ctor();
-    recog.lang = 'pl-PL';
+    recog.lang = COURSE_INFO.sttLang;
     recog.continuous = false;
     recog.interimResults = true;
     recog.maxAlternatives = 5;

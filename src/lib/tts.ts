@@ -1,5 +1,5 @@
 /**
- * Polish speech output.
+ * Speech output for the active course (Polish or Montenegrin, see lib/course).
  *
  * Order of preference for every phrase:
  *   1. a pre-recorded neural clip (lib/voiceClips – Azure Zofia / Marek), unless the learner turned it off
@@ -14,6 +14,7 @@
  *  - Chrome on Android can get stuck in a paused state: call resume() before speaking.
  */
 
+import { COURSE_INFO } from './course';
 import { ttsSupported } from './env';
 import { clipPlaying, findClip, playClip, stopClip, type ClipVoice } from './voiceClips';
 
@@ -37,12 +38,19 @@ export function voiceRank(v: { name: string; localService?: boolean }): number {
   return v.localService === false ? 4 : 5;
 }
 
+/** Position of a voice language in the course's preference list (lower is better), or -1. */
+function langRank(lang: string | undefined): number {
+  const l = (lang ?? '').toLowerCase().replace('_', '-');
+  return COURSE_INFO.voicePrefixes.findIndex((p) => l.startsWith(p));
+}
+
+/** Device voices for the course language, best first (e.g. Bosnian, Croatian, Serbian for Montenegrin). */
 export function polishVoices(): SpeechSynthesisVoice[] {
   if (!ttsSupported) return [];
   return window.speechSynthesis
     .getVoices()
-    .filter((v) => v.lang?.toLowerCase().replace('_', '-').startsWith('pl'))
-    .sort((a, b) => voiceRank(a) - voiceRank(b) || a.name.localeCompare(b.name));
+    .filter((v) => langRank(v.lang) >= 0)
+    .sort((a, b) => langRank(a.lang) - langRank(b.lang) || voiceRank(a) - voiceRank(b) || a.name.localeCompare(b.name));
 }
 
 export function getPreferredVoiceURI(): string | null {
@@ -109,13 +117,13 @@ export function isSpeaking(): boolean {
 export type Speaker = 'f' | 'm';
 
 /**
- * Speak Polish text. Resolves when speech ends (or is cancelled).
+ * Speak target-language text. Resolves when speech ends (or is cancelled).
  * Slow rates use the clip synthesized slowly; other rates play the normal clip at that speed.
  */
 export async function speak(text: string, rate: number = RATE_NORMAL, speaker: Speaker = 'f'): Promise<void> {
   if (!text.trim()) return;
   const slow = rate <= 0.7;
-  const voice: ClipVoice = speaker === 'm' ? 'pl-m' : 'pl-f';
+  const voice = `${COURSE_INFO.clipPrefix}-${speaker}` as ClipVoice;
   const clip = findClip(text, slow ? 's' : 'n', voice);
   if (clip) {
     if (ttsSupported) window.speechSynthesis.cancel();
@@ -134,8 +142,8 @@ function speakDevice(text: string, rate: number): Promise<void> {
   synth.resume();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'pl-PL';
   const voice = cachedVoice ?? findPolishVoice();
+  utterance.lang = voice?.lang || COURSE_INFO.ttsLang;
   if (voice) utterance.voice = voice;
   utterance.rate = rate;
   utterance.pitch = 1;

@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from './lib/course';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { clipCount, subscribeManifest } from './lib/voiceClips';
 import { getItem } from './data';
@@ -23,7 +24,6 @@ import { HandsFree } from './views/HandsFree';
 import { SpeedBlitz } from './views/SpeedBlitz';
 import { StoryPlayer } from './views/StoryPlayer';
 import { getStory } from './data/stories';
-import { KasiaAngel } from './components/KasiaAngel';
 
 const TAB_IDS = TABS.map((t) => t.id);
 
@@ -38,7 +38,6 @@ const TAB_IDS = TABS.map((t) => t.id);
  *   #/handsfree/<map|vocab>                    – audio-only trainer
  *   #/story/<storyId>                          – mini story
  *   #/blitz                                    – 60-second Speed Blitz
- *   #/<tab>/kasia                              – "Dla Kasi" dedication screen
  */
 export function App() {
   const { segments, navigate } = useHashRoute('map');
@@ -60,7 +59,6 @@ export function App() {
   const itemId = segments[1] === 'item' ? segments[2] : undefined;
   const item = itemId ? getItem(itemId) : undefined;
   const settingsOpen = segments[1] === 'settings';
-  const kasiaOpen = segments[1] === 'kasia';
 
   const openItem = (id: string) => navigate(`${tab}/item/${id}`);
   const closeSheet = () => navigate(tab, true);
@@ -81,13 +79,18 @@ export function App() {
   return (
     <div className="flex min-h-dvh flex-col">
       {mic.blocked && mic.status !== 'no-device' && <StandaloneDownload />}
-      <TopBar title={tabInfo[lang]} onOpenSettings={() => navigate(`${tab}/settings`)} onOpenKasia={() => navigate(`${tab}/kasia`)} />
+      <TopBar title={tabInfo[lang]} onOpenSettings={() => navigate(`${tab}/settings`)} />
       {voiceMissing && clips === 0 && (
         <p className="mx-auto mt-3 w-full max-w-3xl px-4 text-xs leading-relaxed text-slate-500">
-          {tr(
-            'לא נמצא קול פולני במכשיר – ההקראה עשויה להישמע במבטא זר. באנדרואיד: הגדרות ← שפה ← המרת טקסט לדיבור ← התקינו פולנית. ב-iPhone: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← פולנית.',
-            'No Polish voice was found on this device – playback may sound foreign. Android: Settings → Language → Text-to-speech → install Polish. iPhone: Settings → Accessibility → Spoken Content → Voices → Polish.',
-          )}
+          {C.id === 'cnr'
+            ? tr(
+                'לא נמצא במכשיר קול בוסני, קרואטי או סרבי – ההקראה עשויה להישמע במבטא זר. באנדרואיד: הגדרות ← שפה ← המרת טקסט לדיבור ← התקינו קרואטית או סרבית. ב-iPhone: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← קרואטית.',
+                'No Bosnian, Croatian or Serbian voice was found on this device – playback may sound foreign. Android: Settings → Language → Text-to-speech → install Croatian or Serbian. iPhone: Settings → Accessibility → Spoken Content → Voices → Croatian.',
+              )
+            : tr(
+                'לא נמצא קול פולני במכשיר – ההקראה עשויה להישמע במבטא זר. באנדרואיד: הגדרות ← שפה ← המרת טקסט לדיבור ← התקינו פולנית. ב-iPhone: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← פולנית.',
+                'No Polish voice was found on this device – playback may sound foreign. Android: Settings → Language → Text-to-speech → install Polish. iPhone: Settings → Accessibility → Spoken Content → Voices → Polish.',
+              )}
         </p>
       )}
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-28">
@@ -106,7 +109,6 @@ export function App() {
       <Sheet open={!!item} onClose={closeSheet} title={item?.polish}>
         {item && <ItemDetail key={item.id} item={item} />}
       </Sheet>
-      {kasiaOpen && <KasiaAngel onClose={closeSheet} />}
       <Sheet open={settingsOpen} onClose={closeSheet} title={tr('הגדרות', 'Settings')}>
         <Settings />
       </Sheet>

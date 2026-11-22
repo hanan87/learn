@@ -1,22 +1,24 @@
 import { expect, type Page } from '@playwright/test';
 
 /** Start the app with a chosen language/theme and fail the test on any uncaught error or console error. */
-export async function openApp(page: Page, opts: { lang?: 'he' | 'en'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown } = {}) {
+export async function openApp(page: Page, opts: { lang?: 'he' | 'en'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown; course?: 'pl' | 'cnr' } = {}) {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(`console: ${m.text()}`);
   });
   await page.addInitScript(
-    ({ lang, theme, progress }) => {
+    ({ lang, theme, progress, course }) => {
       if (sessionStorage.getItem('e2e-init')) return;
       sessionStorage.setItem('e2e-init', '1');
       localStorage.clear();
       if (lang) localStorage.setItem('polish-learn:lang', lang);
       if (theme) localStorage.setItem('polish-learn:theme', theme);
-      if (progress) localStorage.setItem('polish-learn:progress:v1', JSON.stringify(progress));
+      if (course) localStorage.setItem('polish-learn:course', course);
+      const key = course === 'cnr' ? 'polish-learn:progress:cnr:v1' : 'polish-learn:progress:v1';
+      if (progress) localStorage.setItem(key, JSON.stringify(progress));
     },
-    { lang: opts.lang, theme: opts.theme, progress: opts.progress },
+    { lang: opts.lang, theme: opts.theme, progress: opts.progress, course: opts.course },
   );
   await page.goto(`/${opts.hash ?? '#/map'}`);
   return errors;
@@ -28,15 +30,16 @@ export function expectNoErrors(errors: string[]) {
   expect(real, real.join('\n')).toEqual([]);
 }
 
-export async function progress(page: Page) {
-  return page.evaluate(() => JSON.parse(localStorage.getItem('polish-learn:progress:v1') ?? 'null'));
+export async function progress(page: Page, course: 'pl' | 'cnr' = 'pl') {
+  const key = course === 'cnr' ? 'polish-learn:progress:cnr:v1' : 'polish-learn:progress:v1';
+  return page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? 'null'), key);
 }
 
 /**
  * Drive one lesson to the end. Answers are deliberately sometimes wrong so retry steps appear too.
  * Speaking steps use the real (fake-device) microphone.
  */
-export async function runLesson(page: Page, maxSteps = 60) {
+export async function runLesson(page: Page, maxSteps = 60, onWriting?: () => Promise<void>) {
   for (let i = 0; i < maxSteps; i++) {
     if (await page.getByText(/Lesson complete!|Session complete!/).isVisible()) return true;
     const stage = (await page.locator('header p').first().textContent()) ?? '';
@@ -57,7 +60,8 @@ export async function runLesson(page: Page, maxSteps = 60) {
       if (await finish.isEnabled()) await finish.click();
       else await page.getByRole('button', { name: "Can't speak right now" }).click();
     } else if (/Writing/.test(stage)) {
-      await page.getByPlaceholder('Napisz po polsku…').fill('abc');
+      if (onWriting) await onWriting();
+      await page.getByPlaceholder(/Napisz po polsku…|Napiši na crnogorskom…/).fill('abc');
       await page.getByRole('button', { name: 'Check' }).click();
     } else {
       const main = page.locator('div.animate-pop-in.mx-auto');

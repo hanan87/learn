@@ -1,3 +1,4 @@
+import { COURSE_INFO, COURSES } from '../lib/course';
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react';
 import { applyProfile, getItem, registerCustomItems } from '../data';
 import { SOUND_INFO, WEAK_SOUND_ERROR_RATE, WEAK_SOUND_MIN_ATTEMPTS, WEAK_SOUND_MIN_AVG, type SoundKey } from '../data/sounds';
@@ -5,7 +6,7 @@ import type { LearningItem } from '../data/types';
 import { addDays, daysBetween, todayKey } from '../lib/date';
 import { setHapticsEnabled } from '../lib/haptics';
 import { DEFAULT_PROFILE, type LearnerProfile } from '../lib/personalize';
-import { detectSounds, letterSound } from '../lib/polishPhonetics';
+import { detectSounds, letterSound } from '../lib/phonetics';
 
 /**
  * Learner progress persisted in LocalStorage (schema v2):
@@ -16,7 +17,8 @@ import { detectSounds, letterSound } from '../lib/polishPhonetics';
  *  - lesson / dialogue completion, and the learner's own dictionary items
  */
 
-const STORAGE_KEY = 'polish-learn:progress:v1';
+/** Each course keeps its own progress (lib/course). */
+const STORAGE_KEY = COURSE_INFO.progressKey;
 
 /** Leitner box intervals in days. Box 0 = new; boxes 1–5 equal the mastery level. */
 export const SRS_INTERVALS = [0, 1, 3, 7, 14, 30];
@@ -146,10 +148,19 @@ export function migrate(raw: unknown): ProgressState | null {
 function load(): ProgressState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return (raw && migrate(JSON.parse(raw))) || initialState();
+    return (raw && migrate(JSON.parse(raw))) || seededState();
   } catch {
     return initialState();
   }
+}
+
+/** A course started for the first time keeps the learner's profile and settings from the other one. */
+function seededState(): ProgressState {
+  const fresh = initialState();
+  const other = Object.values(COURSES).find((c) => c.progressKey !== STORAGE_KEY);
+  const raw = other && localStorage.getItem(other.progressKey);
+  const prev = raw ? migrate(JSON.parse(raw)) : null;
+  return prev ? { ...fresh, profile: prev.profile, prefs: prev.prefs, dailyGoal: prev.dailyGoal } : fresh;
 }
 
 export type Action =

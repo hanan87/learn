@@ -8,10 +8,14 @@
  *
  * Clips are content-addressed (hash of voice + speed + text), so re-running after a content change
  * only synthesizes new phrases. Stale files are removed with --prune.
+ * Every course is included: the course data is built per page load, so each course's catalog is
+ * produced in its own process (scripts/dump-catalog.ts with LEARN_COURSE) and the lists are merged.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildClipCatalog } from '../src/lib/clipCatalog';
+import type { ClipRequest } from '../src/lib/clipCatalog';
+import { COURSES, type CourseId } from '../src/lib/course';
 import { AZURE_VOICES, buildSsml, clipFileName } from './voice-lib';
 
 const OUT = 'public/audio';
@@ -56,8 +60,23 @@ async function synthesize(key: string, region: string, ssml: string): Promise<Bu
   throw new Error('Azure TTS: too many retries');
 }
 
+function courseCatalog(course: CourseId): ClipRequest[] {
+  const json = execFileSync(process.execPath, ['--import', 'tsx', 'scripts/dump-catalog.ts'], {
+    env: { ...process.env, LEARN_COURSE: course },
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  return JSON.parse(json) as ClipRequest[];
+}
+
 async function main() {
-  const catalog = buildClipCatalog();
+  const merged = new Map<string, ClipRequest>();
+  for (const id of Object.keys(COURSES) as CourseId[]) {
+    const list = courseCatalog(id);
+    console.log(`${COURSES[id].name.en}: ${list.length} phrases`);
+    for (const c of list) merged.set(c.key, c);
+  }
+  const catalog = [...merged.values()];
   const chars = catalog.reduce((n, c) => n + c.text.length, 0);
   console.log(`${catalog.length} phrases, ${chars} characters (Azure free tier: 500,000 / month).`);
   if (dry) return;

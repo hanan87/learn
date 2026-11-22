@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { useMemo, useState } from 'react';
 import {
   AlertTriangle,
@@ -90,7 +91,7 @@ export function VocabReview({ onOpenItem, onStartPractice, onOpenSoundGroup, onO
             className="btn-secondary"
           >
             <ArrowLeftRight className="size-4" />
-            {direction === 'native-pl' ? tr('עברית ← פולנית', 'English → Polish') : tr('פולנית ← עברית', 'Polish → English')}
+            {direction === 'native-pl' ? tr(`עברית ← ${C.name.he}`, `English → ${C.name.en}`) : tr(`${C.name.he} ← עברית`, `${C.name.en} → English`)}
           </button>
         </div>
       </section>
@@ -333,7 +334,7 @@ function Dictionary({ onOpenItem, onAdd }: { onOpenItem: (id: string) => void; o
       </div>
       <label className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2.5 ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-rose-400">
         <Search className="size-4 text-slate-400" />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr('חיפוש בעברית או בפולנית', 'Search in English or Polish')} className="min-w-0 flex-1 bg-transparent text-base outline-none" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr(`חיפוש בעברית או ${C.inLang.he}`, `Search in English or ${C.name.en}`)} className="min-w-0 flex-1 bg-transparent text-base outline-none" />
       </label>
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {filters.map(([f, label]) => (

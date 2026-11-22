@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 /**
@@ -38,7 +39,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
-    document.title = lang === 'he' ? 'פולנית מאפס' : 'Polish from Zero';
+    document.title = lang === 'he' ? C.titleHe : C.titleEn;
   }, [lang]);
 
   const setLang = useCallback((l: Lang) => {

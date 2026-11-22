@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Ear, Headphones, Lightbulb, Mic, Pause, Play, SkipForward, Volume2, X, XCircle } from 'lucide-react';
 import { itemText } from '../data/types';
@@ -328,8 +329,8 @@ export function HandsFree({ source, onExit }: { source: 'map' | 'vocab'; onExit:
   const text = itemText(item, lang);
   const phaseLabel: Record<Phase, string> = {
     meaning: tr('המשמעות', 'Meaning'),
-    slow: tr('בפולנית – לאט', 'Polish – slowly'),
-    normal: tr('בפולנית – בקצב רגיל', 'Polish – normal speed'),
+    slow: tr(`${C.inLang.he} – לאט`, `${C.name.en} – slowly`),
+    normal: tr(`${C.inLang.he} – בקצב רגיל`, `${C.name.en} – normal speed`),
     listen: tr('תורכם – אמרו בקול!', 'Your turn – say it aloud!'),
     repeat: tr('חזרו אחרי הדובר בקול', 'Repeat aloud after the speaker'),
     feedback:

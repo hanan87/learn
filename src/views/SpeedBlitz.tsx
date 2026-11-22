@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Flame, Timer, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { ALL_ITEMS } from '../data';
@@ -161,8 +162,8 @@ export function SpeedBlitz({ onExit }: { onExit: () => void }) {
           <Timer className="size-16 text-amber-500" />
           <p className="max-w-sm text-slate-600">
             {tr(
-              'מילה בפולנית מופיעה ונשמעת – בחרו את הפירוש הנכון כמה שיותר מהר. 5 ברצף = כפול נקודות, 10 ברצף = משולש.',
-              'A Polish word appears and is spoken – pick the right meaning as fast as you can. 5 in a row = double points, 10 in a row = triple.',
+              `מילה ${C.inLang.he} מופיעה ונשמעת – בחרו את הפירוש הנכון כמה שיותר מהר. 5 ברצף = כפול נקודות, 10 ברצף = משולש.`,
+              `A ${C.name.en} word appears and is spoken – pick the right meaning as fast as you can. 5 in a row = double points, 10 in a row = triple.`,
             )}
           </p>
           <p className="flex items-center gap-1.5 font-bold text-amber-700" data-testid="blitz-best">

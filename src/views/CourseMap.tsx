@@ -1,3 +1,5 @@
+import { CourseSwitch } from '../components/CourseSwitch';
+import { COURSE_INFO as C } from '../lib/course';
 import { useState } from 'react';
 import { CheckCircle2, ChevronDown, Headphones, Lock, Play, RotateCcw, Star, Trophy, UserRound, X } from 'lucide-react';
 import { ProfileFields } from '../components/ProfileFields';
@@ -66,7 +68,10 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree }: Props) 
   return (
     <div className="space-y-5">
       <section className="pt-1" data-testid="map-greeting">
-        <p className="eyebrow">{new Date().toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="eyebrow">{new Date().toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <CourseSwitch lang={lang} variant="pills" />
+        </div>
         <h2 className="mt-1 text-3xl leading-tight font-semibold">
           {greeting}
           {firstName && <span className="text-rose-600">, {firstName}</span>}
@@ -113,7 +118,7 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree }: Props) 
 
       <HandsFreeButton
         onClick={onOpenHandsFree}
-        subtitle={tr('המשמעות, הפולנית לאט ומהר, ואז אתם חוזרים – בלי לגעת במסך.', 'Meaning, slow and normal Polish, then you repeat – no screen taps needed.')}
+        subtitle={tr(`המשמעות, ה${C.name.he} לאט ומהר, ואז אתם חוזרים – בלי לגעת במסך.`, `Meaning, slow and normal ${C.name.en}, then you repeat – no screen taps needed.`)}
       />
 
       <ol className="relative space-y-4">

@@ -1,3 +1,5 @@
+import { COURSE } from '../lib/course';
+import { CNR_ROLEPLAYS } from './cnr/dialogues';
 import type { Formality } from './types';
 
 /**
@@ -53,7 +55,7 @@ const no = (polish: string, he: string, en: string, fbHe: string, fbEn: string):
 });
 const line = (polish: string, he: string, en: string) => ({ polish, t: { he, en } });
 
-export const ROLEPLAYS: Roleplay[] = [
+const PL_ROLEPLAYS: Roleplay[] = [
   {
     id: 'warsaw-cafe',
     title: { he: 'בית קפה בוורשה', en: 'A café in Warsaw' },
@@ -250,3 +252,6 @@ export const ROLEPLAYS: Roleplay[] = [
     ],
   },
 ];
+
+/** Roleplays of the active course. */
+export const ROLEPLAYS: Roleplay[] = COURSE === 'cnr' ? CNR_ROLEPLAYS : PL_ROLEPLAYS;

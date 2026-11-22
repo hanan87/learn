@@ -1,3 +1,5 @@
+import { COURSE } from '../lib/course';
+
 /**
  * Mini stories: short, funny beginner dialogues (6–8 lines). Every word is tappable; the glossary
  * gives its meaning and, when the ending changed because of Polish grammar (kawa → kawę,
@@ -72,7 +74,7 @@ const COMMON: Record<string, GlossEntry> = {
   ma: g('יש לו/לה', 'has', 'mieć', 'mieć (להיות בעל) ← ma: יש לו/לה. nie ma = אין.', 'mieć (to have) → ma: he / she has. nie ma = there is no.'),
 };
 
-export const STORIES: Story[] = [
+const PL_STORIES: Story[] = [
   {
     id: 'kawa-dla-kota',
     title: { he: 'קפה בשביל החתול', en: 'Coffee for the cat' },
@@ -248,6 +250,9 @@ export const SPEAKER_VOICE: Record<string, 'f' | 'm'> = {
   Marek: 'm',
   Ania: 'f',
 };
+
+/** Mini stories of the active course (the Montenegrin starter course has none yet). */
+export const STORIES: Story[] = COURSE === 'cnr' ? [] : PL_STORIES;
 
 export const speakerVoice = (speaker: string): 'f' | 'm' => SPEAKER_VOICE[speaker] ?? 'f';
 

@@ -1,6 +1,8 @@
 import type { Lang } from '../i18n/LangContext';
+import { COURSE, COURSE_INFO } from '../lib/course';
 import { DEFAULT_PROFILE, effectiveGender, hasGenderPair, hasTemplate, otherGender, personalize, type LearnerProfile } from '../lib/personalize';
 import { toEnglishPhonetic } from '../lib/polishPhonetics';
+import { CNR_LEGEND, CNR_SITUATIONS, CNR_UNITS } from './cnr/units';
 import { ITEM_EN, UNIT_EN } from './english';
 import { SITUATIONS } from './situations';
 import type { CourseUnitId, ItemSource, LearningItem, Unit, UnitId, UnitSource } from './types';
@@ -32,7 +34,10 @@ function localizeUnit(u: UnitSource): Unit {
   };
 }
 
-export const UNITS: Unit[] = [...[unit1, unit2, unit3, unit4].map(localizeUnit), ...EXTRA_UNITS];
+const PL_UNITS: Unit[] = [...[unit1, unit2, unit3, unit4].map(localizeUnit), ...EXTRA_UNITS];
+
+/** Units of the active course (lib/course). */
+export const UNITS: Unit[] = COURSE === 'cnr' ? CNR_UNITS : PL_UNITS;
 
 export const ALL_ITEMS: LearningItem[] = UNITS.flatMap((u) => u.items);
 
@@ -138,13 +143,14 @@ export function getUnit(id: CourseUnitId): Unit {
 
 /** Situational prompt for the active-recall speaking challenge. */
 export function getSituation(item: LearningItem, lang: Lang): string {
-  const extra = EXTRA_SITUATIONS[item.id];
-  if (lang === 'he') return personalize(extra?.he ?? SITUATIONS[item.id] ?? `איך אומרים בפולנית: "${item.hebrew}"?`, currentProfile, 'he');
-  return personalize(extra?.en ?? `How do you say "${item.english}" in Polish?`, currentProfile, 'en');
+  const extra = COURSE === 'cnr' ? CNR_SITUATIONS[item.id] : EXTRA_SITUATIONS[item.id];
+  const plain = COURSE === 'pl' ? SITUATIONS[item.id] : undefined;
+  if (lang === 'he') return personalize(extra?.he ?? plain ?? `איך אומרים ${COURSE_INFO.inLang.he}: "${item.hebrew}"?`, currentProfile, 'he');
+  return personalize(extra?.en ?? `How do you say "${item.english}" ${COURSE_INFO.inLang.en}?`, currentProfile, 'en');
 }
 
 /** Legend explaining the phonetic transcription conventions (Hebrew niqqud / English respelling). */
-export const PHONETIC_LEGEND: { pl: string; he: string; en: string; noteHe: string; noteEn: string }[] = [
+const PL_LEGEND: { pl: string; he: string; en: string; noteHe: string; noteEn: string }[] = [
   { pl: 'sz', he: 'שׁ', en: 'sh', noteHe: 'ש קשה – לשון אחורה, שפתיים מעוגלות', noteEn: 'hard sh – tongue back, lips rounded' },
   { pl: 'ś / si', he: 'שְׁי', en: 'sh(y)', noteHe: 'ש רכה – לשון קדימה, חיוך (ה-י מסמנת רכות)', noteEn: 'soft sh – tongue forward, smile (y marks softness)' },
   { pl: 'cz', he: 'צ׳', en: 'ch', noteHe: 'צ׳ קשה – לשון אחורה', noteEn: 'hard ch – tongue back' },
@@ -164,3 +170,5 @@ export const PHONETIC_LEGEND: { pl: string; he: string; en: string; noteHe: stri
   { pl: 'y', he: 'ִ', en: 'ih', noteHe: 'i "כהה" – חיריק בלי יוד', noteEn: 'dark i as in "bit"' },
   { pl: 'i', he: 'ִי', en: 'ee', noteHe: 'i רגילה – חיריק עם יוד', noteEn: 'ee as in "see"' },
 ];
+
+export const PHONETIC_LEGEND = COURSE === 'cnr' ? CNR_LEGEND : PL_LEGEND;

@@ -1,4 +1,5 @@
-import { toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from './polishPhonetics';
+import { COURSE_INFO } from './course';
+import { toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from './phonetics';
 
 /**
  * Learner personalization: grammatical gender and first name.
@@ -21,8 +22,8 @@ export const DEFAULT_PROFILE: LearnerProfile = { gender: null, name: '' };
 
 /** Fallback names used until the learner types their own. */
 export const DEFAULT_NAMES: Record<Gender, { latin: string; he: string }> = {
-  m: { latin: 'Dawid', he: 'דוד' },
-  f: { latin: 'Anna', he: 'אנה' },
+  m: { latin: COURSE_INFO.defaultNames.m, he: 'דוד' },
+  f: { latin: COURSE_INFO.defaultNames.f, he: 'אנה' },
 };
 
 /** Which representation a template string belongs to – decides how {name} is rendered. */

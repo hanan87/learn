@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { expectNoErrors, openApp, progress } from './helpers';
 
-/** Stage 6 (Pro): personalization, hands-free mode, mini stories, Speed Blitz, haptics – and "Dla Kasi". */
+/** Stage 6 (Pro): personalization, hands-free mode, mini stories, Speed Blitz, haptics. */
 
 /** Records navigator.vibrate calls in window.__vibrations (desktop Chrome has no vibration motor). */
 async function recordVibrations(page: Page) {
@@ -22,7 +22,7 @@ const vibrations = (page: Page) => page.evaluate(() => (window as unknown as { _
 test.describe('speaker gender and name', () => {
   test('welcome → female + name; phrases, notes and roleplay follow the profile', async ({ page }) => {
     const errors = await openApp(page);
-    await page.getByRole('button', { name: /Polish for English speakers/ }).click();
+    await page.getByRole('button', { name: /For English speakers/ }).click();
     await page.getByRole('radio', { name: /^Female/ }).click();
     await page.getByPlaceholder('Anna').fill('kasia');
     await page.getByRole('button', { name: "Let's start" }).click();
@@ -184,74 +184,6 @@ test.describe('haptics switch', () => {
     expect(await vibrations(page)).toBe(before);
     expectNoErrors(errors);
   });
-});
-
-test.describe('Dla Kasi', () => {
-  for (const theme of ['light', 'dark'] as const) {
-    test(`opens the angel screen, plays music, bursts magic and closes (${theme})`, async ({ page }) => {
-      const errors = await openApp(page, { lang: 'he', theme, progress: { version: 2, xp: 123, items: { 'u1-01': { learned: true } }, lessons: { 'u1-L1': { completedAt: '2026-11-06', bestAccuracy: 90 } }, dialogues: {} } });
-      const btn = page.getByTestId('kasia-button');
-      await expect(btn).toBeVisible();
-      await expect(btn).toHaveText('Dla Kasi');
-      await btn.click();
-
-      const modal = page.getByTestId('kasia-modal');
-      await expect(modal).toBeVisible();
-      await expect(modal.getByRole('heading', { name: 'Kasiu, jesteś moim małym aniołkiem' })).toBeVisible();
-      await expect(modal).toContainText('קאשה, את המלאכית הקטנה שלי');
-      await expect(modal).toContainText('Stworzyłem tę aplikację specjalnie dla Ciebie.');
-      await expect(modal.locator('canvas')).toHaveCount(2);
-      await expect(modal.locator('svg[aria-label="Kasia"]')).toBeVisible();
-
-      // The live learning meter shows the real progress.
-      const meter = page.getByTestId('kasia-meter');
-      await expect(meter).toContainText('123');
-      await expect(meter).toContainText('מילים');
-
-      // Translation switch: Polish only, then English.
-      await modal.getByRole('button', { name: 'PL', exact: true }).click();
-      await expect(modal).not.toContainText('קאשה, את המלאכית הקטנה שלי');
-      await modal.getByRole('button', { name: 'EN', exact: true }).click();
-      await expect(modal).toContainText('Kasia, you are my little angel');
-
-      // More magic: a new compliment card every tap.
-      const magic = page.getByTestId('kasia-magic');
-      await magic.click();
-      const card = page.getByTestId('kasia-compliment');
-      await expect(card).toBeVisible();
-      const first = await card.locator('p').first().textContent();
-      await magic.click();
-      await expect(card.locator('p').first()).not.toHaveText(first ?? '');
-
-      // The canvas really draws (non-transparent pixels on the burst layer right after a tap).
-      await magic.click();
-      await page.waitForTimeout(200);
-      const painted = await page.evaluate(() => {
-        const c = document.querySelectorAll<HTMLCanvasElement>('[data-testid="kasia-modal"] canvas')[1];
-        const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
-        let n = 0;
-        for (let i = 3; i < d.length; i += 4 * 50) if (d[i] > 0) n++;
-        return n;
-      });
-      expect(painted).toBeGreaterThan(0);
-
-      const mute = page.getByTestId('kasia-mute');
-      await mute.click();
-      await expect(mute).toHaveAttribute('aria-pressed', 'true');
-
-      await page.screenshot({ path: `tests/e2e/screens/kasia-${theme}-${test.info().project.name}.png` });
-      await modal.getByRole('button', { name: /Close/ }).click();
-      await expect(modal).toBeHidden();
-      await expect(page).toHaveURL(/#\/map$/);
-
-      // Escape closes it too.
-      await btn.click();
-      await expect(modal).toBeVisible();
-      await page.keyboard.press('Escape');
-      await expect(modal).toBeHidden();
-      expectNoErrors(errors);
-    });
-  }
 });
 
 test('Settings shows the current release', async ({ page }) => {

@@ -5,12 +5,15 @@ import type { ClipSpeed, ClipVoice } from '../src/lib/voiceClips';
 export const AZURE_VOICES: Record<ClipVoice, { locale: string; name: string }> = {
   'pl-f': { locale: 'pl-PL', name: 'pl-PL-ZofiaNeural' },
   'pl-m': { locale: 'pl-PL', name: 'pl-PL-MarekNeural' },
+  // No Montenegrin voices exist; the Bosnian ones read Ijekavian Latin text with a close accent.
+  'cnr-f': { locale: 'bs-BA', name: 'bs-BA-VesnaNeural' },
+  'cnr-m': { locale: 'bs-BA', name: 'bs-BA-GoranNeural' },
   he: { locale: 'he-IL', name: 'he-IL-HilaNeural' },
   en: { locale: 'en-US', name: 'en-US-JennyNeural' },
 };
 
 /**
- * Speaking rates. Polish is spoken a touch slower than conversational speed so learners can follow;
+ * Speaking rates. The course language is spoken a touch slower than conversational speed so learners can follow;
  * the slow variant is synthesized slowly (natural prosody) instead of stretching the normal clip.
  */
 export function prosodyRate(voice: ClipVoice, speed: ClipSpeed): string {

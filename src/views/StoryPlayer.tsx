@@ -6,7 +6,7 @@ import { StoryIcon } from '../components/StoryIcon';
 import { PolishSyllables } from '../components/PolishSyllables';
 import { useLang } from '../i18n/LangContext';
 import { haptic } from '../lib/haptics';
-import { toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from '../lib/polishPhonetics';
+import { toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from '../lib/phonetics';
 import { shuffle } from '../lib/random';
 import { RATE_CHAIN, speak, speakSequence, stopSpeaking } from '../lib/tts';
 import { useProgress, XP } from '../state/ProgressContext';

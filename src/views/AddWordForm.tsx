@@ -1,10 +1,11 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { useEffect, useState } from 'react';
 import { CheckCircle2, Sparkles, Volume2 } from 'lucide-react';
 import type { Formality, LearningItem } from '../data/types';
 import { Phonetic } from '../components/Phonetic';
 import { PolishSyllables } from '../components/PolishSyllables';
 import { useLang } from '../i18n/LangContext';
-import { autoBackchain, autoTip, toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from '../lib/polishPhonetics';
+import { autoBackchain, autoTip, toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from '../lib/phonetics';
 import { notationToPlain } from '../lib/syllables';
 import { normalize } from '../lib/text';
 import { speak } from '../lib/tts';
@@ -119,10 +120,10 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
 
       <div>
         <label className={label} htmlFor="aw-polish">
-          {tr('בפולנית *', 'Polish *')}
+          {tr(`${C.inLang.he} *`, `${C.name.en} *`)}
         </label>
         <div className="flex gap-2">
-          <input id="aw-polish" value={f.polish} onChange={(e) => set('polish', e.target.value)} dir="ltr" lang="pl" autoCapitalize="off" autoCorrect="off" spellCheck={false} placeholder="np. Dzień dobry" className={`${input} polish text-lg`} />
+          <input id="aw-polish" value={f.polish} onChange={(e) => set('polish', e.target.value)} dir="ltr" lang={C.htmlLang} autoCapitalize="off" autoCorrect="off" spellCheck={false} placeholder={C.id === 'cnr' ? 'npr. Dobar dan' : 'np. Dzień dobry'} className={`${input} polish text-lg`} />
           <button type="button" disabled={!f.polish.trim()} onClick={() => speak(f.polish)} className="grid size-12 shrink-0 place-items-center rounded-xl bg-rose-50 text-rose-600 ring-1 ring-rose-200 disabled:opacity-40" aria-label={tr('השמע', 'Play')}>
             <Volume2 className="size-5" />
           </button>
@@ -179,8 +180,8 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
           <label className={label} htmlFor="aw-syl">
             {tr('חלוקה להברות (· בין הברות, [ ] סביב ההברה המוטעמת)', 'Syllables (· between syllables, [ ] around the stressed one)')}
           </label>
-          <input id="aw-syl" value={f.syllables} onChange={(e) => set('syllables', e.target.value)} dir="ltr" lang="pl" className={`${input} polish`} />
-          {!syllablesValid && <p className="mt-1 text-xs text-rose-600">{tr('החלוקה לא תואמת לטקסט הפולני.', 'The syllables do not match the Polish text.')}</p>}
+          <input id="aw-syl" value={f.syllables} onChange={(e) => set('syllables', e.target.value)} dir="ltr" lang={C.htmlLang} className={`${input} polish`} />
+          {!syllablesValid && <p className="mt-1 text-xs text-rose-600">{tr(`החלוקה לא תואמת לטקסט ה${C.adjHe}.`, `The syllables do not match the ${C.name.en} text.`)}</p>}
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>

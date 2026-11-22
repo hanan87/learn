@@ -3,7 +3,9 @@
  * word-level pronunciation scoring and Polish diacritic diagnostics.
  */
 
-const DIACRITIC_MAP: Record<string, string> = {
+import { COURSE } from './course';
+
+const PL_DIACRITICS: Record<string, string> = {
   ą: 'a',
   ć: 'c',
   ę: 'e',
@@ -14,6 +16,8 @@ const DIACRITIC_MAP: Record<string, string> = {
   ź: 'z',
   ż: 'z',
 };
+const CNR_DIACRITICS: Record<string, string> = { č: 'c', ć: 'c', đ: 'd', š: 's', ž: 'z', ś: 's', ź: 'z' };
+const DIACRITIC_MAP = COURSE === 'cnr' ? CNR_DIACRITICS : PL_DIACRITICS;
 
 /** Lowercase, strip punctuation, collapse whitespace. */
 export function normalize(text: string): string {
@@ -108,7 +112,7 @@ export function scorePronunciation(target: string, transcript: string): Pronunci
   return { score: heardNorm ? score : 0, transcript, words };
 }
 
-export const DIACRITIC_EXPLANATIONS: Record<string, { he: string; en: string }> = {
+const PL_EXPLANATIONS: Record<string, { he: string; en: string }> = {
   ą: { he: 'ą היא o אפית ("וֹן") – בלי הסימן, a היא סתם "אָ".', en: 'ą is a nasal o ("on") – without the tail, a is just "ah".' },
   ć: { he: 'ć היא צ׳ רכה (לשון קדימה, חיוך) – בלי הסימן, c היא "צ" רגילה.', en: 'ć is a soft "ch" (tongue forward, smile) – without the accent, c is "ts".' },
   ę: { he: 'ę היא e אפית ("ֶן"; בסוף מילה – e) – בלי הסימן, e רגילה.', en: 'ę is a nasal e ("en"; plain e at the end of a word) – without the tail, a plain e.' },
@@ -119,6 +123,17 @@ export const DIACRITIC_EXPLANATIONS: Record<string, { he: string; en: string }> 
   ź: { he: 'ź היא ז׳ רכה (לשון קדימה) – בלי הסימן, z היא "ז" רגילה.', en: 'ź is a soft "zh" (tongue forward) – without the accent, z is a plain z.' },
   ż: { he: 'ż היא ז׳ קשה (לשון אחורה, שפתיים מעוגלות) – בלי הנקודה, z היא "ז" רגילה.', en: 'ż is a hard "zh" as in "measure" (tongue back, lips rounded) – without the dot, z is a plain z.' },
 };
+
+const CNR_EXPLANATIONS: Record<string, { he: string; en: string }> = {
+  č: { he: 'č היא צ׳ קשה (לשון אחורה, שפתיים קדימה) – בלי הסימן, c היא "צ".', en: 'č is a hard "ch" (tongue back, lips forward) – without the mark, c is "ts".' },
+  ć: { he: 'ć היא צ׳ רכה (לשון קדימה, חיוך) – לא č הקשה, ובלי הסימן c היא "צ".', en: 'ć is a soft "ch" (tongue forward, smile) – not the hard č; without the accent, c is "ts".' },
+  š: { he: 'š היא "ש" – בלי הסימן, s היא "ס". šuma (יער) ≠ suma (סכום).', en: 'š is "sh" – without the mark, s is a plain s. šuma (forest) ≠ suma (sum).' },
+  ž: { he: 'ž היא ז׳ – בלי הסימן, z היא "ז". koža (עור) ≠ koza (עז).', en: 'ž is "zh" – without the mark, z is a plain z. koža (skin) ≠ koza (goat).' },
+  đ: { he: 'đ היא ג׳ רכה (כמעט "דְי") – עם הקו, היא לא d רגילה.', en: 'đ is a soft "j" (almost "dy") – with the stroke, it is not a plain d.' },
+};
+
+/** Explanations of the active course's special letters. */
+export const DIACRITIC_EXPLANATIONS = COURSE === 'cnr' ? CNR_EXPLANATIONS : PL_EXPLANATIONS;
 
 export interface DiacriticIssue {
   expected: string;

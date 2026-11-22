@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Ear, Headphones, Lightbulb, Loader2, Mic, RotateCcw, Square, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useSpeechRecorder } from '../hooks/useSpeechRecorder';
@@ -50,7 +51,7 @@ function sttReason(code: string | null, tr: (he: string, en: string) => string):
         'The browser blocked its speech-recognition service (happens in Brave, Edge and private mode). Recording itself works – rate yourself.',
       );
     case 'language-not-supported':
-      return tr('זיהוי הדיבור בדפדפן הזה לא תומך בפולנית. נסו Chrome.', 'Speech recognition in this browser does not support Polish. Try Chrome.');
+      return tr(`זיהוי הדיבור בדפדפן הזה לא תומך ${C.inLang.he}. נסו Chrome.`, `Speech recognition in this browser does not support ${C.name.en}. Try Chrome.`);
     case 'audio-capture':
       return tr(
         'הדפדפן לא הצליח להפעיל זיהוי דיבור במקביל להקלטה. ההקלטה נשמרה – השוו קולות ודרגו את עצמכם.',
@@ -309,7 +310,7 @@ export function PronunciationPractice({ target, itemId, articulationTip, backcha
         </div>
       )}
       {recording && recorder.interim && (
-        <p dir="ltr" lang="pl" className="polish text-center text-lg text-slate-500">
+        <p dir="ltr" lang={C.htmlLang} className="polish text-center text-lg text-slate-500">
           {recorder.interim}…
         </p>
       )}
@@ -370,11 +371,11 @@ export function PronunciationPractice({ target, itemId, articulationTip, backcha
               <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
               <span>
                 {tr('זה נשמע יותר כמו', 'That sounded more like')}{' '}
-                <strong dir="ltr" lang="pl" className="polish">
+                <strong dir="ltr" lang={C.htmlLang} className="polish">
                   {confusableWith}
                 </strong>{' '}
                 {tr('מאשר', 'than')}{' '}
-                <strong dir="ltr" lang="pl" className="polish">
+                <strong dir="ltr" lang={C.htmlLang} className="polish">
                   {target}
                 </strong>
                 . {tr('שימו לב למיקום הלשון בצליל המבדיל.', 'Watch the tongue position on the sound that differs.')}
@@ -407,7 +408,7 @@ export function PronunciationPractice({ target, itemId, articulationTip, backcha
             {comparing === 'speaker' && <Ear className="size-5 animate-pulse" aria-hidden />}
             {comparing === 'you' && <Mic className="size-5 animate-pulse" aria-hidden />}
             {comparing === null && tr('השווה קולות (שמע את עצמך מול הדובר)', 'Compare voices (you vs. the speaker)')}
-            {comparing === 'speaker' && tr('משמיע: הדובר הפולני…', 'Playing: the Polish speaker…')}
+            {comparing === 'speaker' && tr(`משמיע: הדובר ה${C.adjHe}…`, `Playing: the ${C.name.en} speaker…`)}
             {comparing === 'you' &&
               (attempt.simulatedVoice ? tr('משמיע: ההקלטה המדומה שלך…', 'Playing: your simulated recording…') : tr('משמיע: ההקלטה שלך…', 'Playing: your recording…'))}
           </button>
@@ -472,7 +473,7 @@ function ScoreView({ scoring, selfRated }: { scoring: PronunciationResult; selfR
                 ? tr('קרוב – עוד קצת דיוק', 'Close – a bit more precision')
                 : tr('בואו נפרק ונתרגל', "Let's break it down and practise")}
         </p>
-        <p dir="ltr" lang="pl" className="polish flex flex-wrap gap-x-2 text-xl font-semibold">
+        <p dir="ltr" lang={C.htmlLang} className="polish flex flex-wrap gap-x-2 text-xl font-semibold">
           {scoring.words.map((w, i) => (
             <span key={i} className={w.matched ? 'text-emerald-600' : 'text-rose-600 underline decoration-rose-300 decoration-wavy'}>
               {w.word}
@@ -482,7 +483,7 @@ function ScoreView({ scoring, selfRated }: { scoring: PronunciationResult; selfR
         {!selfRated && (
           <p className="truncate text-xs text-slate-500">
             {tr('זוהה:', 'Heard:')}{' '}
-            <span dir="ltr" lang="pl" className="polish">
+            <span dir="ltr" lang={C.htmlLang} className="polish">
               {scoring.transcript || '—'}
             </span>
           </p>

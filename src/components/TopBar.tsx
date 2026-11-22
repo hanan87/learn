@@ -3,7 +3,6 @@ import { useLang } from '../i18n/LangContext';
 import { useTheme } from '../i18n/ThemeContext';
 import { useProgress } from '../state/ProgressContext';
 import { StandaloneDownload } from './StandaloneDownload';
-import { KasiaButton } from './KasiaAngel';
 
 /** HE | EN segmented switch for the interface + learning language. */
 export function LangSwitch() {
@@ -26,7 +25,7 @@ export function LangSwitch() {
 }
 
 /** Sticky header with title, language switch, download/settings, streak, daily goal and XP. */
-export function TopBar({ title, onOpenSettings, onOpenKasia }: { title: string; onOpenSettings: () => void; onOpenKasia: () => void }) {
+export function TopBar({ title, onOpenSettings }: { title: string; onOpenSettings: () => void }) {
   const { activeStreak, todayXp, state, level, levelProgress } = useProgress();
   const { tr } = useLang();
   const theme = useTheme();
@@ -38,7 +37,6 @@ export function TopBar({ title, onOpenSettings, onOpenKasia }: { title: string; 
         {/* Phones: the bottom nav already names the tab, so the title is for screen readers only and the row keeps room for its buttons. */}
         <h1 className="sr-only min-w-0 flex-1 truncate text-base font-bold text-slate-900 sm:not-sr-only sm:text-lg">{title}</h1>
         <span className="flex-1 sm:hidden" aria-hidden />
-        <KasiaButton onClick={onOpenKasia} />
         <LangSwitch />
         <button
           type="button"

@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { parseSyllables } from '../lib/syllables';
 
 const SIZES = {
@@ -19,7 +20,7 @@ interface Props {
 export function PolishSyllables({ notation, size = 'lg', showDots = true, className = '' }: Props) {
   const words = parseSyllables(notation);
   return (
-    <p dir="ltr" lang="pl" className={`polish leading-snug text-slate-900 ${SIZES[size]} ${className}`}>
+    <p dir="ltr" lang={C.htmlLang} className={`polish leading-snug text-slate-900 ${SIZES[size]} ${className}`}>
       {words.map((word, wi) => (
         <span key={wi} className="inline-block whitespace-nowrap">
           {word.map((syl, si) => (

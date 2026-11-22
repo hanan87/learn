@@ -1,3 +1,6 @@
+import { COURSE } from '../lib/course';
+import { CNR_CONTRAST_GROUPS } from './cnr/pairs';
+
 /**
  * Minimal pairs for the Sound Lab: two real words that differ in a single sound
  * that Hebrew speakers tend to merge.
@@ -29,7 +32,7 @@ export interface ContrastGroup {
   pairs: MinimalPair[];
 }
 
-export const CONTRAST_GROUPS: ContrastGroup[] = [
+const PL_CONTRAST_GROUPS: ContrastGroup[] = [
   {
     id: 'sz-s',
     title: 'sz מול ś',
@@ -195,3 +198,6 @@ export const CONTRAST_GROUPS: ContrastGroup[] = [
     ],
   },
 ];
+
+/** Sound Lab groups of the active course. */
+export const CONTRAST_GROUPS: ContrastGroup[] = COURSE === 'cnr' ? CNR_CONTRAST_GROUPS : PL_CONTRAST_GROUPS;

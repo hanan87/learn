@@ -8,7 +8,7 @@
  * Output is a best-effort suggestion; the add-word form lets the learner edit it.
  */
 
-import { SOUND_INFO, type SoundKey } from '../data/sounds';
+import { PL_SOUND_INFO as SOUND_INFO, type PlSoundKey, type SoundKey } from '../data/sounds';
 
 const VOWELS = new Set(['a', 'ą', 'e', 'ę', 'i', 'o', 'ó', 'u', 'y']);
 const DIGRAPHS = ['dź', 'dż', 'dz', 'ch', 'cz', 'rz', 'sz'];
@@ -480,7 +480,7 @@ export function autoBackchain(text: string): [string, string, string] {
 /** Articulation tip assembled from the sounds in the text, plus stress and devoicing notes. */
 export function autoTip(text: string, lang: 'he' | 'en' = 'he'): string {
   const sounds = detectSounds(text);
-  const parts = sounds.slice(0, 3).map((s) => (lang === 'he' ? SOUND_INFO[s].tip : SOUND_INFO[s].tipEn));
+  const parts = sounds.slice(0, 3).map((s) => (lang === 'he' ? SOUND_INFO[s as PlSoundKey].tip : SOUND_INFO[s as PlSoundKey].tipEn));
   const notation = toSyllableNotation(text);
   const stressed = [...notation.matchAll(/\[([^\]]+)\]/g)].map((m) => m[1]);
   if (stressed.length) parts.push(lang === 'he' ? `ההטעמה על: ${stressed.join(', ')}.` : `Stress on: ${stressed.join(', ')}.`);

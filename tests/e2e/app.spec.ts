@@ -5,7 +5,7 @@ import { expectNoErrors, openApp, progress, runLesson } from './helpers';
 test.describe('first run, language and theme', () => {
   test('welcome screen → Hebrew RTL, switch to English LTR, choice persists', async ({ page }) => {
     const errors = await openApp(page);
-    await page.getByRole('button', { name: /פולנית לדוברי עברית/ }).click();
+    await page.getByRole('button', { name: /לדוברי עברית/ }).click();
     // Step 2 of the welcome screen: speaker gender and name (optional).
     await expect(page.getByText('נעים להכיר!')).toBeVisible();
     await page.getByRole('button', { name: 'בואו נתחיל' }).click();

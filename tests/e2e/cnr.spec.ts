@@ -1,0 +1,124 @@
+import { expect, test, type Page } from '@playwright/test';
+import { expectNoErrors, openApp, progress, runLesson } from './helpers';
+
+/**
+ * The Montenegrin course: chosen on the welcome screen or in Settings, its own units, lessons,
+ * keyboard, Sound Lab, roleplay and Croatian-language speech recognition – and Polish progress
+ * stays untouched while switching back and forth.
+ */
+
+/** Mock recognizer that records the language it was started with and "hears" window.__sttText. */
+async function mockRecognition(page: Page, heard: string) {
+  await page.addInitScript((text) => {
+    type Handler = ((e?: unknown) => void) | null;
+    const w = window as unknown as Record<string, unknown> & { __sttText: string; __sttLang: string };
+    w.__sttText = text;
+    class MockRecognition {
+      lang = '';
+      continuous = false;
+      interimResults = false;
+      maxAlternatives = 1;
+      onresult: Handler = null;
+      onerror: Handler = null;
+      onend: Handler = null;
+      onsoundstart: Handler = null;
+      onspeechstart: Handler = null;
+      private live = false;
+      start() {
+        this.live = true;
+        w.__sttLang = this.lang;
+        window.setTimeout(() => {
+          this.onsoundstart?.();
+          const alt = Object.assign([{ transcript: w.__sttText, confidence: 0.9 }], { isFinal: true });
+          this.onresult?.({ resultIndex: 0, results: [alt] });
+          this.stop();
+        }, 1000);
+      }
+      stop() {
+        if (!this.live) return;
+        this.live = false;
+        window.setTimeout(() => this.onend?.(), 10);
+      }
+      abort() {
+        this.stop();
+      }
+    }
+    w.SpeechRecognition = MockRecognition;
+    w.webkitSpeechRecognition = MockRecognition;
+  }, heard);
+}
+
+test.describe('Montenegrin course', () => {
+  test('welcome → Montenegrin + female; the map, profile and course persist', async ({ page }) => {
+    const errors = await openApp(page);
+    await page.getByRole('button', { name: /For English speakers/ }).click();
+    await page.getByTestId('course-cnr').click();
+    await expect(page.getByText('Drago mi je!')).toBeVisible();
+    await expect(page.getByText('I speak Montenegrin as:')).toBeVisible();
+    await page.getByRole('radio', { name: /^Female/ }).click();
+    await page.getByRole('button', { name: "Let's start" }).click();
+
+    await expect(page.getByText('The Sounds of Montenegrin')).toBeVisible();
+    await expect(page.getByTestId('course-pill-cnr')).toHaveAttribute('aria-pressed', 'true');
+    expect(await page.evaluate(() => localStorage.getItem('polish-learn:course'))).toBe('cnr');
+    expect((await progress(page, 'cnr')).profile.gender).toBe('f');
+    await expect(page).toHaveTitle('Montenegrin from Zero');
+
+    // Her gendered form, with the man's form in the note.
+    await page.goto('/#/map/item/m4-12');
+    await expect(page.getByRole('dialog').getByText('Htjela').first()).toBeVisible();
+    await expect(page.getByTestId('gender-note')).toContainText('Htio bih kafu');
+    expectNoErrors(errors);
+  });
+
+  test('a full lesson runs, with the Montenegrin keyboard and writing check', async ({ page }) => {
+    const errors = await openApp(page, { lang: 'en', course: 'cnr', hash: '#/lesson/m1-L1' });
+    await expect(page.getByText('čaj').first()).toBeVisible();
+    let keyboardChecked = false;
+    const checkKeyboard = async () => {
+      const kb = page.getByLabel('Montenegrin helper keyboard');
+      for (const key of ['č', 'ć', 'đ', 'š', 'ž', 'dž']) await expect(kb.getByRole('button', { name: key, exact: true })).toBeVisible();
+      await expect(kb.getByRole('button', { name: 'ł', exact: true })).toHaveCount(0);
+      keyboardChecked = true;
+    };
+    expect(await runLesson(page, 60, checkKeyboard)).toBe(true);
+    expect(keyboardChecked).toBe(true);
+    expect((await progress(page, 'cnr')).lessons['m1-L1']).toBeTruthy();
+    expect(await progress(page, 'pl')).toBeNull();
+    expectNoErrors(errors);
+  });
+
+  test('Sound Lab, roleplay and speech recognition use the course', async ({ page }) => {
+    await mockRecognition(page, 'čaj');
+    const errors = await openApp(page, { lang: 'en', course: 'cnr', hash: '#/lab' });
+    await expect(page.getByText('č · dž').first()).toBeVisible();
+    await expect(page.getByText('šuma').first()).toBeVisible();
+
+    await page.goto('/#/talk');
+    await expect(page.getByText('A café in Kotor', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('stories')).toHaveCount(0);
+
+    // Recognition runs in Croatian (same Latin Ijekavian spelling) and a correct "čaj" passes.
+    await page.goto('/#/map/item/m1-01');
+    await page.getByRole('button', { name: 'Start recording' }).click();
+    await expect(page.getByText('Heard:')).toBeVisible({ timeout: 30_000 });
+    expect(await page.evaluate(() => (window as unknown as { __sttLang: string }).__sttLang)).toBe('hr-HR');
+    await expect(page.getByTestId('unrecognized')).toHaveCount(0);
+    expectNoErrors(errors);
+  });
+
+  test('switching courses keeps each course’s progress', async ({ page }) => {
+    const errors = await openApp(page, { lang: 'en', progress: { version: 2, xp: 77, items: {}, lessons: {}, dialogues: {} } });
+    await expect(page.getByText('Secrets of Polish Pronunciation')).toBeVisible();
+    await page.getByTestId('course-pill-cnr').click();
+    await expect(page.getByText('The Sounds of Montenegrin')).toBeVisible();
+    expect((await progress(page, 'pl')).xp).toBe(77);
+
+    await page.goto('/#/map/settings');
+    await expect(page.getByTestId('course-settings')).toBeVisible();
+    await page.getByTestId('course-pl').click();
+    await expect(page.getByText('Secrets of Polish Pronunciation')).toBeVisible();
+    expect((await progress(page, 'pl')).xp).toBe(77);
+    expectNoErrors(errors);
+  });
+});

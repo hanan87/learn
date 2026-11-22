@@ -6,7 +6,7 @@ import { itemText } from '../../data/types';
 import { Phonetic } from '../../components/Phonetic';
 import { PolishSyllables } from '../../components/PolishSyllables';
 import { useLang } from '../../i18n/LangContext';
-import { toEnglishPhonetic } from '../../lib/polishPhonetics';
+import { toEnglishPhonetic } from '../../lib/phonetics';
 import { RATE_SLOW, speak } from '../../lib/tts';
 import { useProgress } from '../../state/ProgressContext';
 import type { LessonStep } from '../buildLesson';

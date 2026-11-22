@@ -3,14 +3,15 @@
  *
  * public/audio/manifest.json maps "<voice>|<speed>|<text>" to an mp3 file. speak() asks here first;
  * when a clip exists it is played with an <audio> element, otherwise the device voice is used.
- *   voice: 'pl-f' (Zofia, the teacher), 'pl-m' (Marek), 'he' (Hila), 'en' (Jenny)
+ *   voice: 'pl-f' (Zofia, the teacher), 'pl-m' (Marek), 'cnr-f' / 'cnr-m' (Montenegrin course: Bosnian
+ *          Vesna / Goran), 'he' (Hila), 'en' (Jenny)
  *   speed: 'n' normal, 's' slow (synthesized slowly – not a sped-down copy)
  * The standalone single-file build has no audio folder, so it streams from the live site.
  */
 
 import { isStandaloneBuild } from './env';
 
-export type ClipVoice = 'pl-f' | 'pl-m' | 'he' | 'en';
+export type ClipVoice = 'pl-f' | 'pl-m' | 'cnr-f' | 'cnr-m' | 'he' | 'en';
 export type ClipSpeed = 'n' | 's';
 
 export interface ClipManifest {
@@ -19,7 +20,7 @@ export interface ClipManifest {
   clips: Record<string, string>;
 }
 
-const LIVE_AUDIO = 'https://hanan87.github.io/polish-learn-app/audio/';
+const LIVE_AUDIO = 'https://hanan87.github.io/learn/audio/';
 export const AUDIO_BASE = isStandaloneBuild ? LIVE_AUDIO : `${import.meta.env?.BASE_URL ?? '/'}audio/`;
 const PREF_KEY = 'polish-learn:natural-voice';
 
@@ -86,12 +87,13 @@ export function setNaturalVoiceEnabled(on: boolean): void {
 }
 
 /**
- * Best clip for a phrase. Preference order: requested voice → the other Polish voice (Polish only).
+ * Best clip for a phrase. Preference order: requested voice → the other voice of the same course.
  * Returns the full URL or null.
  */
 export function findClip(text: string, speed: ClipSpeed, voice: ClipVoice = 'pl-f'): string | null {
   if (!manifest || !naturalVoiceEnabled()) return null;
-  const order: ClipVoice[] = voice === 'pl-m' ? ['pl-m', 'pl-f'] : voice === 'pl-f' ? ['pl-f', 'pl-m'] : [voice];
+  const pair: Partial<Record<ClipVoice, ClipVoice>> = { 'pl-f': 'pl-m', 'pl-m': 'pl-f', 'cnr-f': 'cnr-m', 'cnr-m': 'cnr-f' };
+  const order: ClipVoice[] = pair[voice] ? [voice, pair[voice]!] : [voice];
   // Single words are also recorded without punctuation ("mlekiem." → "mlekiem").
   const bare = text.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
   for (const t of bare && bare !== text.trim() && !/\s/.test(bare) ? [text, bare] : [text]) {

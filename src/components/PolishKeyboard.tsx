@@ -3,8 +3,10 @@ import { ArrowBigUp, Delete, Space } from 'lucide-react';
 import { useLang } from '../i18n/LangContext';
 import { haptic } from '../lib/haptics';
 
-const LETTERS = ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'];
-const DIGRAPHS = ['sz', 'cz', 'rz', 'dz', 'dź', 'dż', 'ch'];
+import { COURSE, COURSE_INFO as C } from '../lib/course';
+
+const LETTERS = COURSE === 'cnr' ? ['č', 'ć', 'đ', 'š', 'ž'] : ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'];
+const DIGRAPHS = COURSE === 'cnr' ? ['dž', 'lj', 'nj'] : ['sz', 'cz', 'rz', 'dz', 'dź', 'dż', 'ch'];
 
 interface Props {
   inputRef: RefObject<HTMLInputElement | null>;
@@ -13,7 +15,7 @@ interface Props {
 }
 
 /**
- * Touch-friendly helper keyboard with Polish special letters and common digraphs.
+ * Touch-friendly helper keyboard with the course's special letters and common digraphs.
  * Inserts at the caret position of the linked input. Buttons use onPointerDown + preventDefault
  * so the input keeps focus (and the caret) on both desktop and mobile.
  */
@@ -83,15 +85,15 @@ export function PolishKeyboard({ inputRef, value, onChange }: Props) {
   });
 
   return (
-    <div className="space-y-2 rounded-2xl bg-slate-200/70 p-2" dir="ltr" aria-label={tr('מקלדת עזר פולנית', 'Polish helper keyboard')}>
-      <div className="grid grid-cols-9 gap-1.5">
+    <div className="space-y-2 rounded-2xl bg-slate-200/70 p-2" dir="ltr" aria-label={tr(`מקלדת עזר ${C.name.he}`, `${C.name.en} helper keyboard`)}>
+      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${LETTERS.length}, minmax(0, 1fr))` }}>
         {LETTERS.map((l) => (
           <button key={l} type="button" className={keyCls} {...press(() => insert(l))}>
             {shift ? l.toLocaleUpperCase('pl-PL') : l}
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-10 gap-1.5">
+      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${DIGRAPHS.length + 3}, minmax(0, 1fr))` }}>
         <button type="button" aria-label={tr('אות גדולה', 'Shift')} className={`${keyCls} col-span-1 ${shift ? '!bg-rose-600 !text-white' : ''}`} {...press(() => setShift((s) => !s))}>
           <ArrowBigUp className="size-5" />
         </button>

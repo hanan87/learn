@@ -2,7 +2,9 @@
  * Synthetic transcripts for the recording simulation panel and for spelling distractors.
  * Substitutions mirror typical mistakes of Hebrew and English speakers.
  */
-const MISTAKES: [RegExp, string][] = [
+import { COURSE } from './course';
+
+const PL_MISTAKES: [RegExp, string][] = [
   [/ł/, 'l'],
   [/sz/, 's'],
   [/ś/, 'sz'],
@@ -15,6 +17,20 @@ const MISTAKES: [RegExp, string][] = [
   [/w/, 'ł'],
   [/y/, 'i'],
 ];
+
+const CNR_MISTAKES: [RegExp, string][] = [
+  [/č/, 'ć'],
+  [/ć/, 'č'],
+  [/š/, 's'],
+  [/ž/, 'z'],
+  [/đ/, 'dž'],
+  [/dž/, 'đ'],
+  [/lj/, 'l'],
+  [/nj/, 'n'],
+  [/ije/, 'e'],
+  [/h/, 'k'],
+];
+const MISTAKES = COURSE === 'cnr' ? CNR_MISTAKES : PL_MISTAKES;
 
 export function mispronounce(target: string): string {
   let out = target.toLocaleLowerCase('pl-PL');

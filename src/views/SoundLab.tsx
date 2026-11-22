@@ -1,3 +1,4 @@
+import { COURSE_INFO as C } from '../lib/course';
 import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Check, Ear, Headphones, HelpCircle, Mic, Play, Shuffle, Volume2, X } from 'lucide-react';
 import { CONTRAST_GROUPS, type ContrastGroup, type MinimalPair, type PairWord } from '../data/minimalPairs';
@@ -7,7 +8,7 @@ import { Phonetic } from '../components/Phonetic';
 import { PolishSyllables } from '../components/PolishSyllables';
 import { PronunciationPractice } from '../components/PronunciationPractice';
 import { useLang } from '../i18n/LangContext';
-import { toEnglishPhonetic } from '../lib/polishPhonetics';
+import { toEnglishPhonetic } from '../lib/phonetics';
 import { pick } from '../lib/random';
 import { RATE_NORMAL, RATE_SLOW, speak, speakSequence, stopSpeaking } from '../lib/tts';
 import { XP, summarizeSounds, useProgress } from '../state/ProgressContext';
@@ -235,7 +236,7 @@ function EarTraining({ group }: { group: ContrastGroup }) {
               onClick={() => choose(side)}
               className={`rounded-2xl p-4 ring-2 transition active:scale-95 ${isRight ? 'bg-emerald-50 ring-emerald-500' : isWrongPick ? 'animate-shake bg-rose-50 ring-rose-400' : 'bg-white ring-slate-200'}`}
             >
-              <span dir="ltr" lang="pl" className="polish block text-2xl font-bold">
+              <span dir="ltr" lang={C.htmlLang} className="polish block text-2xl font-bold">
                 {w.polish}
               </span>
               <span className="block text-xs text-slate-500">{meaning(w, lang)}</span>
