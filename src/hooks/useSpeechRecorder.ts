@@ -67,6 +67,8 @@ interface Options {
 
 const SPEECH_RMS = 0.025;
 const SILENCE_AFTER_SPEECH_MS = 1500;
+/** How long stop() waits for the recognizer's final result before aborting it (Android is slow). */
+const STOP_GRACE_MS = 2500;
 const NO_VOICE_TIMEOUT_MS = 8000;
 const ZERO_SIGNAL_MS = 1500;
 // Android Chrome beeps on every recognition start, so restart at most once there.
@@ -82,6 +84,13 @@ interface Attempt {
   recogDone: boolean;
   segments: string[];
   lastAlternatives: string[];
+  /**
+   * Latest interim (not yet final) text of the running recognition session and its alternatives.
+   * Android Chrome often ends a session – or is aborted after stop() – without ever sending a final
+   * result, although it showed the words live; that text is then used as the transcript.
+   */
+  interimText: string;
+  interimAlternatives: string[];
   sttError: string | null;
   sttSound: boolean;
   restarts: number;
@@ -105,6 +114,8 @@ const newAttempt = (mode: CaptureMode): Attempt => ({
   recogDone: mode === 'record',
   segments: [],
   lastAlternatives: [],
+  interimText: '',
+  interimAlternatives: [],
   sttError: null,
   sttSound: false,
   restarts: 0,
@@ -171,12 +182,26 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
     analyserRef.current = null;
   };
 
-  /** Candidate transcripts: all final segments joined, with each alternative of the last segment. */
+  /** Keep what the recognizer showed live when a session ends without a final result. */
+  const keepInterim = (why: string) => {
+    const a = attemptRef.current;
+    if (!a.interimText) return;
+    a.segments.push(a.interimText);
+    a.lastAlternatives = a.interimAlternatives.length ? a.interimAlternatives : [a.interimText];
+    micLog('stt-interim-kept', `${why}: ${a.lastAlternatives.join(' | ')}`);
+    a.interimText = '';
+    a.interimAlternatives = [];
+  };
+
+  /**
+   * Candidate transcripts: all segments joined, with each alternative of the last segment – and the
+   * last segment on its own, so a learner who restarts the phrase is judged on the final try.
+   */
   const bestTranscript = () => {
     const a = attemptRef.current;
     const head = a.segments.slice(0, -1).join(' ');
     const lasts = a.lastAlternatives.length ? a.lastAlternatives : a.segments.slice(-1);
-    const candidates = lasts.map((l) => `${head} ${l}`.trim()).filter(Boolean);
+    const candidates = [...lasts.map((l) => `${head} ${l}`.trim()), ...(head ? lasts : [])].filter(Boolean);
     if (!candidates.length) return '';
     const t = normalize(targetRef.current);
     return candidates.reduce((best, c) => (similarity(t, normalize(c)) > similarity(t, normalize(best)) ? c : best));
@@ -240,8 +265,9 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
         micLog('stt-abort', 'no onend after stop');
         a.recogDone = true;
         killRecognizer(recog);
+        keepInterim('abort');
         finalize(session);
-      }, 1500);
+      }, STOP_GRACE_MS);
     } else {
       a.recogDone = true;
     }
@@ -302,6 +328,8 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
       if (session !== sessionRef.current) return;
       a.sttSound = true;
       let interimText = '';
+      let interimAlts: string[] = [];
+      let interimParts = 0;
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const res = e.results[i];
         if (res.isFinal) {
@@ -312,8 +340,15 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
           micLog('stt-final', alts.join(' | '));
         } else {
           interimText += res[0].transcript;
+          interimParts++;
+          interimAlts = [];
+          for (let k = 0; k < res.length; k++) interimAlts.push(res[k].transcript.trim());
         }
       }
+      // Interim text is replaced by every new event; a final result consumes it. The alternatives
+      // only describe the whole interim text when it is a single result.
+      a.interimText = interimText.trim();
+      a.interimAlternatives = a.interimText ? (interimParts === 1 ? interimAlts.filter(Boolean) : [a.interimText]) : [];
       setInterim((a.segments.join(' ') + ' ' + interimText).trim());
       // Stop early only when the phrase is (nearly) complete – not on the first partial result.
       const sim = similarity(normalize(targetRef.current), normalize(bestTranscript()));
@@ -332,7 +367,14 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
     };
     recog.onend = () => {
       if (session !== sessionRef.current) return;
+      keepInterim('end');
       const fatal = a.sttError && (FATAL_STT.has(a.sttError) || a.sttError === 'audio-capture');
+      // The phrase is already there: finish instead of listening again (and on Android, beeping again).
+      if (statusRef.current === 'recording' && a.segments.length && similarity(normalize(targetRef.current), normalize(bestTranscript())) >= 0.75) {
+        a.recogDone = true;
+        stop('phrase-complete');
+        return;
+      }
       if (statusRef.current === 'recording') {
         // In speech-only mode a finished utterance ends the attempt.
         if (a.mode === 'stt' && a.segments.length) {
