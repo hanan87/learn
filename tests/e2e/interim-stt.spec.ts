@@ -64,7 +64,7 @@ for (const behaviour of ['end', 'hang'] as const) {
       const stop = page.getByRole('button', { name: 'Stop recording', exact: true });
       if (await stop.isVisible()) await stop.click();
     }
-    await expect(page.getByText('Heard:')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('heard-line')).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId('unrecognized')).toHaveCount(0);
     await expect(page.getByText('Excellent! Clear pronunciation')).toBeVisible();
     expectNoErrors(errors);
@@ -78,7 +78,7 @@ test('"How do I say…?" scores interim-only speech too', async ({ page }) => {
   await page.getByTestId('say-submit').click();
   const result = page.getByTestId('say-result');
   await result.getByRole('button', { name: 'Start recording' }).click();
-  await expect(result.getByText('Heard:')).toBeVisible({ timeout: 30_000 });
+  await expect(result.getByTestId('heard-line')).toBeVisible({ timeout: 30_000 });
   await expect(result.getByTestId('unrecognized')).toHaveCount(0);
   await expect(result.getByText('Excellent! Clear pronunciation')).toBeVisible();
   expectNoErrors(errors);

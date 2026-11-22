@@ -100,7 +100,7 @@ test.describe('lesson pronunciation check', () => {
     // Gibberish that is recognized as other words is scored low and shows the words in red.
     await setHeard(page, 'bla bla');
     await page.getByRole('button', { name: /Start recording|Try again/ }).first().click();
-    await expect(page.getByText('Heard:')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('heard-line')).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText('Excellent! Clear pronunciation')).toHaveCount(0);
     expectNoErrors(errors);
   });

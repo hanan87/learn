@@ -65,7 +65,7 @@ async function recordOnce(page: Page, n: number) {
   await expect(page.getByText('We hear you')).toBeVisible({ timeout: 10_000 });
   await expect.poll(async () => Number(await meter.getAttribute('aria-valuenow')), { message: `level on recording ${n}` }).toBeGreaterThan(0);
   // A valid score from the (mock) recognizer.
-  await expect(page.getByText('Heard:')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId('heard-line')).toBeVisible({ timeout: 20_000 });
   await expect(page.getByText('Excellent! Clear pronunciation')).toBeVisible();
   await expect(page.getByText('100%').first()).toBeVisible();
   await expect(page.getByText('No sound was captured.')).toHaveCount(0);

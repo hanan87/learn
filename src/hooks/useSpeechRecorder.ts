@@ -14,7 +14,7 @@ import {
 import { getCapturePreference, learnMode, resolveCaptureMode, type CaptureMode } from '../lib/captureMode';
 import { getRecognizerCtor, isAndroid, ttsSupported, type Recognizer } from '../lib/env';
 import { micLog, sttSession } from '../lib/micLog';
-import { normalize, similarity } from '../lib/text';
+import { scorePronunciation } from '../lib/text';
 import { isSpeaking, stopSpeaking } from '../lib/tts';
 import { haptic } from '../lib/haptics';
 import { useMic } from '../state/MicContext';
@@ -71,8 +71,9 @@ const SILENCE_AFTER_SPEECH_MS = 1500;
 const STOP_GRACE_MS = 2500;
 const NO_VOICE_TIMEOUT_MS = 8000;
 const ZERO_SIGNAL_MS = 1500;
-// Android Chrome beeps on every recognition start, so restart at most once there.
-const MAX_RECOG_RESTARTS = isAndroid ? 1 : 3;
+// Android Chrome beeps on every recognition start, so restart only twice there (a long sentence with
+// pauses still fits; a learner who is done speaking stops the recording by silence anyway).
+const MAX_RECOG_RESTARTS = isAndroid ? 2 : 3;
 const FATAL_STT = new Set(['not-allowed', 'service-not-allowed', 'language-not-supported', 'network']);
 
 interface Attempt {
@@ -194,17 +195,24 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
   };
 
   /**
-   * Candidate transcripts: all segments joined, with each alternative of the last segment – and the
-   * last segment on its own, so a learner who restarts the phrase is judged on the final try.
+   * The transcript: every segment heard, in order (nothing is dropped, so the learner sees all they
+   * said), choosing among the recognizer's alternatives for the last segment the one that scores best.
+   * A false start before the phrase only costs a little in the score (lib/pronScore).
    */
   const bestTranscript = () => {
     const a = attemptRef.current;
     const head = a.segments.slice(0, -1).join(' ');
     const lasts = a.lastAlternatives.length ? a.lastAlternatives : a.segments.slice(-1);
-    const candidates = [...lasts.map((l) => `${head} ${l}`.trim()), ...(head ? lasts : [])].filter(Boolean);
+    const candidates = lasts.map((l) => `${head} ${l}`.trim()).filter(Boolean);
     if (!candidates.length) return '';
-    const t = normalize(targetRef.current);
-    return candidates.reduce((best, c) => (similarity(t, normalize(c)) > similarity(t, normalize(best)) ? c : best));
+    const score = (c: string) => scorePronunciation(targetRef.current, c).score;
+    return candidates.reduce((best, c) => (score(c) > score(best) ? c : best));
+  };
+
+  /** The whole phrase has been said (well enough to stop listening): the last word is there too. */
+  const phraseComplete = () => {
+    const r = scorePronunciation(targetRef.current, bestTranscript());
+    return r.score >= 80 && !!r.words[r.words.length - 1]?.matched;
   };
 
   const finalize = (session: number) => {
@@ -214,7 +222,10 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
     teardown();
     const transcript = bestTranscript();
     const peak = Math.max(a.peak, a.decodedPeak ?? 0);
-    const heard = a.heard || a.sttSound || (a.decodedPeak ?? 0) > SPEECH_RMS * 0.8;
+    // The recognizer's "sound" event can fire on a silent input; a recording that is digitally silent
+    // (no background noise at all) overrules it.
+    const recordedSilence = a.mode !== 'stt' && !!a.audioUrl && !a.audioLost && a.decodedPeak !== null && a.decodedPeak < 0.002;
+    const heard = a.heard || (a.sttSound && !recordedSilence) || (a.decodedPeak ?? 0) > SPEECH_RMS * 0.8;
     const res: RecorderResult = {
       audioUrl: a.audioUrl,
       transcript,
@@ -351,8 +362,7 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
       a.interimAlternatives = a.interimText ? (interimParts === 1 ? interimAlts.filter(Boolean) : [a.interimText]) : [];
       setInterim((a.segments.join(' ') + ' ' + interimText).trim());
       // Stop early only when the phrase is (nearly) complete – not on the first partial result.
-      const sim = similarity(normalize(targetRef.current), normalize(bestTranscript()));
-      if (a.segments.length && sim >= 0.75 && statusRef.current === 'recording') later(() => stop('phrase-complete'), 600);
+      if (a.segments.length && statusRef.current === 'recording' && phraseComplete()) later(() => stop('phrase-complete'), 600);
     };
     recog.onerror = (e) => {
       if (session !== sessionRef.current) return;
@@ -370,7 +380,7 @@ export function useSpeechRecorder({ target, maxDurationMs }: Options) {
       keepInterim('end');
       const fatal = a.sttError && (FATAL_STT.has(a.sttError) || a.sttError === 'audio-capture');
       // The phrase is already there: finish instead of listening again (and on Android, beeping again).
-      if (statusRef.current === 'recording' && a.segments.length && similarity(normalize(targetRef.current), normalize(bestTranscript())) >= 0.75) {
+      if (statusRef.current === 'recording' && a.segments.length && phraseComplete()) {
         a.recogDone = true;
         stop('phrase-complete');
         return;

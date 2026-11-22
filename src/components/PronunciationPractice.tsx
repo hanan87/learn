@@ -6,6 +6,8 @@ import type { CaptureMode } from '../lib/captureMode';
 import { useLang } from '../i18n/LangContext';
 import { isIOS, speechRecognitionSupported } from '../lib/env';
 import { normalize, scorePronunciation, similarity, type PronunciationResult } from '../lib/text';
+import { detectSounds } from '../lib/phonetics';
+import { SOUND_INFO } from '../data/sounds';
 import { judgeAttempt } from '../lib/handsFreeJudge';
 import { speak, stopSpeaking } from '../lib/tts';
 import { MIC_STATUS_MESSAGES, RETRYABLE, useMic } from '../state/MicContext';
@@ -439,56 +441,139 @@ export function PronunciationPractice({ target, itemId, articulationTip, backcha
   );
 }
 
+/** What to fix: the first wrong sounds, with what was heard instead and the course tip for that sound. */
+function fixHints(scoring: PronunciationResult): { text: string; heard: string; tip?: { he: string; en: string } }[] {
+  const out: { text: string; heard: string; tip?: { he: string; en: string } }[] = [];
+  const seen = new Set<string>();
+  for (const w of scoring.words) {
+    if (!w.heard) continue;
+    for (const m of w.sounds ?? []) {
+      if (m.ok || seen.has(m.text)) continue;
+      seen.add(m.text);
+      const key = detectSounds(m.text)[0];
+      const info = key ? SOUND_INFO[key] : undefined;
+      out.push({ text: m.text, heard: m.heard ?? '', tip: info ? { he: info.tip, en: info.tipEn } : undefined });
+      if (out.length >= 2) return out;
+    }
+  }
+  return out;
+}
+
 function ScoreView({ scoring, selfRated }: { scoring: PronunciationResult; selfRated: boolean }) {
-  const { tr } = useLang();
+  const { tr, lang } = useLang();
   const { score } = scoring;
   const color = score >= PASS_SCORE ? 'text-emerald-600' : score >= 60 ? 'text-amber-600' : 'text-rose-600';
   const ring = score >= PASS_SCORE ? 'stroke-emerald-500' : score >= 60 ? 'stroke-amber-500' : 'stroke-rose-500';
   const circumference = 2 * Math.PI * 26;
+  const missing = scoring.words.filter((w) => !w.heard && !w.matched).map((w) => w.word);
+  const hints = selfRated ? [] : fixHints(scoring);
+  const allRight = scoring.words.every((w) => w.matched && (w.sounds ?? []).every((m) => m.ok));
+  const headline = selfRated
+    ? tr('הערכה עצמית', 'Self-assessment')
+    : score >= PASS_SCORE && allRight
+      ? tr('מצוין! הגייה ברורה', 'Excellent! Clear pronunciation')
+      : score >= PASS_SCORE
+        ? tr('טוב מאוד – נשאר לדייק צליל', 'Very good – one sound to polish')
+      : missing.length && scoring.transcript
+        ? tr(`חסר: ${missing.join(' ')}`, `Missing: ${missing.join(' ')}`)
+        : score >= 60
+          ? tr('קרוב – עוד קצת דיוק', 'Close – a bit more precision')
+          : tr('בואו נפרק ונתרגל', "Let's break it down and practise");
   return (
-    <div className="flex items-center gap-4">
-      <div className="relative size-16 shrink-0">
-        <svg viewBox="0 0 60 60" className="size-16 -rotate-90">
-          <circle cx="30" cy="30" r="26" className="fill-none stroke-slate-100" strokeWidth="6" />
-          <circle
-            cx="30"
-            cy="30"
-            r="26"
-            className={`fill-none ${ring} transition-all duration-700`}
-            strokeWidth="6"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={circumference * (1 - score / 100)}
-          />
-        </svg>
-        <span className={`absolute inset-0 grid place-items-center text-base font-bold ${color}`}>{score}%</span>
+    <div className="space-y-3" data-testid="score-view">
+      <div className="flex items-center gap-4">
+        <div className="relative size-16 shrink-0">
+          <svg viewBox="0 0 60 60" className="size-16 -rotate-90">
+            <circle cx="30" cy="30" r="26" className="fill-none stroke-slate-100" strokeWidth="6" />
+            <circle
+              cx="30"
+              cy="30"
+              r="26"
+              className={`fill-none ${ring} transition-all duration-700`}
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference * (1 - score / 100)}
+            />
+          </svg>
+          <span className={`absolute inset-0 grid place-items-center text-base font-bold ${color}`}>{score}%</span>
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className={`text-sm font-bold ${color}`}>{headline}</p>
+          {!selfRated && (
+            <p className="text-xs break-words text-slate-500" data-testid="heard-line">
+              {tr('זוהה:', 'Heard:')}{' '}
+              <span dir="ltr" lang={C.htmlLang} className="polish">
+                {scoring.transcript || '—'}
+              </span>
+            </p>
+          )}
+        </div>
       </div>
-      <div className="min-w-0 flex-1 space-y-1">
-        <p className={`text-sm font-bold ${color}`}>
-          {selfRated
-            ? tr('הערכה עצמית', 'Self-assessment')
-            : score >= PASS_SCORE
-              ? tr('מצוין! הגייה ברורה', 'Excellent! Clear pronunciation')
-              : score >= 60
-                ? tr('קרוב – עוד קצת דיוק', 'Close – a bit more precision')
-                : tr('בואו נפרק ונתרגל', "Let's break it down and practise")}
-        </p>
-        <p dir="ltr" lang={C.htmlLang} className="polish flex flex-wrap gap-x-2 text-xl font-semibold">
-          {scoring.words.map((w, i) => (
-            <span key={i} className={w.matched ? 'text-emerald-600' : 'text-rose-600 underline decoration-rose-300 decoration-wavy'}>
-              {w.word}
+
+      {/* Word by word: wrong sounds in red, with the word's own score and what was heard. */}
+      <ul dir="ltr" className="flex flex-wrap gap-x-3 gap-y-2" data-testid="word-scores">
+        {scoring.words.map((w, i) => (
+          <li key={i} className="flex flex-col items-center">
+            <span lang={C.htmlLang} className="polish text-xl font-semibold">
+              {w.sounds?.length
+                ? w.sounds.map((m, k) => (
+                    <span key={k} className={m.ok ? (w.matched ? 'text-emerald-600' : 'text-slate-800') : 'text-rose-600 underline decoration-rose-400 decoration-wavy decoration-2'}>
+                      {m.text}
+                    </span>
+                  ))
+                : <span className={w.matched ? 'text-emerald-600' : 'text-rose-600 underline decoration-rose-300 decoration-wavy'}>{w.word}</span>}
             </span>
+            {!selfRated && (
+              <span className={`text-[11px] font-semibold ${w.matched ? 'text-emerald-700' : 'text-rose-700'}`} dir="auto">
+                {w.heard ? `${w.score ?? Math.round(w.similarity * 100)}%` : tr('לא נאמר', 'not said')}
+                {w.heard && !w.matched && cleanCompare(w.heard) !== cleanCompare(w.word) && (
+                  <span className="font-normal text-slate-500">
+                    {' · '}
+                    {tr('נשמע:', 'heard:')}{' '}
+                    <span dir="ltr" lang={C.htmlLang} className="polish">
+                      {w.heard}
+                    </span>
+                  </span>
+                )}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {!selfRated && scoring.extra?.length ? (
+        <p className="text-xs text-slate-500">
+          {tr('מילים נוספות שנשמעו:', 'Extra words heard:')}{' '}
+          <span dir="ltr" lang={C.htmlLang} className="polish">
+            {scoring.extra.join(' ')}
+          </span>
+        </p>
+      ) : null}
+
+      {hints.length > 0 && (
+        <ul className="space-y-1.5 rounded-xl bg-rose-50 p-3 text-sm text-rose-950 ring-1 ring-rose-200" data-testid="fix-hints">
+          {hints.map((h, k) => (
+            <li key={k}>
+              <span className="font-bold">
+                <span dir="ltr" lang={C.htmlLang} className="polish">
+                  {h.text}
+                </span>{' '}
+                {h.heard
+                  ? tr('נשמעה כמו', 'sounded like')
+                  : tr('לא נשמעה', 'was not heard')}{' '}
+                {h.heard && (
+                  <span dir="ltr" lang={C.htmlLang} className="polish">
+                    {h.heard}
+                  </span>
+                )}
+              </span>
+              {h.tip && <span className="block text-rose-900/80">{lang === 'he' ? h.tip.he : h.tip.en}</span>}
+            </li>
           ))}
-        </p>
-        {!selfRated && (
-          <p className="truncate text-xs text-slate-500">
-            {tr('זוהה:', 'Heard:')}{' '}
-            <span dir="ltr" lang={C.htmlLang} className="polish">
-              {scoring.transcript || '—'}
-            </span>
-          </p>
-        )}
-      </div>
+        </ul>
+      )}
     </div>
   );
 }
+
+const cleanCompare = (s: string) => s.toLocaleLowerCase().replace(/[^\p{L}\s]/gu, '').trim();

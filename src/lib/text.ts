@@ -1,6 +1,6 @@
 /**
- * Text comparison utilities: normalization, Levenshtein distance,
- * word-level pronunciation scoring and Polish diacritic diagnostics.
+ * Text comparison utilities: normalization, Levenshtein distance and diacritic diagnostics
+ * (the pronunciation score is in lib/pronScore).
  */
 
 import { COURSE } from './course';
@@ -56,61 +56,8 @@ export function similarity(a: string, b: string): number {
   return 1 - levenshtein(a, b) / max;
 }
 
-export interface WordResult {
-  word: string;
-  matched: boolean;
-  heard?: string;
-  similarity: number;
-}
-
-export interface PronunciationResult {
-  score: number;
-  transcript: string;
-  words: WordResult[];
-}
-
-const WORD_MATCH_THRESHOLD = 0.75;
-
-/**
- * Score a recognized transcript against the target phrase.
- * The overall score blends whole-string similarity with the share of target words
- * that found a close match in the transcript, so a single garbled word in a long
- * sentence is penalized but does not zero the score.
- */
-export function scorePronunciation(target: string, transcript: string): PronunciationResult {
-  const targetNorm = normalize(target);
-  const heardNorm = normalize(transcript);
-  const targetWords = targetNorm.split(' ').filter(Boolean);
-  const heardWords = heardNorm.split(' ').filter(Boolean);
-  const used = new Set<number>();
-
-  const displayWords = target.split(/\s+/).filter(Boolean);
-  const words: WordResult[] = targetWords.map((tw, idx) => {
-    let best = -1;
-    let bestSim = 0;
-    heardWords.forEach((hw, j) => {
-      if (used.has(j)) return;
-      const sim = similarity(tw, hw);
-      if (sim > bestSim) {
-        bestSim = sim;
-        best = j;
-      }
-    });
-    const matched = bestSim >= WORD_MATCH_THRESHOLD;
-    if (matched && best >= 0) used.add(best);
-    return {
-      word: displayWords[idx] ?? tw,
-      matched,
-      heard: best >= 0 ? heardWords[best] : undefined,
-      similarity: bestSim,
-    };
-  });
-
-  const charScore = similarity(targetNorm, heardNorm);
-  const wordScore = words.length ? words.filter((w) => w.matched).length / words.length : 0;
-  const score = Math.round((charScore * 0.6 + wordScore * 0.4) * 100);
-  return { score: heardNorm ? score : 0, transcript, words };
-}
+/** Pronunciation scoring lives in lib/pronScore (sound by sound); re-exported for existing imports. */
+export { scorePronunciation, type PronunciationResult, type SoundMark, type WordResult } from './pronScore';
 
 const PL_EXPLANATIONS: Record<string, { he: string; en: string }> = {
   ą: { he: 'ą היא o אפית ("וֹן") – בלי הסימן, a היא סתם "אָ".', en: 'ą is a nasal o ("on") – without the tail, a is just "ah".' },

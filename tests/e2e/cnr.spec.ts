@@ -101,7 +101,7 @@ test.describe('Montenegrin course', () => {
     // Recognition runs in Croatian (same Latin Ijekavian spelling) and a correct "čaj" passes.
     await page.goto('/#/map/item/m1-01');
     await page.getByRole('button', { name: 'Start recording' }).click();
-    await expect(page.getByText('Heard:')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('heard-line')).toBeVisible({ timeout: 30_000 });
     expect(await page.evaluate(() => (window as unknown as { __sttLang: string }).__sttLang)).toBe('hr-HR');
     await expect(page.getByTestId('unrecognized')).toHaveCount(0);
     expectNoErrors(errors);

@@ -88,7 +88,7 @@ test.describe('How do I say…?', () => {
     // Wrong words are a miss, never praise.
     await setHeard(page, 'poproszę herbatę');
     await result.getByRole('button', { name: 'Start recording' }).click();
-    await expect(result.getByText('Heard:')).toBeVisible({ timeout: 30_000 });
+    await expect(result.getByTestId('heard-line')).toBeVisible({ timeout: 30_000 });
     await expect(result.getByText('Excellent! Clear pronunciation')).toHaveCount(0);
 
     // The right sentence passes.

@@ -16,7 +16,7 @@ import { scorePronunciation } from './text';
 export type Outcome = 'pass' | 'low' | 'unclear' | 'silent' | 'unchecked';
 
 /** Minimum recognition score that counts as saying the phrase correctly. */
-export const HANDS_FREE_PASS = 70;
+export const HANDS_FREE_PASS = 85;
 
 /** Recognition errors that mean "the service cannot check speech here", not "you said it wrong". */
 const UNAVAILABLE_STT = new Set(['network', 'not-allowed', 'service-not-allowed', 'language-not-supported', 'audio-capture', 'unsupported']);

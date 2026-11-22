@@ -23,7 +23,7 @@ import { useMic } from '../state/MicContext';
  *   1. the meaning is spoken in Hebrew / English (when the device has such a voice) and shown large
  *   2. the Polish phrase is spoken slowly, then at normal speed
  *   3. a short cue, then the microphone opens; the attempt is judged (lib/handsFreeJudge)
- *   4. only a real recognition score ≥ 70 % passes. A miss is said out loud ("Not quite",
+ *   4. only a real recognition score ≥ 85 % (lib/pronScore, sound by sound) passes. A miss is said out loud ("Not quite",
  *      "I didn't recognize the word", "I didn't hear you"), followed by help that grows with each
  *      miss – slow replay, the phrase built up in parts, the articulation tip – and another try,
  *      until the word passes (the skip button moves on manually)
