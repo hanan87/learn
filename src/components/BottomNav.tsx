@@ -1,11 +1,12 @@
-import { AudioLines, BookOpenCheck, Map, MessagesSquare, type LucideIcon } from 'lucide-react';
+import { AudioLines, BookOpenCheck, Languages, Map, MessagesSquare, type LucideIcon } from 'lucide-react';
 import { useLang } from '../i18n/LangContext';
 
-export type TabId = 'map' | 'lab' | 'vocab' | 'talk';
+export type TabId = 'map' | 'lab' | 'say' | 'vocab' | 'talk';
 
 export const TABS: { id: TabId; he: string; en: string; icon: LucideIcon }[] = [
   { id: 'map', he: 'מפת הקורס', en: 'Course map', icon: Map },
   { id: 'lab', he: 'מעבדת צלילים', en: 'Sound lab', icon: AudioLines },
+  { id: 'say', he: 'איך אומרים?', en: 'How to say', icon: Languages },
   { id: 'vocab', he: 'אוצר מילים וחזרה', en: 'Words & review', icon: BookOpenCheck },
   { id: 'talk', he: 'סימולציית שיחה', en: 'Voice roleplay', icon: MessagesSquare },
 ];
@@ -21,7 +22,7 @@ export function BottomNav({ active, onChange, dueCount }: Props) {
   const { lang, tr } = useLang();
   return (
     <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur" aria-label={tr('ניווט ראשי', 'Main navigation')}>
-      <ul className="mx-auto grid max-w-3xl grid-cols-4">
+      <ul className="mx-auto grid max-w-3xl grid-cols-5">
         {TABS.map(({ id, icon: Icon, ...labels }) => {
           const isActive = id === active;
           return (

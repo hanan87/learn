@@ -9,6 +9,7 @@ Live: https://hanan87.github.io/learn/
 - **Polish** – the full course below.
 - **Montenegrin** (starter course) – 4 units, 52 items (sounds č/ć, dž/đ, lj/nj, vowel r and ije; politeness with Vi/ti; numbers, directions and time; café and restaurant), a Sound Lab with 4 minimal-pair groups, a café roleplay in Kotor, hands-free mode, Speed Blitz and the Montenegrin keyboard. Montenegrin has no dedicated speech engines, so recognition uses Croatian (`hr-HR`, same Latin Ijekavian spelling) and the voices are Bosnian / Croatian / Serbian.
 - The course is picked on the welcome screen, on the map or in Settings; each course keeps its own progress (`lib/course.ts`).
+- **How do I say…?** tab: type a word or sentence in Hebrew / English (or in the course language) – it is translated (course phrases first, then MyMemory machine translation, then Chrome's on-device translator), spoken normally and slowly, shown with syllables, stress, transcription and a word-by-word breakdown; you repeat it and get an honest score, and can save it to your dictionary (`lib/translate.ts`, `views/SayIt.tsx`).
 
 ### Polish course
 

@@ -22,6 +22,7 @@ import { VocabReview } from './views/VocabReview';
 import { Welcome } from './views/Welcome';
 import { HandsFree } from './views/HandsFree';
 import { SpeedBlitz } from './views/SpeedBlitz';
+import { SayIt } from './views/SayIt';
 import { StoryPlayer } from './views/StoryPlayer';
 import { getStory } from './data/stories';
 
@@ -29,7 +30,7 @@ const TAB_IDS = TABS.map((t) => t.id);
 
 /**
  * Routes:
- *   #/map | #/lab | #/vocab | #/talk          – tabs
+ *   #/map | #/lab | #/say | #/vocab | #/talk  – tabs (say: "How do I say…?" translate, listen, repeat)
  *   #/<tab>/item/<itemId>                      – item sheet on top of a tab
  *   #/<tab>/settings                           – settings sheet
  *   #/lab/group/<groupId>                      – Sound Lab opened on a contrast group
@@ -103,6 +104,7 @@ export function App() {
             onOpenHandsFree={() => navigate('handsfree/vocab')}
             onOpenBlitz={() => navigate('blitz')}
           />}
+        {tab === 'say' && <SayIt onOpenItem={openItem} />}
         {tab === 'talk' && <Roleplay onOpenStory={(id) => navigate(`story/${id}`)} />}
       </main>
       <BottomNav active={tab} onChange={(t) => navigate(t)} dueCount={dueItemIds().length} />
