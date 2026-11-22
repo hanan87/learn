@@ -29,6 +29,10 @@ export interface CourseInfo {
   voicePrefixes: string[];
   /** Prefix of the pre-recorded clip voices ('pl' → 'pl-f' / 'pl-m'). */
   clipPrefix: 'pl' | 'cnr';
+  /** Names of the neural voices (female teacher, male) and the language they speak. */
+  voiceNames: { f: string; m: string; he: string; en: string };
+  /** Phrase played to preview a voice in Settings. */
+  voiceSample: string;
   /** localStorage key of this course's progress. */
   progressKey: string;
   /** Names used in phrases until the learner types their own. */
@@ -53,6 +57,8 @@ export const COURSES: Record<CourseId, CourseInfo> = {
     ttsLang: 'pl-PL',
     voicePrefixes: ['pl'],
     clipPrefix: 'pl',
+    voiceNames: { f: 'Zofia', m: 'Marek', he: 'פולנית', en: 'Polish' },
+    voiceSample: 'Dzień dobry! Miło mi Cię poznać.',
     progressKey: 'polish-learn:progress:v1',
     defaultNames: { m: 'Dawid', f: 'Anna' },
     niceToMeet: 'Miło mi!',
@@ -73,6 +79,8 @@ export const COURSES: Record<CourseId, CourseInfo> = {
     ttsLang: 'hr-HR',
     voicePrefixes: ['sr-me', 'cnr', 'bs', 'hr', 'sr-latn', 'sr'],
     clipPrefix: 'cnr',
+    voiceNames: { f: 'Vesna', m: 'Goran', he: 'בוסנית – הכי קרובה למונטנגרית', en: 'Bosnian – the closest to Montenegrin' },
+    voiceSample: 'Dobar dan! Drago mi je.',
     progressKey: 'polish-learn:progress:cnr:v1',
     defaultNames: { m: 'David', f: 'Ana' },
     niceToMeet: 'Drago mi je!',

@@ -2,9 +2,10 @@
  * Speech output for the active course (Polish or Montenegrin, see lib/course).
  *
  * Order of preference for every phrase:
- *   1. a pre-recorded neural clip (lib/voiceClips – Azure Zofia / Marek), unless the learner turned it off
- *   2. the device voice the learner picked in Settings
- *   3. the best Polish device voice we can find (Edge "Natural", Google, iOS Enhanced…)
+ *   1. a pre-recorded neural clip (lib/voiceClips – Azure Zofia / Marek, Vesna / Goran), unless turned off
+ *   2. the live neural voice (lib/cloudVoice) when the learner stored an Azure key on this device
+ *   3. the device voice the learner picked in Settings
+ *   4. the best course-language device voice we can find (Edge "Natural", Google, iOS Enhanced…)
  *
  * Device-voice notes:
  * Cross-browser notes:
@@ -15,6 +16,7 @@
  */
 
 import { COURSE_INFO } from './course';
+import { cloudClipUrl } from './cloudVoice';
 import { ttsSupported } from './env';
 import { clipPlaying, findClip, playClip, stopClip, type ClipVoice } from './voiceClips';
 
@@ -25,6 +27,8 @@ export const RATE_CHAIN = 0.85;
 let cachedVoice: SpeechSynthesisVoice | null | undefined;
 let activeUtterance: SpeechSynthesisUtterance | null = null;
 let cancelToken = 0;
+/** Bumped by every speak() and stopSpeaking(): a live-voice request that returns late is dropped. */
+let speakGen = 0;
 
 const VOICE_PREF_KEY = 'polish-learn:device-voice';
 
@@ -103,6 +107,7 @@ export function hasPolishVoice(): boolean {
 
 export function stopSpeaking(): void {
   cancelToken++;
+  speakGen++;
   stopClip();
   if (ttsSupported) window.speechSynthesis.cancel();
   activeUtterance = null;
@@ -122,9 +127,13 @@ export type Speaker = 'f' | 'm';
  */
 export async function speak(text: string, rate: number = RATE_NORMAL, speaker: Speaker = 'f'): Promise<void> {
   if (!text.trim()) return;
+  const gen = ++speakGen;
   const slow = rate <= 0.7;
+  const speed = slow ? 's' : 'n';
   const voice = `${COURSE_INFO.clipPrefix}-${speaker}` as ClipVoice;
-  const clip = findClip(text, slow ? 's' : 'n', voice);
+  const clip = findClip(text, speed, voice) ?? (await cloudClipUrl(text, speed, voice));
+  // Stopped, or another phrase was asked for, while the live voice was loading.
+  if (gen !== speakGen) return;
   if (clip) {
     if (ttsSupported) window.speechSynthesis.cancel();
     const played = await playClip(clip, slow ? 1 : Math.max(0.7, Math.min(1.2, rate)));
@@ -178,7 +187,9 @@ export function findVoiceFor(prefix: string): SpeechSynthesisVoice | null {
  * Resolves false without speaking when the device has no voice for that language.
  */
 export async function speakNative(text: string, lang: 'he' | 'en', rate = 1): Promise<boolean> {
-  const clip = findClip(text, 'n', lang);
+  const gen = ++speakGen;
+  const clip = findClip(text, 'n', lang) ?? (await cloudClipUrl(text, 'n', lang));
+  if (gen !== speakGen) return true;
   if (clip && (await playClip(clip, rate))) return true;
   return speakNativeDevice(text, lang, rate);
 }

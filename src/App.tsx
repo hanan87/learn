@@ -2,6 +2,7 @@ import { COURSE_INFO as C } from './lib/course';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Info } from 'lucide-react';
 import { clipCount, subscribeManifest } from './lib/voiceClips';
+import { cloudConfigured, subscribeCloudVoice } from './lib/cloudVoice';
 import { getItem } from './data';
 import { BottomNav, TABS, type TabId } from './components/BottomNav';
 import { ItemDetail } from './components/ItemDetail';
@@ -48,6 +49,7 @@ export function App() {
   const mic = useMic();
   const [voiceMissing, setVoiceMissing] = useState(false);
   const clips = useSyncExternalStore(subscribeManifest, clipCount);
+  const cloud = useSyncExternalStore(subscribeCloudVoice, cloudConfigured);
 
   useEffect(() => {
     if (!ttsSupported) return;
@@ -82,15 +84,15 @@ export function App() {
     <div className="flex min-h-dvh flex-col">
       {mic.blocked && mic.status !== 'no-device' && <StandaloneDownload />}
       <TopBar title={tabInfo[lang]} onOpenSettings={() => navigate(`${tab}/settings`)} />
-      {voiceMissing && clips === 0 && (
+      {voiceMissing && clips === 0 && !cloud && (
         <div className="mx-auto mt-3 w-full max-w-3xl px-4">
           <p className="flex items-start gap-2 rounded-2xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">
             <Info className="mt-px size-4 shrink-0" aria-hidden />
             <span>
           {C.id === 'cnr'
             ? tr(
-                'לא נמצא במכשיר קול בוסני, קרואטי או סרבי – ההקראה עשויה להישמע במבטא זר. באנדרואיד: הגדרות ← שפה ← המרת טקסט לדיבור ← התקינו קרואטית או סרבית. ב-iPhone: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← קרואטית.',
-                'No Bosnian, Croatian or Serbian voice was found on this device – playback may sound foreign. Android: Settings → Language → Text-to-speech → install Croatian or Serbian. iPhone: Settings → Accessibility → Spoken Content → Voices → Croatian.',
+                'לא נמצא במכשיר קול בוסני, קרואטי או סרבי – ההקראה עשויה להישמע במבטא זר. לקול טבעי: הגדרות ← קול המורה ← קול ענן טבעי. או התקינו קול: באנדרואיד: הגדרות ← שפה ← המרת טקסט לדיבור ← קרואטית או סרבית; ב-iPhone: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← קרואטית.',
+                'No Bosnian, Croatian or Serbian voice was found on this device – playback may sound foreign. For a natural voice: Settings → Teacher voice → Natural cloud voice. Or install a voice: Android: Settings → Language → Text-to-speech → Croatian or Serbian; iPhone: Settings → Accessibility → Spoken Content → Voices → Croatian.',
               )
             : tr(
                 'לא נמצא קול פולני במכשיר – ההקראה עשויה להישמע במבטא זר. באנדרואיד: הגדרות ← שפה ← המרת טקסט לדיבור ← התקינו פולנית. ב-iPhone: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← פולנית.',

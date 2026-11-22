@@ -39,6 +39,7 @@ const listeners = new Set<() => void>();
 
 export function setManifest(m: ClipManifest | null): void {
   manifest = m;
+  if (m && Object.keys(m.clips).length) primeAudioElement();
   listeners.forEach((l) => l());
 }
 
@@ -124,7 +125,42 @@ function element(): HTMLAudioElement {
 }
 
 export function clipPlaying(): boolean {
-  return !!audioEl && !audioEl.paused && !audioEl.ended;
+  return !priming && !!audioEl && !audioEl.paused && !audioEl.ended;
+}
+
+// A 2 ms silent WAV: playing it inside a tap unlocks the shared element on iOS.
+const SILENCE = 'data:audio/wav;base64,UklGRjQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YRAAAACAgICAgICAgICAgICAgICA';
+let priming = false;
+let primeArmed = false;
+
+/**
+ * Unlock the shared audio element on the learner's first tap. Speech that starts after an async step
+ * (the live cloud voice, "How do I say…?" after translating) is otherwise blocked by iOS autoplay rules.
+ */
+export function primeAudioElement(): void {
+  if (primeArmed || typeof window === 'undefined') return;
+  primeArmed = true;
+  const unlock = () => {
+    window.removeEventListener('pointerdown', unlock, true);
+    window.removeEventListener('keydown', unlock, true);
+    const el = element();
+    // Something is already playing or loaded: the element is unlocked.
+    if (el.src) return;
+    priming = true;
+    el.muted = true;
+    el.src = SILENCE;
+    const done = () => {
+      priming = false;
+      el.muted = false;
+      if (el.src === SILENCE) {
+        el.pause();
+        el.removeAttribute('src');
+      }
+    };
+    el.play().then(done, done);
+  };
+  window.addEventListener('pointerdown', unlock, true);
+  window.addEventListener('keydown', unlock, true);
 }
 
 export function stopClip(): void {
@@ -163,6 +199,8 @@ export function playClip(url: string, playbackRate = 1): Promise<boolean> {
       started = true;
       clearTimeout(guard);
     };
+    priming = false;
+    el.muted = false;
     el.src = url;
     el.playbackRate = playbackRate;
     (el as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;

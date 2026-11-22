@@ -16,7 +16,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFile
 import { join } from 'node:path';
 import type { ClipRequest } from '../src/lib/clipCatalog';
 import { COURSES, type CourseId } from '../src/lib/course';
-import { AZURE_VOICES, buildSsml, clipFileName } from './voice-lib';
+import { AZURE_OUTPUT_FORMAT, AZURE_VOICES, azureTtsUrl, buildSsml, clipFileName } from './voice-lib';
 
 const OUT = 'public/audio';
 const args = new Set(process.argv.slice(2));
@@ -39,12 +39,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function synthesize(key: string, region: string, ssml: string): Promise<Buffer> {
   for (let attempt = 0; attempt < 6; attempt++) {
-    const res = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+    const res = await fetch(azureTtsUrl(region), {
       method: 'POST',
       headers: {
         'Ocp-Apim-Subscription-Key': key,
         'Content-Type': 'application/ssml+xml',
-        'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+        'X-Microsoft-OutputFormat': AZURE_OUTPUT_FORMAT,
         'User-Agent': 'polish-learn-app-voice-generator',
       },
       body: ssml,
