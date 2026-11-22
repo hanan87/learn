@@ -111,7 +111,7 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
       <div className="fixed inset-0 z-50 grid place-items-center bg-white p-6 text-center">
         <div className="space-y-3">
           <p>{isPractice ? tr('אין עדיין מספיק נתונים לאימון חיזוק.', 'Not enough history yet for a reinforcement session.') : tr('השיעור לא נמצא.', 'Lesson not found.')}</p>
-          <button type="button" onClick={onClose} className="rounded-xl bg-slate-900 px-4 py-2 text-white">
+          <button type="button" onClick={onClose} className="rounded-xl bg-brand-600 px-4 py-2 text-white">
             {tr('חזרה', 'Back')}
           </button>
         </div>
@@ -165,22 +165,25 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex min-h-dvh flex-col bg-slate-50" role="dialog" aria-modal="true" aria-label={subtitle}>
       {mic.blocked && mic.status !== 'no-device' && <StandaloneDownload />}
-      <header className="pt-safe border-b border-slate-200 bg-white">
+      <header className="pt-safe border-b border-slate-200/70 bg-slate-50/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
-          <button type="button" onClick={() => setConfirmExit(true)} className="grid size-10 place-items-center rounded-full text-slate-500 hover:bg-slate-100" aria-label={tr('יציאה מהשיעור', 'Exit lesson')}>
-            <X className="size-6" />
+          <button
+            type="button"
+            onClick={() => setConfirmExit(true)}
+            className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200/80 hover:text-slate-900"
+            aria-label={tr('יציאה מהשיעור', 'Exit lesson')}
+          >
+            <X className="size-5" />
           </button>
-          <div className="h-4 flex-1 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
-            <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: `${pct}%` }}>
-              <div className="mx-2 mt-1 h-1 rounded-full bg-white/40" />
-            </div>
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+            <div className="h-full rounded-full bg-brand-600 transition-all duration-500" style={{ width: `${pct}%` }} />
           </div>
-          <span className="text-xs font-bold whitespace-nowrap text-slate-500">
+          <span className="text-xs font-semibold whitespace-nowrap text-slate-500 tabular-nums">
             {index + 1}/{queue.length}
           </span>
         </div>
         {step && (
-          <p className="mx-auto max-w-2xl px-4 pb-2 text-xs font-bold tracking-wide text-rose-600">
+          <p className="mx-auto max-w-2xl px-4 pb-2 text-xs font-bold tracking-wide text-brand-700">
             {isPractice && <span className="text-indigo-600">{tr('אימון חיזוק · ', 'Reinforcement · ')}</span>}
             {STAGE_LABELS[step.kind][lang]}
             {step.key.endsWith('-retry') && tr(' · חזרה על טעות', ' · retry')}
@@ -209,7 +212,7 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
               onClick={next}
               autoFocus
               className={`w-full rounded-2xl py-4 text-base font-bold text-white shadow-md active:scale-[0.98] ${
-                result.tone === 'error' ? 'bg-rose-600' : result.tone === 'warning' ? 'bg-amber-600' : 'bg-emerald-600'
+                result.tone === 'error' ? 'bg-rose-600' : result.tone === 'warning' ? 'bg-amber-600' : 'bg-brand-600'
               }`}
             >
               {index + 1 >= queue.length ? tr(`סיום (+${XP.lessonComplete} XP)`, `Finish (+${XP.lessonComplete} XP)`) : tr('המשך', 'Continue')}
@@ -219,12 +222,12 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
       )}
 
       {confirmExit && (
-        <div className="fixed inset-0 z-20 grid place-items-center bg-slate-900/40 p-6">
+        <div className="fixed inset-0 z-20 grid place-items-center bg-black/45 p-6">
           <div className="animate-pop-in w-full max-w-sm space-y-4 rounded-3xl bg-white p-6 text-center shadow-xl">
             <p className="text-lg font-bold">{tr('לצאת מהשיעור?', 'Leave the lesson?')}</p>
             <p className="text-sm text-slate-600">{tr('ההתקדמות בשיעור הנוכחי לא תישמר.', 'Progress in this lesson will not be saved.')}</p>
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setConfirmExit(false)} className="rounded-2xl bg-emerald-600 py-3 font-bold text-white">
+              <button type="button" onClick={() => setConfirmExit(false)} className="rounded-2xl bg-brand-600 py-3 font-bold text-white">
                 {tr('להמשיך ללמוד', 'Keep learning')}
               </button>
               <button type="button" onClick={onClose} className="rounded-2xl bg-slate-100 py-3 font-medium text-rose-600">

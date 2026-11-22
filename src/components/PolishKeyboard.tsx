@@ -94,7 +94,7 @@ export function PolishKeyboard({ inputRef, value, onChange }: Props) {
         ))}
       </div>
       <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${DIGRAPHS.length + 3}, minmax(0, 1fr))` }}>
-        <button type="button" aria-label={tr('אות גדולה', 'Shift')} className={`${keyCls} col-span-1 ${shift ? '!bg-rose-600 !text-white' : ''}`} {...press(() => setShift((s) => !s))}>
+        <button type="button" aria-label={tr('אות גדולה', 'Shift')} className={`${keyCls} col-span-1 ${shift ? '!bg-brand-600 !text-white' : ''}`} {...press(() => setShift((s) => !s))}>
           <ArrowBigUp className="size-5" />
         </button>
         {DIGRAPHS.map((d) => (

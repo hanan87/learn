@@ -166,7 +166,7 @@ export function SayIt({ onOpenItem }: { onOpenItem: (id: string) => void }) {
               onClick={() => switchMode(m)}
               aria-pressed={mode === m}
               data-testid={`say-mode-${m}`}
-              className={`flex-1 px-3 py-2 transition ${mode === m ? 'bg-slate-900 text-slate-50' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+              className={`flex-1 px-3 py-2 transition ${mode === m ? 'bg-brand-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
             >
               {label}
             </button>
@@ -194,7 +194,7 @@ export function SayIt({ onOpenItem }: { onOpenItem: (id: string) => void }) {
             placeholder={mode === 'target' ? (C.id === 'cnr' ? 'npr. Gdje je autobuska stanica?' : 'np. Gdzie jest dworzec?') : tr('למשל: איפה תחנת האוטובוס?', 'e.g. Where is the bus station?')}
             aria-label={mode === 'target' ? tr(`טקסט ${C.inLang.he}`, `Text ${C.inLang.en}`) : tr('מילה או משפט בעברית', 'Word or sentence in English')}
             data-testid="say-input"
-            className={`min-w-0 flex-1 rounded-xl bg-white px-3 py-3 text-base ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-rose-400 ${mode === 'target' ? 'polish' : ''}`}
+            className={`min-w-0 flex-1 rounded-xl bg-white px-3 py-3 text-base ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-brand-500 ${mode === 'target' ? 'polish' : ''}`}
           />
           <button type="submit" disabled={!input.trim() || busy} className="btn-primary shrink-0 px-4" data-testid="say-submit">
             {busy ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <Volume2 className="size-5" aria-hidden />}
@@ -322,7 +322,7 @@ function SayResult({
                 autoCorrect="off"
                 spellCheck={false}
                 aria-label={tr('התרגום המתוקן', 'Corrected translation')}
-                className="polish min-w-0 flex-1 rounded-xl bg-white px-3 py-2.5 text-lg ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-rose-400"
+                className="polish min-w-0 flex-1 rounded-xl bg-white px-3 py-2.5 text-lg ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-brand-500"
               />
               <button type="submit" className="btn-primary shrink-0 px-4">
                 {tr('עדכון', 'Update')}

@@ -140,7 +140,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
         </button>
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 truncate font-serif text-xl font-semibold">
-            <StoryIcon id={story.id} className="size-5 shrink-0 text-rose-600" /> {story.title[lang]}
+            <StoryIcon id={story.id} className="size-5 shrink-0 text-brand-600" /> {story.title[lang]}
           </p>
           <p className="polish truncate text-xs text-slate-500" dir="ltr">
             {story.titlePl}
@@ -158,7 +158,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
         <button
           type="button"
           onClick={playAll}
-          className="grid size-10 place-items-center rounded-full bg-rose-600 text-white"
+          className="grid size-10 place-items-center rounded-full bg-brand-600 text-white"
           aria-label={playingLine !== null ? tr('עצור', 'Stop') : tr('השמע את הסיפור', 'Play the story')}
         >
           {playingLine !== null ? <Square className="size-4" /> : <Play className="size-4 fill-white" />}
@@ -178,7 +178,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
             <li key={li} className={`animate-pop-in flex flex-col ${left ? 'items-start' : 'items-end'}`} dir="ltr">
               <span className="mb-0.5 px-2 text-[11px] font-bold text-slate-500">{line.speaker}</span>
               <div
-                className={`max-w-[92%] rounded-2xl px-4 py-2.5 shadow-sm ring-1 ${left ? 'rounded-ss-sm bg-white ring-slate-200' : 'rounded-se-sm bg-rose-50 ring-rose-200'} ${
+                className={`max-w-[92%] rounded-2xl px-4 py-2.5 shadow-sm ring-1 ${left ? 'rounded-ss-sm bg-white ring-slate-200' : 'rounded-se-sm bg-brand-50 ring-brand-200'} ${
                   playingLine === li ? 'ring-2 ring-amber-400' : ''
                 }`}
               >
@@ -224,14 +224,14 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
             setInspect(null);
             setShown((n) => n + 1);
           }}
-          className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-slate-900 py-3.5 font-bold text-white active:scale-[0.98]"
+          className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-brand-600 py-3.5 font-bold text-white active:scale-[0.98]"
         >
           <ChevronDown className="size-5" /> {tr('השורה הבאה', 'Next line')} ({shown}/{story.lines.length})
         </button>
       )}
 
       {allShown && !quiz && (
-        <button type="button" onClick={() => setQuiz(true)} className="mt-4 rounded-2xl bg-rose-600 py-3.5 font-bold text-white shadow-md active:scale-[0.98]">
+        <button type="button" onClick={() => setQuiz(true)} className="mt-4 rounded-2xl bg-brand-600 py-3.5 font-bold text-white shadow-md active:scale-[0.98]">
           {tr('לשאלות ההבנה', 'To the comprehension questions')}
         </button>
       )}
@@ -271,7 +271,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
             })}
           </div>
           {picked && (
-            <button type="button" onClick={nextQuestion} className="w-full rounded-2xl bg-slate-900 py-3.5 font-bold text-white">
+            <button type="button" onClick={nextQuestion} className="w-full rounded-2xl bg-brand-600 py-3.5 font-bold text-white">
               {qIndex + 1 < story.questions.length ? tr('לשאלה הבאה', 'Next question') : tr('סיום הסיפור', 'Finish the story')}
             </button>
           )}
@@ -286,7 +286,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
             {tr(`${correctCount} מתוך ${story.questions.length} תשובות נכונות`, `${correctCount} of ${story.questions.length} answers right`)} · +{earned} XP
           </p>
           {prevBest !== undefined && <p className="text-xs text-slate-400">{tr(`שיא קודם: ${prevBest}`, `Previous best: ${prevBest}`)}</p>}
-          <button type="button" onClick={onExit} className="rounded-2xl bg-slate-900 px-6 py-3 font-bold text-white">
+          <button type="button" onClick={onExit} className="rounded-2xl bg-brand-600 px-6 py-3 font-bold text-white">
             {tr('לסיפורים נוספים', 'More stories')}
           </button>
         </section>

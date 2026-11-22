@@ -68,7 +68,7 @@ export function VocabReview({ onOpenItem, onStartPractice, onOpenSoundGroup, onO
           <Layers className="size-3.5" /> {tr('חזרה מרווחת', 'Spaced repetition')}
         </p>
         <h2 className="mt-2 text-3xl leading-tight">
-          <span className="text-rose-600 tabular-nums">{due.length}</span> {tr('כרטיסים לחזרה היום', 'cards due today')}
+          <span className="text-brand-700 tabular-nums">{due.length}</span> {tr('כרטיסים לחזרה היום', 'cards due today')}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
           {tr(
@@ -216,7 +216,7 @@ function ReviewSession({ ids, direction, onExit }: { ids: string[]; direction: D
         <CheckCircle2 className="mx-auto size-14 text-emerald-500" />
         <p className="text-2xl font-black">{tr('סיימתם את החזרה!', 'Review complete!')}</p>
         <p className="text-slate-600">{tr(`${correct} מתוך ${results.length} נכונות`, `${correct} of ${results.length} correct`)}</p>
-        <button type="button" onClick={onExit} className="rounded-2xl bg-slate-900 px-6 py-3 font-bold text-white">
+        <button type="button" onClick={onExit} className="rounded-2xl bg-brand-600 px-6 py-3 font-bold text-white">
           {tr('חזרה לאוצר המילים', 'Back to words')}
         </button>
       </div>
@@ -252,7 +252,7 @@ function ReviewSession({ ids, direction, onExit }: { ids: string[]; direction: D
         ) : (
           <div className="space-y-2">
             <PolishSyllables notation={item.syllablesPolish} size="lg" />
-            <button type="button" onClick={() => speak(item.polish)} className="mx-auto flex items-center gap-1 text-sm text-rose-600">
+            <button type="button" onClick={() => speak(item.polish)} className="mx-auto flex items-center gap-1 text-sm text-brand-700">
               <Volume2 className="size-4" /> {tr('השמע', 'Play')}
             </button>
           </div>
@@ -283,7 +283,7 @@ function ReviewSession({ ids, direction, onExit }: { ids: string[]; direction: D
             setRevealed(true);
             speak(item.polish);
           }}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-4 font-bold text-white active:scale-[0.98]"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 py-4 font-bold text-white active:scale-[0.98]"
         >
           <Eye className="size-5" /> {tr('הצג תשובה', 'Show answer')}
         </button>
@@ -332,7 +332,7 @@ function Dictionary({ onOpenItem, onAdd }: { onOpenItem: (id: string) => void; o
           <Plus className="size-4" /> {tr('הוסף מילה או משפט משלי', 'Add my own word')}
         </button>
       </div>
-      <label className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2.5 ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-rose-400">
+      <label className="flex items-center gap-2 rounded-2xl bg-white px-3 py-2.5 ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-brand-500">
         <Search className="size-4 text-slate-400" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr(`חיפוש בעברית או ${C.inLang.he}`, `Search in English or ${C.name.en}`)} className="min-w-0 flex-1 bg-transparent text-base outline-none" />
       </label>
@@ -342,7 +342,7 @@ function Dictionary({ onOpenItem, onAdd }: { onOpenItem: (id: string) => void; o
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium ring-1 ${filter === f ? 'bg-slate-900 text-white ring-slate-900' : 'bg-white text-slate-600 ring-slate-200'}`}
+            className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium ring-1 ${filter === f ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-slate-600 ring-slate-200'}`}
           >
             {label}
           </button>
@@ -388,7 +388,7 @@ function WordCard({ item, open, onToggle, onOpenItem, learned }: { item: Learnin
   return (
     <li className={`overflow-hidden rounded-2xl bg-white ring-1 ${weak ? 'ring-amber-300' : 'ring-slate-200'}`}>
       <div className="flex items-center gap-2 px-3 py-2.5">
-        <button type="button" onClick={() => speak(item.polish)} className="grid size-10 shrink-0 place-items-center rounded-full bg-rose-50 text-rose-600 active:scale-95" aria-label={tr('השמע', 'Play')}>
+        <button type="button" onClick={() => speak(item.polish)} className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600 active:scale-95" aria-label={tr('השמע', 'Play')}>
           <Volume2 className="size-5" />
         </button>
         <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-start" aria-expanded={open}>

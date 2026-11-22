@@ -28,7 +28,7 @@ export function PolishSyllables({ notation, size = 'lg', showDots = true, classN
               {si > 0 && showDots && <span className="mx-[0.06em] text-slate-300">·</span>}
               <span
                 className={
-                  syl.stressed ? 'text-rose-600 underline decoration-rose-300 decoration-2 underline-offset-[0.22em]' : ''
+                  syl.stressed ? 'text-brand-700 underline decoration-brand-300 decoration-2 underline-offset-[0.22em]' : ''
                 }
               >
                 {syl.text}

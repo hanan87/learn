@@ -160,7 +160,7 @@ export function FillBlankStep({ step, answered, onAnswered }: StepProps<FillStep
       <p dir="ltr" lang={C.htmlLang} className="polish flex flex-wrap items-center gap-x-2 gap-y-2 text-2xl font-semibold">
         {words.map((w, i) =>
           i === step.blankIndex ? (
-            <span key={i} className={`inline-block min-w-20 rounded-lg border-b-4 px-2 text-center ${picked ? 'border-rose-400 text-rose-600' : 'border-slate-300 text-transparent'}`}>
+            <span key={i} className={`inline-block min-w-20 rounded-lg border-b-4 px-2 text-center ${picked ? 'border-brand-500 text-brand-700' : 'border-slate-300 text-transparent'}`}>
               {picked ?? '___'}
             </span>
           ) : (

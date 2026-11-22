@@ -23,7 +23,7 @@ export function SpeakControls({ text, backchainingSteps, showSteps = true, compa
 
   const btn = 'inline-flex items-center justify-center gap-1.5 rounded-xl font-medium ring-1 transition active:scale-95 disabled:opacity-50';
   const size = compact ? 'px-3 py-2 text-sm' : 'px-4 py-3 text-sm sm:text-base';
-  const on = 'bg-rose-600 text-white ring-rose-600';
+  const on = 'bg-brand-600 text-white ring-brand-600';
   const off = 'bg-white text-slate-800 ring-slate-200 hover:bg-slate-50';
 
   return (

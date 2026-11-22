@@ -32,7 +32,7 @@ export function StandaloneDownload({ variant = 'banner' }: { variant?: 'banner' 
   }
   if (variant === 'inline') {
     return (
-      <a {...common} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow active:scale-95">
+      <a {...common} className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow active:scale-95">
         <Download className="size-4 shrink-0" aria-hidden />
         {label}
       </a>

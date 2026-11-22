@@ -87,7 +87,7 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
     setTouched(new Set());
   };
 
-  const input = 'w-full rounded-xl bg-white px-3 py-2.5 text-base ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-rose-400';
+  const input = 'w-full rounded-xl bg-white px-3 py-2.5 text-base ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-brand-500';
   const label = 'mb-1 block text-sm font-bold text-slate-700';
 
   if (saved) {
@@ -100,7 +100,7 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
           <button type="button" onClick={() => setSaved(false)} className="rounded-xl bg-slate-100 px-4 py-2.5 font-medium">
             {tr('הוסף עוד', 'Add another')}
           </button>
-          <button type="button" onClick={onDone} className="rounded-xl bg-slate-900 px-4 py-2.5 font-bold text-white">
+          <button type="button" onClick={onDone} className="rounded-xl bg-brand-600 px-4 py-2.5 font-bold text-white">
             {tr('סיום', 'Done')}
           </button>
         </div>
@@ -124,7 +124,7 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
         </label>
         <div className="flex gap-2">
           <input id="aw-polish" value={f.polish} onChange={(e) => set('polish', e.target.value)} dir="ltr" lang={C.htmlLang} autoCapitalize="off" autoCorrect="off" spellCheck={false} placeholder={C.id === 'cnr' ? 'npr. Dobar dan' : 'np. Dzień dobry'} className={`${input} polish text-lg`} />
-          <button type="button" disabled={!f.polish.trim()} onClick={() => speak(f.polish)} className="grid size-12 shrink-0 place-items-center rounded-xl bg-rose-50 text-rose-600 ring-1 ring-rose-200 disabled:opacity-40" aria-label={tr('השמע', 'Play')}>
+          <button type="button" disabled={!f.polish.trim()} onClick={() => speak(f.polish)} className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-200 disabled:opacity-40" aria-label={tr('השמע', 'Play')}>
             <Volume2 className="size-5" />
           </button>
         </div>
@@ -159,7 +159,7 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
               key={value}
               type="button"
               onClick={() => set('formality', value)}
-              className={`rounded-xl py-2 text-sm font-medium ring-1 ${f.formality === value ? 'bg-slate-900 text-white ring-slate-900' : 'bg-white ring-slate-200'}`}
+              className={`rounded-xl py-2 text-sm font-medium ring-1 ${f.formality === value ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white ring-slate-200'}`}
             >
               {text}
             </button>
@@ -206,7 +206,7 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
       </div>
 
       {f.polish.trim() && syllablesValid && (
-        <div className="space-y-1 rounded-2xl bg-rose-50/60 p-4 text-center ring-1 ring-rose-100">
+        <div className="space-y-1 rounded-2xl bg-brand-50/60 p-4 text-center ring-1 ring-brand-100">
           <p className="text-xs font-bold text-slate-500">{tr('תצוגה מקדימה', 'Preview')}</p>
           <PolishSyllables notation={f.syllables || f.polish} size="lg" />
           <Phonetic he={f.phoneticHe} en={f.phoneticEn} size="sm" />

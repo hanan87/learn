@@ -87,10 +87,10 @@ export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void })
               <button
                 type="button"
                 onClick={() => setActive(r)}
-                className="flex h-full w-full flex-col gap-2 rounded-3xl bg-white p-4 text-start shadow-sm ring-1 ring-slate-200 transition hover:ring-rose-300 active:scale-[0.98]"
+                className="flex h-full w-full flex-col gap-2 rounded-3xl bg-white p-4 text-start shadow-sm ring-1 ring-slate-200 transition hover:ring-brand-300 active:scale-[0.98]"
               >
                 <span className="flex items-center gap-2">
-                  <span className="grid size-10 place-items-center rounded-2xl bg-rose-100 text-rose-600">
+                  <span className="grid size-10 place-items-center rounded-2xl bg-brand-50 text-brand-600">
                     <Icon className="size-5" />
                   </span>
                   <span className="flex-1 text-base font-bold text-slate-900">{r.title[lang]}</span>
@@ -150,10 +150,10 @@ function Bubble({ entry, partnerName }: { entry: Turn; partnerName: string }) {
   const polish = pl(entry.polish);
   return (
     <div className={`animate-pop-in flex gap-2 ${me ? 'flex-row-reverse' : ''}`}>
-      <span className={`grid size-9 shrink-0 place-items-center rounded-full ${me ? 'bg-rose-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+      <span className={`grid size-9 shrink-0 place-items-center rounded-full ${me ? 'bg-brand-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
         <User className="size-4" />
       </span>
-      <div className={`max-w-[85%] space-y-1 rounded-2xl px-4 py-2.5 shadow-sm ${me ? 'rounded-se-sm bg-rose-50 ring-1 ring-rose-200' : 'rounded-ss-sm bg-white ring-1 ring-slate-200'}`}>
+      <div className={`max-w-[85%] space-y-1 rounded-2xl px-4 py-2.5 shadow-sm ${me ? 'rounded-se-sm bg-brand-50 ring-1 ring-brand-200' : 'rounded-ss-sm bg-white ring-1 ring-slate-200'}`}>
         <p className="flex items-center gap-2 text-[11px] text-slate-500">
           {me ? tr('אתם', 'You') : partnerName}
           {entry.score !== undefined && <span className="rounded-full bg-emerald-100 px-1.5 font-bold text-emerald-700">{entry.score}%</span>}
@@ -307,7 +307,7 @@ function RoleplayRunner({ scenario, onExit }: { scenario: RoleplayT; onExit: () 
         <div className="animate-pop-in space-y-3 rounded-3xl bg-white p-4 shadow-sm ring-2 ring-emerald-300">
           <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">{tx(picked.feedback)}</p>
           <p className="flex items-center gap-1.5 font-bold text-slate-800">
-            <Mic className="size-4 text-rose-600" /> {tr('עכשיו אמרו את זה בקול:', 'Now say it aloud:')}
+            <Mic className="size-4 text-brand-600" /> {tr('עכשיו אמרו את זה בקול:', 'Now say it aloud:')}
           </p>
           <div className="text-center">
             <PolishSyllables notation={toSyllableNotation(pl(picked.polish))} size="lg" />
@@ -353,7 +353,7 @@ function RoleplayRunner({ scenario, onExit }: { scenario: RoleplayT; onExit: () 
             <button type="button" onClick={restart} className="flex items-center gap-1.5 rounded-2xl bg-slate-100 px-4 py-3 font-medium">
               <RotateCcw className="size-4" /> {tr('שוב', 'Again')}
             </button>
-            <button type="button" onClick={onExit} className="rounded-2xl bg-slate-900 px-5 py-3 font-bold text-white">
+            <button type="button" onClick={onExit} className="rounded-2xl bg-brand-600 px-5 py-3 font-bold text-white">
               {tr('לשיחות נוספות', 'More conversations')}
             </button>
           </div>

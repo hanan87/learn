@@ -7,7 +7,7 @@ export const unit4: UnitSource = {
   subtitle: 'להזמין, לשלם ולהסתדר בקופה',
   description:
     'הכלל הראשון בהזמנה: לא אומרים "אני רוצה" (chcę) – זה נשמע גס. אומרים Poproszę ("אבקש") ואחריו מה שרוצים. למלצרים ולקופאים פונים ב-Pan/Pani, וחברים מזמינים לקפה ב-ty.',
-  color: 'emerald',
+  color: 'amber',
   items: [
     {
       id: 'u4-01',

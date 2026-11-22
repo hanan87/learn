@@ -18,7 +18,7 @@ const SOURCES: CompactUnit[] = [
   {
     id: 'u5',
     order: 5,
-    color: 'violet',
+    color: 'emerald',
     title: 'קניות וכסף',
     titleEn: 'Shopping & Money',
     subtitle: 'מחירים, תשלום, קבלות ומידות',
@@ -167,7 +167,7 @@ const SOURCES: CompactUnit[] = [
   {
     id: 'u6',
     order: 6,
-    color: 'teal',
+    color: 'rose',
     title: 'תחבורה ונסיעות',
     titleEn: 'Transport & Travel',
     subtitle: 'רכבות, אוטובוסים, מוניות ומלונות',
@@ -480,7 +480,7 @@ const SOURCES: CompactUnit[] = [
   {
     id: 'u8',
     order: 8,
-    color: 'orange',
+    color: 'teal',
     title: 'שיחת חולין',
     titleEn: 'Small Talk',
     subtitle: 'מאיפה אתם, מה אתם עושים, מזג אוויר ולחיים',

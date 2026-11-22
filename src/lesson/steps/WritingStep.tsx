@@ -52,7 +52,7 @@ export function WritingStep({ step, answered, onAnswered }: StepProps<Step>) {
                       {iss.typed}
                     </span>{' '}
                     {tr('במקום', 'instead of')}{' '}
-                    <span dir="ltr" className="polish text-rose-600">
+                    <span dir="ltr" className="polish text-brand-700">
                       {iss.expected}
                     </span>
                     :
@@ -83,10 +83,10 @@ export function WritingStep({ step, answered, onAnswered }: StepProps<Step>) {
         <FormalityBadge formality={item.formality} />
         <p className="text-xl font-bold">{itemText(item, lang).meaning}</p>
         <div className="flex gap-2">
-          <button type="button" onClick={() => speak(item.polish)} className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-sm font-medium text-white">
+          <button type="button" onClick={() => speak(item.polish)} className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-sm font-medium text-white">
             <Volume2 className="size-4" /> {tr('השמע', 'Play')}
           </button>
-          <button type="button" onClick={() => speak(item.polish, RATE_SLOW)} className="flex items-center gap-1.5 rounded-xl bg-rose-100 px-3 py-2 text-sm font-medium text-rose-700">
+          <button type="button" onClick={() => speak(item.polish, RATE_SLOW)} className="flex items-center gap-1.5 rounded-xl bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700">
             <Snail className="size-4" /> {tr('לאט', 'Slow')}
           </button>
         </div>
@@ -105,7 +105,7 @@ export function WritingStep({ step, answered, onAnswered }: StepProps<Step>) {
         spellCheck={false}
         enterKeyHint="done"
         placeholder={C.writePrompt}
-        className="polish w-full rounded-2xl bg-white px-4 py-4 text-2xl font-semibold ring-2 ring-slate-200 outline-none focus:ring-rose-400 disabled:bg-slate-50"
+        className="polish w-full rounded-2xl bg-white px-4 py-4 text-2xl font-semibold ring-2 ring-slate-200 outline-none focus:ring-brand-500 disabled:bg-slate-50"
       />
       {!answered && <PolishKeyboard inputRef={inputRef} value={value} onChange={setValue} />}
       {!answered && (

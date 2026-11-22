@@ -32,7 +32,7 @@ export function Phonetic({ he, en, size = 'md', className = '' }: Props) {
           {word.map((syl, si) => (
             <span key={si}>
               {si > 0 && <span className="mx-[0.1em] text-slate-300">-</span>}
-              <span className={syl.stressed ? 'font-bold text-rose-600' : ''}>{!isHe && syl.stressed ? syl.text.toUpperCase() : syl.text}</span>
+              <span className={syl.stressed ? 'font-bold text-brand-700' : ''}>{!isHe && syl.stressed ? syl.text.toUpperCase() : syl.text}</span>
             </span>
           ))}
           {wi < words.length - 1 && <span>&nbsp;&nbsp;</span>}

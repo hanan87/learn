@@ -1,21 +1,21 @@
-import { Flame, Moon, Settings, Star, Sun, Target } from 'lucide-react';
+import { Moon, Settings, Sun } from 'lucide-react';
+import { COURSE, COURSE_INFO as C } from '../lib/course';
 import { useLang } from '../i18n/LangContext';
 import { useTheme } from '../i18n/ThemeContext';
-import { useProgress } from '../state/ProgressContext';
 import { StandaloneDownload } from './StandaloneDownload';
 
 /** HE | EN segmented switch for the interface + learning language. */
 export function LangSwitch() {
   const { lang, setLang, tr } = useLang();
   return (
-    <div className="flex shrink-0 overflow-hidden rounded-full text-xs font-bold ring-1 ring-slate-300" dir="ltr" role="group" aria-label={tr('שפת ממשק', 'Interface language')}>
+    <div className="flex shrink-0 rounded-xl bg-slate-100 p-0.5 text-xs font-bold ring-1 ring-slate-200/80" dir="ltr" role="group" aria-label={tr('שפת ממשק', 'Interface language')}>
       {(['he', 'en'] as const).map((l) => (
         <button
           key={l}
           type="button"
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
-          className={`px-2.5 py-1.5 transition ${lang === l ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+          className={`rounded-[0.625rem] px-2.5 py-1.5 transition ${lang === l ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
         >
           {l.toUpperCase()}
         </button>
@@ -24,56 +24,48 @@ export function LangSwitch() {
   );
 }
 
-/** Sticky header with title, language switch, download/settings, streak, daily goal and XP. */
+/** Flag mark of the active course (Poland white/red, Montenegro red/gold). */
+export function CourseMark({ className = 'h-5 w-7' }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`block shrink-0 rounded-[5px] ring-1 ring-black/10 ${className}`}
+      style={{ background: COURSE === 'cnr' ? 'radial-gradient(circle, #d4af37 0 24%, #c40308 27%)' : 'linear-gradient(180deg, #ffffff 50%, #dc143c 50%)' }}
+    />
+  );
+}
+
+const iconBtn = 'grid size-10 shrink-0 place-items-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200/80 transition hover:text-slate-900 hover:ring-slate-300';
+
+/** Sticky header: course mark and title, language switch, theme, download and settings. */
 export function TopBar({ title, onOpenSettings }: { title: string; onOpenSettings: () => void }) {
-  const { activeStreak, todayXp, state, level, levelProgress } = useProgress();
-  const { tr } = useLang();
+  const { tr, lang } = useLang();
   const theme = useTheme();
-  const goalPct = Math.min(100, Math.round((todayXp / state.dailyGoal) * 100));
 
   return (
-    <header className="pt-safe sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4">
-        {/* Phones: the bottom nav already names the tab, so the title is for screen readers only and the row keeps room for its buttons. */}
-        <h1 className="sr-only min-w-0 flex-1 truncate text-base font-bold text-slate-900 sm:not-sr-only sm:text-lg">{title}</h1>
-        <span className="flex-1 sm:hidden" aria-hidden />
+    <header className="pt-safe sticky top-0 z-20 border-b border-slate-200/70 bg-slate-50/90 backdrop-blur-md">
+      <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-2.5 sm:gap-2.5">
+        <CourseMark />
+        <div className="min-w-0 flex-1 leading-tight">
+          <p className="truncate text-[15px] font-bold text-slate-900">{lang === 'he' ? C.titleHe : C.titleEn}</p>
+          <h1 className="truncate text-xs font-medium text-slate-500">{title}</h1>
+        </div>
         <LangSwitch />
         <button
           type="button"
           onClick={theme.toggle}
-          className="grid size-9 shrink-0 place-items-center rounded-full text-slate-600 hover:bg-slate-100"
+          className={iconBtn}
           aria-label={theme.resolved === 'dark' ? tr('מצב בהיר', 'Light mode') : tr('מצב כהה', 'Dark mode')}
         >
-          {theme.resolved === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
+          {theme.resolved === 'dark' ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
         </button>
         {/* On narrow phones the download shortcut lives in Settings only. */}
         <span className="hidden sm:contents">
           <StandaloneDownload variant="icon" />
         </span>
-        <button type="button" onClick={onOpenSettings} className="grid size-9 shrink-0 place-items-center rounded-full text-slate-600 hover:bg-slate-100" aria-label={tr('הגדרות', 'Settings')}>
-          <Settings className="size-5" />
+        <button type="button" onClick={onOpenSettings} className={iconBtn} aria-label={tr('הגדרות', 'Settings')}>
+          <Settings className="size-[18px]" />
         </button>
-      </div>
-      <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 pb-2 sm:px-4">
-        <div className="flex items-center gap-1 text-sm text-slate-600" title={tr('רצף ימי לימוד', 'Day streak')}>
-          <Flame className={`size-4 ${activeStreak > 0 ? 'fill-amber-400 text-amber-600' : 'text-slate-400'}`} aria-hidden />
-          <span className="font-semibold text-slate-900 tabular-nums">{activeStreak}</span>
-          <span className="text-xs">{tr('ימים', 'days')}</span>
-        </div>
-        <span className="h-3.5 w-px bg-slate-300" aria-hidden />
-        <div className="flex items-center gap-1 text-sm text-slate-600" title={`${todayXp}/${state.dailyGoal} XP`}>
-          <Target className="size-4 text-slate-400" aria-hidden />
-          <span className="font-semibold text-slate-900 tabular-nums">{goalPct}%</span>
-          <span className="text-xs">{tr('מהיעד', 'of goal')}</span>
-        </div>
-        <div className="ms-auto flex items-center gap-1 text-sm text-slate-600">
-          <Star className="size-4 text-slate-400" aria-hidden />
-          <span className="font-semibold text-slate-900 tabular-nums">{state.xp}</span>
-          <span className="text-xs">XP · {tr('רמה', 'Lv')} {level}</span>
-        </div>
-      </div>
-      <div className="h-px bg-slate-200">
-        <div className="h-full bg-rose-600 transition-all" style={{ width: `${levelProgress * 100}%` }} />
       </div>
     </header>
   );

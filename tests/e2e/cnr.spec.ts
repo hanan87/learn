@@ -58,7 +58,7 @@ test.describe('Montenegrin course', () => {
     await page.getByRole('radio', { name: /^Female/ }).click();
     await page.getByRole('button', { name: "Let's start" }).click();
 
-    await expect(page.getByText('The Sounds of Montenegrin')).toBeVisible();
+    await expect(page.getByTestId('continue-lesson')).toContainText('The Sounds of Montenegrin');
     await expect(page.getByTestId('course-pill-cnr')).toHaveAttribute('aria-pressed', 'true');
     expect(await page.evaluate(() => localStorage.getItem('polish-learn:course'))).toBe('cnr');
     expect((await progress(page, 'cnr')).profile.gender).toBe('f');
@@ -109,15 +109,15 @@ test.describe('Montenegrin course', () => {
 
   test('switching courses keeps each course’s progress', async ({ page }) => {
     const errors = await openApp(page, { lang: 'en', progress: { version: 2, xp: 77, items: {}, lessons: {}, dialogues: {} } });
-    await expect(page.getByText('Secrets of Polish Pronunciation')).toBeVisible();
+    await expect(page.getByTestId('continue-lesson')).toContainText('Secrets of Polish Pronunciation');
     await page.getByTestId('course-pill-cnr').click();
-    await expect(page.getByText('The Sounds of Montenegrin')).toBeVisible();
+    await expect(page.getByTestId('continue-lesson')).toContainText('The Sounds of Montenegrin');
     expect((await progress(page, 'pl')).xp).toBe(77);
 
     await page.goto('/#/map/settings');
     await expect(page.getByTestId('course-settings')).toBeVisible();
     await page.getByTestId('course-pl').click();
-    await expect(page.getByText('Secrets of Polish Pronunciation')).toBeVisible();
+    await expect(page.getByTestId('continue-lesson')).toContainText('Secrets of Polish Pronunciation');
     expect((await progress(page, 'pl')).xp).toBe(77);
     expectNoErrors(errors);
   });

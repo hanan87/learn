@@ -62,7 +62,7 @@ export function Settings() {
 
       <section className={card} data-testid="course-settings">
         <h3 className="flex items-center gap-2 font-bold">
-          <Languages className="size-5 text-rose-600" /> {tr('שפת לימוד', 'Language to learn')}
+          <Languages className="size-5 text-brand-600" /> {tr('שפת לימוד', 'Language to learn')}
         </h3>
         <CourseSwitch lang={lang} />
         <p className="text-xs text-slate-500">
@@ -84,14 +84,14 @@ export function Settings() {
 
       <section className={card}>
         <p className="flex items-center gap-1.5 font-bold">
-          <UserRound className="size-4 text-rose-600" /> {tr('הפרופיל שלי', 'My profile')}
+          <UserRound className="size-4 text-brand-600" /> {tr('הפרופיל שלי', 'My profile')}
         </p>
         <ProfileFields lang={lang} profile={state.profile} onChange={setProfile} />
       </section>
 
       <section className={card}>
         <p className="flex items-center gap-1.5 font-bold">
-          <Volume2 className="size-4 text-rose-600" /> {tr('קול המורה', 'Teacher voice')}
+          <Volume2 className="size-4 text-brand-600" /> {tr('קול המורה', 'Teacher voice')}
         </p>
         <VoiceSettings />
       </section>
@@ -152,7 +152,7 @@ export function Settings() {
 
       <section className={card}>
         <p className="flex items-center gap-1.5 font-bold">
-          <Mic className="size-4 text-rose-600" /> {tr('בדיקת מיקרופון', 'Microphone test')}
+          <Mic className="size-4 text-brand-600" /> {tr('בדיקת מיקרופון', 'Microphone test')}
         </p>
         <MicTest />
       </section>
@@ -185,7 +185,7 @@ export function Settings() {
       {!isStandaloneBuild && (
         <section className={card}>
           <p className="flex items-center gap-1.5 font-bold">
-            <Smartphone className="size-4 text-rose-600" /> {tr('אפליקציה עצמאית', 'Standalone app')}
+            <Smartphone className="size-4 text-brand-600" /> {tr('אפליקציה עצמאית', 'Standalone app')}
           </p>
           <p className="text-sm text-slate-600">
             {tr(

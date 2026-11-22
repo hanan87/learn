@@ -55,7 +55,14 @@ test.describe('every screen renders in both languages and themes', () => {
 
   test('the map lists 8 units and every unit opens its items', async ({ page }) => {
     const errors = await openApp(page, { lang: 'en' });
-    for (let u = 1; u <= 8; u++) await expect(page.getByText(`Unit ${u}`, { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Unit \d+:/ })).toHaveCount(8);
+    for (let u = 1; u <= 8; u++) {
+      await page.getByRole('button', { name: new RegExp(`^Unit ${u}:`) }).click();
+      const detail = page.getByTestId('unit-detail');
+      await expect(detail.getByText(`Unit ${u}`, { exact: true })).toBeVisible();
+      await expect(detail.getByRole('button', { name: /^Lesson 1/ })).toBeEnabled();
+      await expect(detail.getByText('All items in this unit')).toBeVisible();
+    }
     expectNoErrors(errors);
   });
 });

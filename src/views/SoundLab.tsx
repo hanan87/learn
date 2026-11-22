@@ -48,7 +48,7 @@ export function SoundLab({ onOpenItem, initialGroup }: { onOpenItem: (id: string
               type="button"
               onClick={() => setGroupId(g.id)}
               className={`polish relative shrink-0 rounded-full px-4 py-2 text-base font-bold ring-1 transition ${
-                g.id === groupId ? 'bg-rose-600 text-white ring-rose-600' : 'bg-white text-slate-700 ring-slate-200'
+                g.id === groupId ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-slate-700 ring-slate-200'
               }`}
               dir="ltr"
             >
@@ -104,7 +104,7 @@ export function SoundLab({ onOpenItem, initialGroup }: { onOpenItem: (id: string
         <h2 className="text-lg font-bold">{tr('מילים ליחידת ההגייה', 'Pronunciation unit words')}</h2>
         <div className="flex flex-wrap gap-2">
           {UNITS[0].items.map((item) => (
-            <button key={item.id} type="button" onClick={() => onOpenItem(item.id)} className="polish rounded-xl bg-white px-3 py-2 text-base font-semibold ring-1 ring-slate-200 hover:ring-rose-300" dir="ltr">
+            <button key={item.id} type="button" onClick={() => onOpenItem(item.id)} className="polish rounded-xl bg-white px-3 py-2 text-base font-semibold ring-1 ring-slate-200 hover:ring-brand-300" dir="ltr">
               {item.polish}
             </button>
           ))}
@@ -159,7 +159,7 @@ function LiveCompare({ group }: { group: ContrastGroup }) {
             <WordTile word={pair.a} tone="a" active={active?.pair === pair.id && active.side === 'a'} />
             <WordTile word={pair.b} tone="b" active={active?.pair === pair.id && active.side === 'b'} />
           </div>
-          <button type="button" onClick={() => playPair(pair)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-3 text-sm font-bold text-white active:scale-[0.98]">
+          <button type="button" onClick={() => playPair(pair)} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 py-3 text-sm font-bold text-white active:scale-[0.98]">
             <Play className="size-4 fill-white" /> {tr('השמע זה מול זה (A-B-A-B)', 'Play side by side (A-B-A-B)')}
           </button>
         </div>
@@ -216,7 +216,7 @@ function EarTraining({ group }: { group: ContrastGroup }) {
         </span>
       </div>
       <div className="flex flex-col items-center gap-2 py-2">
-        <button type="button" onClick={() => speak(target.polish)} className="grid size-20 place-items-center rounded-full bg-rose-600 text-white shadow-lg active:scale-95" aria-label={tr('השמע שוב', 'Play again')}>
+        <button type="button" onClick={() => speak(target.polish)} className="grid size-20 place-items-center rounded-full bg-brand-600 text-white shadow-lg active:scale-95" aria-label={tr('השמע שוב', 'Play again')}>
           <Volume2 className="size-9" />
         </button>
         <button type="button" onClick={() => speak(target.polish, RATE_SLOW)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium">
@@ -258,7 +258,7 @@ function EarTraining({ group }: { group: ContrastGroup }) {
                   `We played "${target.polish}" (${target.english}). Listen again slowly – the difference is the ${sound}.`,
                 )}
           </p>
-          <button type="button" onClick={next} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-3 font-bold text-white">
+          <button type="button" onClick={next} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 py-3 font-bold text-white">
             <Shuffle className="size-4" /> {tr('המילה הבאה', 'Next word')}
           </button>
         </div>
@@ -287,7 +287,7 @@ function SpeakDrill({ group }: { group: ContrastGroup }) {
                 setPairIdx(i);
                 setSide(s);
               }}
-              className={`polish rounded-xl px-3 py-1.5 text-base font-semibold ring-1 ${pairIdx === i && side === s ? 'bg-rose-600 text-white ring-rose-600' : 'bg-slate-50 ring-slate-200'}`}
+              className={`polish rounded-xl px-3 py-1.5 text-base font-semibold ring-1 ${pairIdx === i && side === s ? 'bg-brand-600 text-white ring-brand-600' : 'bg-slate-50 ring-slate-200'}`}
               dir="ltr"
             >
               {p[s].polish}
@@ -299,7 +299,7 @@ function SpeakDrill({ group }: { group: ContrastGroup }) {
         <PolishSyllables notation={word.syllablesPolish} size="lg" />
         <Phonetic he={word.phoneticHebrew} en={toEnglishPhonetic(word.polish)} />
         <p className="text-sm text-slate-500">{meaning(word, lang)}</p>
-        <button type="button" onClick={() => speak(word.polish)} className="mx-auto mt-1 flex items-center gap-1 text-sm font-medium text-rose-600">
+        <button type="button" onClick={() => speak(word.polish)} className="mx-auto mt-1 flex items-center gap-1 text-sm font-medium text-brand-700">
           <Volume2 className="size-4" /> {tr('שמעו את הדובר', 'Hear the speaker')}
         </button>
       </div>

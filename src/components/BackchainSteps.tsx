@@ -24,7 +24,7 @@ export function BackchainSteps({ steps, activeIndex = -1 }: Props) {
               dir="ltr"
               lang={C.htmlLang}
               className={`polish rounded-lg px-2.5 py-1.5 text-base font-semibold ring-1 transition ${
-                activeIndex === i ? 'scale-105 bg-rose-600 text-white ring-rose-600' : 'bg-slate-50 text-slate-800 ring-slate-200 hover:bg-white'
+                activeIndex === i ? 'scale-105 bg-brand-600 text-white ring-brand-600' : 'bg-slate-50 text-slate-800 ring-slate-200 hover:bg-white'
               }`}
             >
               <span className="me-1 text-[10px] font-normal opacity-70">{i + 1}</span>

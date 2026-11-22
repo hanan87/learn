@@ -49,7 +49,7 @@ export function VoiceSettings() {
         <label className="flex items-start justify-between gap-3">
           <span className="min-w-0">
             <span className="flex items-center gap-1.5 font-semibold">
-              <Sparkles className="size-4 text-rose-600" /> {tr('קול טבעי מוקלט', 'Natural recorded voice')}
+              <Sparkles className="size-4 text-brand-600" /> {tr('קול טבעי מוקלט', 'Natural recorded voice')}
             </span>
             <span className="block text-xs text-slate-500">
               {count > 0
@@ -70,7 +70,7 @@ export function VoiceSettings() {
               setNaturalVoiceEnabled(e.target.checked);
             }}
             aria-label={tr('קול טבעי מוקלט', 'Natural recorded voice')}
-            className="mt-1 size-6 shrink-0 accent-rose-600"
+            className="mt-1 size-6 shrink-0 accent-brand-600"
             data-testid="natural-voice"
           />
         </label>
@@ -119,7 +119,7 @@ export function VoiceSettings() {
                     onClick={() => pickDevice(uri)}
                     className={`flex w-full items-center gap-3 px-3 py-2.5 text-start text-sm ${active ? 'bg-slate-100' : 'bg-white hover:bg-slate-50'}`}
                   >
-                    <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${active ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300'}`}>
+                    <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${active ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300'}`}>
                       {active && <Check className="size-3" />}
                     </span>
                     <span className="min-w-0 flex-1 truncate">{v ? v.name : tr('אוטומטי – הקול הטוב ביותר שנמצא', 'Automatic – best voice found')}</span>

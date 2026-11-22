@@ -44,7 +44,7 @@ const SOURCES: CnrUnit[] = [
   {
     id: 'm1',
     order: 1,
-    color: 'red',
+    color: 'violet',
     title: 'צלילי המונטנגרית',
     titleEn: 'The Sounds of Montenegrin',
     subtitle: 'שני סוגי צ׳ ושני סוגי ג׳, ש ו-ז׳, ל ו-נ רכות, r כתנועה ו-ije',
@@ -240,7 +240,7 @@ const SOURCES: CnrUnit[] = [
   {
     id: 'm2',
     order: 2,
-    color: 'amber',
+    color: 'orange',
     title: 'נימוס והיכרות',
     titleEn: 'Politeness & Introductions',
     subtitle: 'ברכות, תודה, סליחה – ומתי Vi ומתי ti',
@@ -635,7 +635,7 @@ const SOURCES: CnrUnit[] = [
   {
     id: 'm4',
     order: 4,
-    color: 'emerald',
+    color: 'amber',
     title: 'בבית הקפה ובמסעדה',
     titleEn: 'At the Café & Restaurant',
     subtitle: 'קפה, מים, יין, חשבון – וסיומות שמשתנות',

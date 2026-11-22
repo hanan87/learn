@@ -51,7 +51,7 @@ export function MicTest() {
         <button
           type="button"
           onClick={() => (recording ? rec.stop() : (mic.retry(), rec.start()))}
-          className={`grid size-14 shrink-0 place-items-center rounded-full text-white shadow ${recording ? 'bg-rose-600' : 'bg-slate-900'}`}
+          className={`grid size-14 shrink-0 place-items-center rounded-full text-white shadow ${recording ? 'bg-rose-600' : 'bg-brand-600'}`}
           aria-label={recording ? tr('עצור', 'Stop') : tr('התחל בדיקה', 'Start test')}
         >
           {recording ? <Square className="size-6" /> : <Mic className="size-7" />}

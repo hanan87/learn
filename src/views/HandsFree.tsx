@@ -319,7 +319,7 @@ export function HandsFree({ source, onExit }: { source: 'map' | 'vocab'; onExit:
     return (
       <div className="grid min-h-dvh place-items-center p-6 text-center">
         <p>{tr('אין מילים לתרגול עדיין.', 'No words to practise yet.')}</p>
-        <button type="button" onClick={onExit} className="rounded-2xl bg-slate-900 px-6 py-3 font-bold text-white">
+        <button type="button" onClick={onExit} className="rounded-2xl bg-brand-600 px-6 py-3 font-bold text-white">
           {tr('חזרה', 'Back')}
         </button>
       </div>

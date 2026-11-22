@@ -87,7 +87,7 @@ export function Welcome() {
             <span className="mt-1 block text-sm text-slate-500">{o.sub}</span>
             <span className="mt-3 flex items-center gap-2 text-sm">
               <span dir="ltr" className="polish font-bold text-slate-800">
-                Dzię<span className="text-rose-600 underline decoration-4">ku</span>ję
+                Dzię<span className="text-brand-700 underline decoration-4">ku</span>ję
               </span>
               <span className="text-slate-400">→</span>
               <span className={o.lang === 'he' ? 'phonetic text-base' : 'font-mono'}>{o.sample.replace(/[[\]]/g, '')}</span>

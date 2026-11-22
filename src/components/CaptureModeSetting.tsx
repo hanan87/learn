@@ -50,7 +50,7 @@ export function CaptureModeSetting() {
               setCapturePreference(o.value);
               setPref(o.value);
             }}
-            className={`rounded-xl p-3 text-start ring-1 transition disabled:opacity-40 ${pref === o.value ? 'bg-rose-50 ring-2 ring-rose-500' : 'bg-slate-50 ring-slate-200'}`}
+            className={`rounded-xl p-3 text-start ring-1 transition disabled:opacity-40 ${pref === o.value ? 'bg-brand-50 ring-2 ring-brand-600' : 'bg-slate-50 ring-slate-200'}`}
           >
             <span className="block text-sm font-bold">{o.title}</span>
             <span className="block text-xs text-slate-600">{o.desc}</span>

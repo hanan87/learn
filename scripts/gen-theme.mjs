@@ -1,14 +1,15 @@
-// Generates src/theme.css – the "Atlas" design tokens.
+// Generates src/theme.css – the "C" design tokens (clean and elegant, light and dark).
 //
-// Instead of Tailwind's 17 saturated hues, the whole app uses a restrained editorial palette:
-//   neutral  warm paper → ink        (replaces slate)
-//   red      Polish crimson accent   (rose, red, pink, fuchsia)
-//   ochre    warm highlight          (amber, orange, yellow)
-//   forest   success / mastery       (emerald, green, lime, teal)
-//   ink-blue information / calm      (sky, blue, cyan, indigo, violet, purple)
-// Every existing utility (bg-rose-600, ring-slate-200, text-amber-800…) maps onto these scales, so
-// components keep their markup while the visual language changes. Dark mode is derived from the
-// same scales (neutral inverted, tints mixed into a warm near-black).
+// Palette:
+//   neutral  cool gray, paper → ink                      (slate, gray, stone)
+//   brand    royal blue – primary actions and accents      (brand-*: bg-brand-600, text-brand-700…)
+//   red      errors and wrong sounds                       (rose, red)
+//   pink     a unit tile color                             (pink, fuchsia)
+//   orange / amber / emerald / teal / sky / blue / violet – each its own hue, used for unit tiles,
+//   stats and feedback, so every unit has a recognizable color.
+// Every existing utility (bg-rose-600, ring-slate-200, text-amber-800…) maps onto these scales.
+// Dark mode is derived from the same scales: the neutral scale is inverted, tints are mixed into a
+// cool near-black, and text shades (700–950) become light tints so they stay readable.
 import { writeFileSync } from 'node:fs';
 
 const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
@@ -16,44 +17,53 @@ const L = [0.975, 0.945, 0.89, 0.815, 0.72, 0.625, 0.545, 0.47, 0.395, 0.335, 0.
 const C = [0.07, 0.15, 0.3, 0.52, 0.78, 0.94, 1, 0.93, 0.8, 0.64, 0.48];
 const fmt = (l, c, h) => `oklch(${(l * 100).toFixed(1)}% ${c.toFixed(3)} ${h})`;
 
-function scale(h, cmax) {
-  return Object.fromEntries(SHADES.map((s, i) => [s, fmt(L[i], C[i] * cmax, h)]));
+function scale(h, cmax, lightness = L) {
+  return Object.fromEntries(SHADES.map((s, i) => [s, fmt(lightness[i], C[i] * cmax, h)]));
 }
 
-const NEUTRAL_H = 75;
+const NEUTRAL_H = 265;
 const neutralLight = {
-  50: fmt(0.974, 0.006, NEUTRAL_H),
-  100: fmt(0.952, 0.007, NEUTRAL_H),
-  200: fmt(0.91, 0.009, NEUTRAL_H),
-  300: fmt(0.845, 0.01, NEUTRAL_H),
-  400: fmt(0.7, 0.01, NEUTRAL_H),
-  500: fmt(0.555, 0.009, NEUTRAL_H),
-  600: fmt(0.46, 0.008, NEUTRAL_H),
-  700: fmt(0.375, 0.008, NEUTRAL_H),
-  800: fmt(0.29, 0.007, NEUTRAL_H),
-  900: fmt(0.215, 0.006, NEUTRAL_H),
-  950: fmt(0.16, 0.005, NEUTRAL_H),
+  50: fmt(0.973, 0.003, NEUTRAL_H),
+  100: fmt(0.955, 0.004, NEUTRAL_H),
+  200: fmt(0.925, 0.006, NEUTRAL_H),
+  300: fmt(0.87, 0.009, NEUTRAL_H),
+  400: fmt(0.711, 0.016, NEUTRAL_H),
+  500: fmt(0.554, 0.02, NEUTRAL_H),
+  600: fmt(0.446, 0.024, NEUTRAL_H),
+  700: fmt(0.373, 0.028, NEUTRAL_H),
+  800: fmt(0.278, 0.028, NEUTRAL_H),
+  900: fmt(0.21, 0.028, NEUTRAL_H),
+  950: fmt(0.135, 0.02, NEUTRAL_H),
 };
 const neutralDark = {
-  50: fmt(0.165, 0.006, NEUTRAL_H),
-  100: fmt(0.205, 0.007, NEUTRAL_H),
-  200: fmt(0.27, 0.008, NEUTRAL_H),
-  300: fmt(0.385, 0.009, NEUTRAL_H),
-  400: fmt(0.525, 0.009, NEUTRAL_H),
-  500: fmt(0.655, 0.009, NEUTRAL_H),
-  600: fmt(0.775, 0.008, NEUTRAL_H),
-  700: fmt(0.855, 0.007, NEUTRAL_H),
-  800: fmt(0.915, 0.006, NEUTRAL_H),
-  900: fmt(0.955, 0.005, NEUTRAL_H),
-  950: fmt(0.985, 0.003, NEUTRAL_H),
+  50: fmt(0.175, 0.006, NEUTRAL_H),
+  100: fmt(0.215, 0.008, NEUTRAL_H),
+  200: fmt(0.285, 0.012, NEUTRAL_H),
+  300: fmt(0.37, 0.014, NEUTRAL_H),
+  400: fmt(0.5, 0.016, NEUTRAL_H),
+  500: fmt(0.71, 0.016, NEUTRAL_H),
+  600: fmt(0.8, 0.012, NEUTRAL_H),
+  700: fmt(0.87, 0.008, NEUTRAL_H),
+  800: fmt(0.925, 0.005, NEUTRAL_H),
+  900: fmt(0.965, 0.003, NEUTRAL_H),
+  950: fmt(0.985, 0.002, NEUTRAL_H),
 };
 
-const FAMILIES = {
-  red: { hues: ['rose', 'red', 'pink', 'fuchsia'], ...{ h: 24, c: 0.2 } },
-  ochre: { hues: ['amber', 'orange', 'yellow'], h: 70, c: 0.135 },
-  forest: { hues: ['emerald', 'green', 'lime', 'teal'], h: 160, c: 0.11 },
-  blue: { hues: ['sky', 'blue', 'cyan', 'indigo', 'violet', 'purple'], h: 258, c: 0.12 },
-};
+// Brand blue sits a little darker than the shared lightness curve so white text on brand-600 passes AA.
+const BRAND_L = [0.972, 0.94, 0.885, 0.8, 0.7, 0.6, 0.515, 0.455, 0.39, 0.33, 0.255];
+
+const FAMILIES = [
+  { hues: ['brand'], h: 266, c: 0.215, l: BRAND_L, darkButton: 0.58 },
+  { hues: ['rose', 'red'], h: 25, c: 0.2 },
+  { hues: ['pink', 'fuchsia'], h: 355, c: 0.19 },
+  { hues: ['orange'], h: 45, c: 0.17 },
+  { hues: ['amber', 'yellow'], h: 75, c: 0.155 },
+  { hues: ['emerald', 'green', 'lime'], h: 158, c: 0.15 },
+  { hues: ['teal'], h: 185, c: 0.12 },
+  { hues: ['sky', 'cyan'], h: 235, c: 0.14 },
+  { hues: ['blue', 'indigo'], h: 264, c: 0.2 },
+  { hues: ['violet', 'purple'], h: 292, c: 0.2 },
+];
 
 const light = [];
 const dark = [];
@@ -61,17 +71,17 @@ for (const [s, v] of Object.entries(neutralLight)) light.push(`  --color-slate-$
 for (const [s, v] of Object.entries(neutralDark)) dark.push(`  --color-slate-${s}: ${v};`, `  --color-stone-${s}: ${v};`, `  --color-gray-${s}: ${v};`);
 
 const DARK_BASE = neutralDark[50];
-for (const fam of Object.values(FAMILIES)) {
-  const sc = scale(fam.h, fam.c);
+for (const fam of FAMILIES) {
+  const sc = scale(fam.h, fam.c, fam.l);
   for (const hue of fam.hues) {
     for (const s of SHADES) light.push(`  --color-${hue}-${s}: ${sc[s]};`);
-    // Dark: tinted surfaces sink into the warm near-black; text shades become light tints;
+    // Dark: tinted surfaces sink into the cool near-black; text shades become light tints;
     // 400–600 (buttons, accents) stay, with 600 lifted slightly for contrast on dark surfaces.
     dark.push(`  --color-${hue}-50: color-mix(in oklab, ${sc[500]} 12%, ${DARK_BASE});`);
     dark.push(`  --color-${hue}-100: color-mix(in oklab, ${sc[500]} 20%, ${DARK_BASE});`);
     dark.push(`  --color-${hue}-200: color-mix(in oklab, ${sc[500]} 34%, ${DARK_BASE});`);
     dark.push(`  --color-${hue}-300: color-mix(in oklab, ${sc[500]} 52%, ${DARK_BASE});`);
-    dark.push(`  --color-${hue}-600: ${fmt(0.6, fam.c * 0.95, fam.h)};`);
+    dark.push(`  --color-${hue}-600: ${fmt(fam.darkButton ?? 0.6, fam.c * 0.92, fam.h)};`);
     dark.push(`  --color-${hue}-700: ${sc[300]};`);
     dark.push(`  --color-${hue}-800: ${sc[200]};`);
     dark.push(`  --color-${hue}-900: ${sc[100]};`);
@@ -79,26 +89,29 @@ for (const fam of Object.values(FAMILIES)) {
   }
 }
 
+const SHADOW = (a) => `oklch(25% 0.03 265 / ${a})`;
+
 const css = `/* Generated by scripts/gen-theme.mjs – do not edit by hand (npm run theme). */
 @theme {
   --font-sans: 'IBM Plex Sans Hebrew', system-ui, 'Segoe UI', Arial, sans-serif;
-  --font-serif: 'Frank Ruhl Libre Variable', 'Frank Ruhl Libre', Georgia, 'Times New Roman', serif;
+  /* The C design uses one family throughout; font-serif is kept as an alias so older markup still renders. */
+  --font-serif: 'IBM Plex Sans Hebrew', system-ui, 'Segoe UI', Arial, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.625rem;
-  --radius-2xl: 0.75rem;
-  --radius-3xl: 1rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.5rem;
 
-  --shadow-2xs: 0 1px 0 oklch(20% 0.01 75 / 0.03);
-  --shadow-xs: 0 1px 0 oklch(20% 0.01 75 / 0.04);
-  --shadow-sm: 0 1px 1px oklch(20% 0.01 75 / 0.04);
-  --shadow-md: 0 1px 2px oklch(20% 0.01 75 / 0.06), 0 2px 8px -4px oklch(20% 0.01 75 / 0.08);
-  --shadow-lg: 0 2px 4px oklch(20% 0.01 75 / 0.05), 0 12px 28px -14px oklch(20% 0.01 75 / 0.22);
-  --shadow-xl: 0 4px 8px oklch(20% 0.01 75 / 0.05), 0 20px 40px -20px oklch(20% 0.01 75 / 0.28);
-  --shadow-2xl: 0 24px 60px -24px oklch(20% 0.01 75 / 0.35);
+  --shadow-2xs: 0 1px 0 ${SHADOW(0.03)};
+  --shadow-xs: 0 1px 1px ${SHADOW(0.04)};
+  --shadow-sm: 0 1px 2px ${SHADOW(0.04)}, 0 4px 12px -6px ${SHADOW(0.06)};
+  --shadow-md: 0 1px 2px ${SHADOW(0.04)}, 0 8px 24px -8px ${SHADOW(0.1)};
+  --shadow-lg: 0 2px 4px ${SHADOW(0.04)}, 0 14px 32px -12px ${SHADOW(0.18)};
+  --shadow-xl: 0 4px 8px ${SHADOW(0.05)}, 0 22px 44px -18px ${SHADOW(0.26)};
+  --shadow-2xl: 0 28px 64px -24px ${SHADOW(0.34)};
 
 ${light.join('\n')}
 }

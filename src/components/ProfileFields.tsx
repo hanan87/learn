@@ -50,13 +50,13 @@ export function ProfileFields({ lang, profile, onChange, course = COURSE_INFO }:
             aria-checked={profile.gender === g}
             onClick={() => onChange({ gender: g })}
             className={`rounded-2xl px-3 py-3 text-start ring-2 transition active:scale-[0.98] ${
-              profile.gender === g ? 'bg-rose-600 text-white ring-rose-600' : 'bg-white text-slate-800 ring-slate-200 hover:ring-rose-300'
+              profile.gender === g ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-slate-800 ring-slate-200 hover:ring-brand-300'
             }`}
           >
             <span className="flex items-center gap-1.5 font-bold">
               <UserRound className="size-4" /> {label}
             </span>
-            <span dir="ltr" className={`polish mt-1 block text-xs ${profile.gender === g ? 'text-rose-100' : 'text-slate-500'}`}>
+            <span dir="ltr" className={`polish mt-1 block text-xs ${profile.gender === g ? 'text-white/75' : 'text-slate-500'}`}>
               {sample}
             </span>
           </button>
@@ -72,7 +72,7 @@ export function ProfileFields({ lang, profile, onChange, course = COURSE_INFO }:
           dir="ltr"
           onChange={(e) => onChange({ name: e.target.value })}
           placeholder={profile.gender ? C.defaultNames[profile.gender] : `${C.defaultNames.m} / ${C.defaultNames.f}`}
-          className="w-full rounded-xl bg-white px-3 py-2.5 text-base ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-rose-400"
+          className="w-full rounded-xl bg-white px-3 py-2.5 text-base ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-brand-500"
         />
         <span className={`block text-xs ${nonLatin ? 'text-amber-700' : 'text-slate-500'}`}>
           {nonLatin

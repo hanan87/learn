@@ -1,6 +1,6 @@
 import { COURSE_INFO as C } from '../lib/course';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Ear, Headphones, Lightbulb, Loader2, Mic, RotateCcw, Square, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Ear, Headphones, Lightbulb, Loader2, Mic, RotateCcw, Square, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useSpeechRecorder } from '../hooks/useSpeechRecorder';
 import type { CaptureMode } from '../lib/captureMode';
 import { useLang } from '../i18n/LangContext';
@@ -259,7 +259,7 @@ export function PronunciationPractice({ target, itemId, articulationTip, backcha
             onClick={toggleRecording}
             disabled={processing}
             className={`relative grid place-items-center rounded-full text-white shadow-lg transition active:scale-95 disabled:opacity-60 ${compact ? 'size-14' : 'size-20'} ${
-              recording ? 'bg-rose-600' : 'bg-slate-900 hover:bg-slate-800'
+              recording ? 'bg-rose-600' : 'bg-brand-600 hover:bg-brand-700'
             }`}
             aria-label={recording ? tr('עצור הקלטה', 'Stop recording') : tr('התחל הקלטה', 'Start recording')}
           >
@@ -330,14 +330,14 @@ export function PronunciationPractice({ target, itemId, articulationTip, backcha
             <li>{tr('דברו מיד אחרי הלחיצה, קרוב לטלפון.', 'Start speaking right after tapping, close to the phone.')}</li>
             <li>{tr('בהגדרות ← "בדיקת מיקרופון" אפשר לראות מה הדפדפן קולט.', 'Settings → "Microphone test" shows what the browser picks up.')}</li>
           </ul>
-          <button type="button" onClick={toggleRecording} className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white active:scale-95">
+          <button type="button" onClick={toggleRecording} className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white active:scale-95">
             <RotateCcw className="size-4" /> {tr('נסו שוב', 'Try again')}
           </button>
         </div>
       )}
 
       {attempt && !attempt.noAudio && (
-        <div className="space-y-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+        <div className="space-y-4 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200/80">
           {attempt.unrecognized && (
             <p className="flex items-start gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-900 ring-1 ring-rose-200" role="alert" data-testid="unrecognized">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -404,7 +404,7 @@ export function PronunciationPractice({ target, itemId, articulationTip, backcha
             onClick={compare}
             hidden={!canCompare}
             disabled={comparing !== null}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3.5 text-base font-bold text-white shadow-md active:scale-[0.98] disabled:opacity-80"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-3.5 text-base font-bold text-white shadow-md active:scale-[0.98] disabled:opacity-80"
           >
             {comparing === null && <Headphones className="size-5" aria-hidden />}
             {comparing === 'speaker' && <Ear className="size-5 animate-pulse" aria-hidden />}
@@ -462,9 +462,12 @@ function fixHints(scoring: PronunciationResult): { text: string; heard: string; 
 function ScoreView({ scoring, selfRated }: { scoring: PronunciationResult; selfRated: boolean }) {
   const { tr, lang } = useLang();
   const { score } = scoring;
-  const color = score >= PASS_SCORE ? 'text-emerald-600' : score >= 60 ? 'text-amber-600' : 'text-rose-600';
-  const ring = score >= PASS_SCORE ? 'stroke-emerald-500' : score >= 60 ? 'stroke-amber-500' : 'stroke-rose-500';
-  const circumference = 2 * Math.PI * 26;
+  const tone = score >= PASS_SCORE ? 'good' : score >= 60 ? 'mid' : 'low';
+  const TONE = {
+    good: { text: 'text-emerald-700', bar: 'bg-emerald-500', pill: 'bg-emerald-50 text-emerald-800 ring-emerald-200' },
+    mid: { text: 'text-amber-700', bar: 'bg-amber-500', pill: 'bg-amber-50 text-amber-800 ring-amber-200' },
+    low: { text: 'text-rose-700', bar: 'bg-rose-500', pill: 'bg-rose-50 text-rose-800 ring-rose-200' },
+  }[tone];
   const missing = scoring.words.filter((w) => !w.heard && !w.matched).map((w) => w.word);
   const hints = selfRated ? [] : fixHints(scoring);
   const allRight = scoring.words.every((w) => w.matched && (w.sounds ?? []).every((m) => m.ok));
@@ -479,67 +482,71 @@ function ScoreView({ scoring, selfRated }: { scoring: PronunciationResult; selfR
         : score >= 60
           ? tr('קרוב – עוד קצת דיוק', 'Close – a bit more precision')
           : tr('בואו נפרק ונתרגל', "Let's break it down and practise");
+  const wordAlign = lang === 'he' ? 'text-right' : 'text-left';
   return (
     <div className="space-y-3" data-testid="score-view">
-      <div className="flex items-center gap-4">
-        <div className="relative size-16 shrink-0">
-          <svg viewBox="0 0 60 60" className="size-16 -rotate-90">
-            <circle cx="30" cy="30" r="26" className="fill-none stroke-slate-100" strokeWidth="6" />
-            <circle
-              cx="30"
-              cy="30"
-              r="26"
-              className={`fill-none ${ring} transition-all duration-700`}
-              strokeWidth="6"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={circumference * (1 - score / 100)}
-            />
-          </svg>
-          <span className={`absolute inset-0 grid place-items-center text-base font-bold ${color}`}>{score}%</span>
+      <div className="flex items-end justify-between gap-3">
+        <div className="shrink-0">
+          <p className="text-xs text-slate-500">{tr('ציון הגייה', 'Pronunciation score')}</p>
+          <p className={`text-4xl leading-none font-bold tabular-nums ${TONE.text}`}>{score}%</p>
         </div>
-        <div className="min-w-0 flex-1 space-y-1">
-          <p className={`text-sm font-bold ${color}`}>{headline}</p>
-          {!selfRated && (
-            <p className="text-xs break-words text-slate-500" data-testid="heard-line">
-              {tr('זוהה:', 'Heard:')}{' '}
-              <span dir="ltr" lang={C.htmlLang} className="polish">
-                {scoring.transcript || '—'}
-              </span>
-            </p>
-          )}
-        </div>
+        <p className={`flex min-w-0 items-center gap-1.5 rounded-2xl px-3 py-1.5 text-sm font-semibold ring-1 ${TONE.pill}`}>
+          {tone === 'good' ? <CheckCircle2 className="size-4 shrink-0" aria-hidden /> : <AlertTriangle className="size-4 shrink-0" aria-hidden />}
+          <span>{headline}</span>
+        </p>
       </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-200/70" aria-hidden>
+        <div className={`h-full rounded-full transition-all duration-700 ${TONE.bar}`} style={{ width: `${score}%` }} />
+      </div>
+      {!selfRated && (
+        <p className="text-sm break-words text-slate-500" data-testid="heard-line">
+          {tr('זוהה:', 'Heard:')}{' '}
+          <span dir="ltr" lang={C.htmlLang} className="polish font-medium text-slate-800">
+            {scoring.transcript || '—'}
+          </span>
+        </p>
+      )}
 
       {/* Word by word: wrong sounds in red, with the word's own score and what was heard. */}
-      <ul dir="ltr" className="flex flex-wrap gap-x-3 gap-y-2" data-testid="word-scores">
-        {scoring.words.map((w, i) => (
-          <li key={i} className="flex flex-col items-center">
-            <span lang={C.htmlLang} className="polish text-xl font-semibold">
-              {w.sounds?.length
-                ? w.sounds.map((m, k) => (
-                    <span key={k} className={m.ok ? (w.matched ? 'text-emerald-600' : 'text-slate-800') : 'text-rose-600 underline decoration-rose-400 decoration-wavy decoration-2'}>
-                      {m.text}
-                    </span>
-                  ))
-                : <span className={w.matched ? 'text-emerald-600' : 'text-rose-600 underline decoration-rose-300 decoration-wavy'}>{w.word}</span>}
-            </span>
-            {!selfRated && (
-              <span className={`text-[11px] font-semibold ${w.matched ? 'text-emerald-700' : 'text-rose-700'}`} dir="auto">
-                {w.heard ? `${w.score ?? Math.round(w.similarity * 100)}%` : tr('לא נאמר', 'not said')}
-                {w.heard && !w.matched && cleanCompare(w.heard) !== cleanCompare(w.word) && (
-                  <span className="font-normal text-slate-500">
-                    {' · '}
-                    {tr('נשמע:', 'heard:')}{' '}
-                    <span dir="ltr" lang={C.htmlLang} className="polish">
-                      {w.heard}
-                    </span>
-                  </span>
-                )}
+      <ul className="divide-y divide-slate-200/70 rounded-2xl bg-white ring-1 ring-slate-200/80" data-testid="word-scores">
+        {scoring.words.map((w, i) => {
+          const wordScore = w.heard ? (w.score ?? Math.round(w.similarity * 100)) : 0;
+          const scoreTone = w.matched ? 'text-emerald-700' : wordScore >= 60 ? 'text-amber-700' : 'text-rose-700';
+          return (
+            <li key={i} className="flex items-center gap-3 px-3 py-2.5">
+              <span dir="ltr" lang={C.htmlLang} className={`polish min-w-0 flex-1 text-lg font-semibold break-words text-slate-900 ${wordAlign}`}>
+                {w.sounds?.length
+                  ? w.sounds.map((m, k) => (
+                      <span key={k} className={m.ok ? '' : 'text-rose-600 underline decoration-rose-400 decoration-wavy decoration-2 underline-offset-4'}>
+                        {m.text}
+                      </span>
+                    ))
+                  : <span className={w.matched ? '' : 'text-rose-600 underline decoration-rose-300 decoration-wavy underline-offset-4'}>{w.word}</span>}
               </span>
-            )}
-          </li>
-        ))}
+              {!selfRated && (
+                <>
+                  <span className="max-w-[45%] shrink-0 text-xs text-slate-500" dir="auto">
+                    {!w.heard
+                      ? tr('לא נאמר', 'not said')
+                      : !w.matched && cleanCompare(w.heard) !== cleanCompare(w.word)
+                        ? (
+                            <>
+                              {tr('נשמע:', 'heard:')}{' '}
+                              <span dir="ltr" lang={C.htmlLang} className="polish font-medium text-slate-700">
+                                {w.heard}
+                              </span>
+                            </>
+                          )
+                        : w.matched && (w.sounds ?? []).every((m) => m.ok)
+                          ? tr('כל הצלילים נכונים', 'all sounds right')
+                          : ''}
+                  </span>
+                  <span className={`w-11 shrink-0 text-end text-sm font-bold tabular-nums ${scoreTone}`}>{w.heard ? `${wordScore}%` : '–'}</span>
+                </>
+              )}
+            </li>
+          );
+        })}
       </ul>
       {!selfRated && scoring.extra?.length ? (
         <p className="text-xs text-slate-500">
@@ -551,23 +558,24 @@ function ScoreView({ scoring, selfRated }: { scoring: PronunciationResult; selfR
       ) : null}
 
       {hints.length > 0 && (
-        <ul className="space-y-1.5 rounded-xl bg-rose-50 p-3 text-sm text-rose-950 ring-1 ring-rose-200" data-testid="fix-hints">
+        <ul className="space-y-2.5 rounded-2xl bg-amber-50 p-3.5 text-sm ring-1 ring-amber-200" data-testid="fix-hints">
           {hints.map((h, k) => (
-            <li key={k}>
-              <span className="font-bold">
-                <span dir="ltr" lang={C.htmlLang} className="polish">
-                  {h.text}
-                </span>{' '}
-                {h.heard
-                  ? tr('נשמעה כמו', 'sounded like')
-                  : tr('לא נשמעה', 'was not heard')}{' '}
-                {h.heard && (
+            <li key={k} className="flex gap-2.5">
+              <Lightbulb className="mt-0.5 size-5 shrink-0 text-amber-600" aria-hidden />
+              <span>
+                <span className="block font-bold text-slate-900">
                   <span dir="ltr" lang={C.htmlLang} className="polish">
-                    {h.heard}
-                  </span>
-                )}
+                    {h.text}
+                  </span>{' '}
+                  {h.heard ? tr('נשמעה כמו', 'sounded like') : tr('לא נשמעה', 'was not heard')}{' '}
+                  {h.heard && (
+                    <span dir="ltr" lang={C.htmlLang} className="polish">
+                      {h.heard}
+                    </span>
+                  )}
+                </span>
+                {h.tip && <span className="mt-0.5 block leading-relaxed text-slate-600">{lang === 'he' ? h.tip.he : h.tip.en}</span>}
               </span>
-              {h.tip && <span className="block text-rose-900/80">{lang === 'he' ? h.tip.he : h.tip.en}</span>}
             </li>
           ))}
         </ul>

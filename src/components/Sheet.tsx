@@ -27,7 +27,7 @@ export function Sheet({ open, onClose, title, children }: Props) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={title}>
-      <button type="button" className="absolute inset-0 bg-slate-900/40" onClick={onClose} aria-label={tr('סגירה', 'Close')} />
+      <button type="button" className="absolute inset-0 bg-black/45" onClick={onClose} aria-label={tr('סגירה', 'Close')} />
       <div className="animate-pop-in pb-safe relative flex max-h-[92dvh] w-full max-w-2xl flex-col rounded-t-3xl bg-slate-50 shadow-2xl sm:rounded-3xl">
         <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
           <span className="mx-auto h-1.5 w-10 rounded-full bg-slate-300 sm:hidden" aria-hidden />

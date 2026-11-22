@@ -75,5 +75,5 @@ export function Waveform({ analyserRef, active, simulated = false }: Props) {
     return () => cancelAnimationFrame(raf);
   }, [analyserRef, active, simulated]);
 
-  return <canvas ref={canvasRef} className="h-16 w-full rounded-xl bg-rose-50/60" aria-hidden />;
+  return <canvas ref={canvasRef} className="h-16 w-full rounded-xl bg-brand-50/60" aria-hidden />;
 }
