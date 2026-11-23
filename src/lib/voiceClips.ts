@@ -106,8 +106,11 @@ export function findClip(text: string, speed: ClipSpeed, voice: ClipVoice = 'pl-
   return null;
 }
 
-export function clipCount(): number {
-  return manifest ? Object.keys(manifest.clips).length : 0;
+/** Number of recorded clips; with a course prefix ('pl' / 'cnr'), only that course's target-language clips. */
+export function clipCount(prefix?: string): number {
+  if (!manifest) return 0;
+  const keys = Object.keys(manifest.clips);
+  return prefix ? keys.filter((k) => k.startsWith(`${prefix}-`)).length : keys.length;
 }
 
 // --- playback -------------------------------------------------------------------------------

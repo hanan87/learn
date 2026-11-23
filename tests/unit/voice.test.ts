@@ -4,7 +4,7 @@ import { STORIES } from '../../src/data/stories';
 import { buildClipCatalog, phraseWords } from '../../src/lib/clipCatalog';
 import { DEFAULT_PROFILE } from '../../src/lib/personalize';
 import { voiceRank } from '../../src/lib/tts';
-import { clipKey, clipText, findClip, setManifest, type ClipManifest } from '../../src/lib/voiceClips';
+import { clipCount, clipKey, clipText, findClip, setManifest, type ClipManifest } from '../../src/lib/voiceClips';
 import { AZURE_VOICES, buildSsml, clipFileName, escapeXml, prosodyRate } from '../../scripts/voice-lib';
 
 afterEach(() => {
@@ -96,6 +96,14 @@ describe('clip lookup', () => {
 
   it('returns nothing without a manifest (device voice is used)', () => {
     expect(findClip('Dzień dobry', 'n')).toBeNull();
+    expect(clipCount()).toBe(0);
+  });
+
+  it('counts the recordings of one course only when asked', () => {
+    setManifest({ ...manifest, clips: { ...manifest.clips, [clipKey('cnr-f', 'n', 'Dobar dan')]: 'ddd.mp3', [clipKey('he', 'n', 'שלום')]: 'eee.mp3' } });
+    expect(clipCount()).toBe(5);
+    expect(clipCount('pl')).toBe(3);
+    expect(clipCount('cnr')).toBe(1);
   });
 
   it('every resolved item phrase would find its clip', () => {

@@ -14,3 +14,6 @@ tests/e2e/screens/
 .env
 .env.*
 *.local
+
+# Half-written voice clips from an interrupted run
+public/audio/*.part

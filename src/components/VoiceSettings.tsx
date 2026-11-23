@@ -29,7 +29,7 @@ function cloudSnapshot(): string {
 export function VoiceSettings() {
   const { tr } = useLang();
   // Re-render when the clip manifest arrives or the preference changes.
-  const snapshot = useSyncExternalStore(subscribeManifest, () => `${clipCount()}|${naturalVoiceEnabled()}`);
+  const snapshot = useSyncExternalStore(subscribeManifest, () => `${clipCount(C.clipPrefix)}|${naturalVoiceEnabled()}`);
   const [count, natural] = [Number(snapshot.split('|')[0]), snapshot.endsWith('true')];
   const cloud = useSyncExternalStore(subscribeCloudVoice, cloudSnapshot);
   const cloudOn = !cloud.startsWith('|');

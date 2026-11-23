@@ -35,12 +35,17 @@ npm run dev
 npm run build
 ```
 
-Natural-voice clips (Azure free tier, about 41,000 characters for both courses):
+Natural-voice clips for all course content (1,758 phrases, about 41,000 characters for both courses). The clips are committed into `public/audio`, so they keep working for good, offline too:
 
 ```bash
-# .env.local (git-ignored): AZURE_SPEECH_KEY=…  AZURE_SPEECH_REGION=westeurope
+# Free – no account, key or card: Microsoft Edge's online neural voices (unofficial edge-tts package)
+pip install edge-tts
+npm run voice:free       # synthesize missing clips into public/audio
+
+# Or with your own Azure AI Speech key – .env.local (git-ignored): AZURE_SPEECH_KEY=…  AZURE_SPEECH_REGION=westeurope
+npm run voice
+
 npm run voice -- --dry   # count phrases and characters
-npm run voice            # synthesize missing clips into public/audio
 ```
 
 ```bash

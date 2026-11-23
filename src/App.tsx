@@ -48,7 +48,7 @@ export function App() {
   const { lang, unset, tr } = useLang();
   const mic = useMic();
   const [voiceMissing, setVoiceMissing] = useState(false);
-  const clips = useSyncExternalStore(subscribeManifest, clipCount);
+  const clips = useSyncExternalStore(subscribeManifest, () => clipCount(C.clipPrefix));
   const cloud = useSyncExternalStore(subscribeCloudVoice, cloudConfigured);
 
   useEffect(() => {
