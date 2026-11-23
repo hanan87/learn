@@ -128,4 +128,10 @@ describe('device voice ranking', () => {
     expect(sorted[1]).toContain('Enhanced');
     expect(sorted.at(-1)).toContain('Paulina');
   });
+
+  it('recognizes an iPhone enhanced voice by its id even when the name does not say so', () => {
+    const compact = { name: 'Lana', localService: true, voiceURI: 'com.apple.voice.compact.hr-HR.Lana' };
+    const enhanced = { name: 'Lana', localService: true, voiceURI: 'com.apple.voice.enhanced.hr-HR.Lana' };
+    expect(voiceRank(enhanced)).toBeLessThan(voiceRank(compact));
+  });
 });

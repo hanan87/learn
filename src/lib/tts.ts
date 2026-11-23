@@ -33,10 +33,11 @@ let speakGen = 0;
 const VOICE_PREF_KEY = 'polish-learn:device-voice';
 
 /** Quality rank of a device voice: neural "Natural" voices first, robotic legacy voices last. */
-export function voiceRank(v: { name: string; localService?: boolean }): number {
+export function voiceRank(v: { name: string; localService?: boolean; voiceURI?: string }): number {
   const n = v.name;
   if (/natural|neural/i.test(n)) return 0;
-  if (/premium|enhanced|siri/i.test(n)) return 1;
+  // iPhone downloads ("Lana" Enhanced) often say so only in the voice id: com.apple.voice.enhanced.hr-HR.Lana.
+  if (/premium|enhanced|siri/i.test(n) || /premium|enhanced|siri/i.test(v.voiceURI ?? '')) return 1;
   if (/online/i.test(n)) return 2;
   if (/google/i.test(n)) return 3;
   return v.localService === false ? 4 : 5;
@@ -54,7 +55,12 @@ export function polishVoices(): SpeechSynthesisVoice[] {
   return window.speechSynthesis
     .getVoices()
     .filter((v) => langRank(v.lang) >= 0)
-    .sort((a, b) => langRank(a.lang) - langRank(b.lang) || voiceRank(a) - voiceRank(b) || a.name.localeCompare(b.name));
+    .sort((a, b) =>
+      // Bosnian, Croatian and Serbian all read Montenegrin well: there the better-sounding voice wins.
+      COURSE_INFO.id === 'cnr'
+        ? voiceRank(a) - voiceRank(b) || langRank(a.lang) - langRank(b.lang) || a.name.localeCompare(b.name)
+        : langRank(a.lang) - langRank(b.lang) || voiceRank(a) - voiceRank(b) || a.name.localeCompare(b.name),
+    );
 }
 
 export function getPreferredVoiceURI(): string | null {
@@ -131,12 +137,15 @@ export async function speak(text: string, rate: number = RATE_NORMAL, speaker: S
   const slow = rate <= 0.7;
   const speed = slow ? 's' : 'n';
   const voice = `${COURSE_INFO.clipPrefix}-${speaker}` as ClipVoice;
-  const clip = findClip(text, speed, voice) ?? (await cloudClipUrl(text, speed, voice));
+  // No slow recording of this phrase (a word, a conversation line…): the natural recording played
+  // slower still sounds far better than the device voice.
+  const slowedNormal = slow && !findClip(text, 's', voice) ? findClip(text, 'n', voice) : null;
+  const clip = slowedNormal ?? findClip(text, speed, voice) ?? (await cloudClipUrl(text, speed, voice));
   // Stopped, or another phrase was asked for, while the live voice was loading.
   if (gen !== speakGen) return;
   if (clip) {
     if (ttsSupported) window.speechSynthesis.cancel();
-    const played = await playClip(clip, slow ? 1 : Math.max(0.7, Math.min(1.2, rate)));
+    const played = await playClip(clip, slowedNormal ? 0.75 : slow ? 1 : Math.max(0.7, Math.min(1.2, rate)));
     if (played) return;
   }
   return speakDevice(text, rate);
