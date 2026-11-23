@@ -150,3 +150,12 @@ describe('lesson engine', () => {
     expect(buildReinforcementLesson(initialState())).toHaveLength(REINFORCEMENT_SIZE);
   });
 });
+
+describe('syllable notation parser', () => {
+  it('keeps punctuation on the stressed syllable instead of a separate one', async () => {
+    const { parseSyllables } = await import('../../src/lib/syllables');
+    expect(parseSyllables('[Jak] się [Pan] [ma]?').at(-1)).toEqual([{ text: 'ma?', stressed: true }]);
+    expect(parseSyllables('[Sta]·ri [most]?')[1]).toEqual([{ text: 'most?', stressed: true }]);
+    expect(parseSyllables('prze·[pra]·szam')[0].map((s) => s.text)).toEqual(['prze', 'pra', 'szam']);
+  });
+});

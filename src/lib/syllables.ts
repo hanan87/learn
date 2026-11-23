@@ -23,11 +23,15 @@ export function parseSyllables(notation: string): ParsedWord[] {
         .map((raw) => {
           const match = raw.match(/^(.*)\[(.+)\](.*)$/);
           if (match) {
-            // Punctuation may sit outside the brackets, e.g. "[ma]?" – keep it attached but unstressed.
+            // Punctuation may sit outside the brackets ("[ma]?", "„[Tak]"): it stays on the stressed
+            // syllable, so no separator dot is drawn before a question mark. Letters stay a syllable.
+            const letters = /\p{L}/u;
+            const lead = match[1] && !letters.test(match[1]) ? match[1] : '';
+            const trail = match[3] && !letters.test(match[3]) ? match[3] : '';
             return [
-              ...(match[1] ? [{ text: match[1], stressed: false }] : []),
-              { text: match[2], stressed: true },
-              ...(match[3] ? [{ text: match[3], stressed: false }] : []),
+              ...(match[1] && !lead ? [{ text: match[1], stressed: false }] : []),
+              { text: lead + match[2] + trail, stressed: true },
+              ...(match[3] && !trail ? [{ text: match[3], stressed: false }] : []),
             ];
           }
           return [{ text: raw, stressed: false }];
