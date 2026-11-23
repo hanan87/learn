@@ -30,7 +30,15 @@ const CNR_MISTAKES: [RegExp, string][] = [
   [/ije/, 'e'],
   [/h/, 'k'],
 ];
-const MISTAKES = COURSE === 'cnr' ? CNR_MISTAKES : PL_MISTAKES;
+const EN_MISTAKES: [RegExp, string][] = [
+  [/th/, 's'],
+  [/w/, 'v'],
+  [/ee/, 'i'],
+  [/v/, 'w'],
+  [/a/, 'e'],
+  [/r/, 'l'],
+];
+const MISTAKES = { pl: PL_MISTAKES, cnr: CNR_MISTAKES, en: EN_MISTAKES }[COURSE];
 
 export function mispronounce(target: string): string {
   let out = target.toLocaleLowerCase('pl-PL');

@@ -1,6 +1,6 @@
-# Polski · Crnogorski od zera – פולנית ומונטנגרית מאפס
+# Polski · Crnogorski · English – פולנית, מונטנגרית ואנגלית
 
-A mobile-first PWA for learning **Polish** or **Montenegrin** from zero, for **Hebrew** speakers (RTL, vocalized Hebrew transcription) and **English** speakers (LTR, English respelling).
+A mobile-first PWA for learning **Polish** or **Montenegrin** from zero, for **Hebrew** speakers (RTL, vocalized Hebrew transcription) and **English** speakers (LTR, English respelling) – and **everyday English** for Hebrew speakers.
 
 Live: https://hanan87.github.io/learn/
 
@@ -8,6 +8,7 @@ Live: https://hanan87.github.io/learn/
 
 - **Polish** – the full course below.
 - **Montenegrin** (starter course) – 4 units, 52 items (sounds č/ć, dž/đ, lj/nj, vowel r and ije; politeness with Vi/ti; numbers, directions and time; café and restaurant), a Sound Lab with 4 minimal-pair groups, a café roleplay in Kotor, hands-free mode, Speed Blitz and the Montenegrin keyboard. Montenegrin has no dedicated speech engines, so recognition uses Croatian (`hr-HR`, same Latin Ijekavian spelling) and the voices are Bosnian / Croatian / Serbian.
+- **Everyday English** (for Hebrew speakers, taught in Hebrew only) – 6 units, 77 items for learners who already know a little: the sounds Hebrew lacks (th, w vs v, the American r, ship vs sheep, bad vs bed, word stress), small talk, café and restaurant, directions and transport, shopping, hotel, flights and the phone; a Sound Lab with 4 minimal-pair groups, 3 roleplays (a New York coffee shop, a hotel check-in, asking the way) and American voices (Jenny / Guy) with `en-US` recognition. English spelling does not show pronunciation, so every word has a hand-written entry – syllables and vocalized Hebrew letters (`data/en/lexicon.ts`, `lib/enPhonetics.ts`); inflected forms are derived and other words get a rule-based approximation. `LEARN_COURSE=en npx tsx scripts/en-lexicon-check.ts` lists course words missing from the lexicon.
 - The course is picked on the welcome screen, on the map or in Settings; each course keeps its own progress (`lib/course.ts`).
 - **How do I say…?** tab: type a word or sentence in Hebrew / English (or in the course language) – it is translated (course phrases first, then MyMemory machine translation, then Chrome's on-device translator), spoken normally and slowly, shown with syllables, stress, transcription and a word-by-word breakdown; you repeat it and get an honest score, and can save it to your dictionary (`lib/translate.ts`, `views/SayIt.tsx`).
 

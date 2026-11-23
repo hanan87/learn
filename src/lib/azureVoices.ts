@@ -10,6 +10,8 @@ export const AZURE_VOICES: Record<ClipVoice, { locale: string; name: string }> =
   // No Montenegrin voices exist; the Bosnian ones read Ijekavian Latin text with a close accent.
   'cnr-f': { locale: 'bs-BA', name: 'bs-BA-VesnaNeural' },
   'cnr-m': { locale: 'bs-BA', name: 'bs-BA-GoranNeural' },
+  'en-f': { locale: 'en-US', name: 'en-US-JennyNeural' },
+  'en-m': { locale: 'en-US', name: 'en-US-GuyNeural' },
   he: { locale: 'he-IL', name: 'he-IL-HilaNeural' },
   en: { locale: 'en-US', name: 'en-US-JennyNeural' },
 };

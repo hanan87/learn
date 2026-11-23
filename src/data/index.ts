@@ -3,6 +3,7 @@ import { COURSE, COURSE_INFO } from '../lib/course';
 import { DEFAULT_PROFILE, effectiveGender, hasGenderPair, hasTemplate, otherGender, personalize, type LearnerProfile } from '../lib/personalize';
 import { toEnglishPhonetic } from '../lib/polishPhonetics';
 import { CNR_LEGEND, CNR_SITUATIONS, CNR_UNITS } from './cnr/units';
+import { EN_LEGEND, EN_SITUATIONS, EN_UNITS } from './en/units';
 import { ITEM_EN, UNIT_EN } from './english';
 import { SITUATIONS } from './situations';
 import type { CourseUnitId, ItemSource, LearningItem, Unit, UnitId, UnitSource } from './types';
@@ -37,7 +38,7 @@ function localizeUnit(u: UnitSource): Unit {
 const PL_UNITS: Unit[] = [...[unit1, unit2, unit3, unit4].map(localizeUnit), ...EXTRA_UNITS];
 
 /** Units of the active course (lib/course). */
-export const UNITS: Unit[] = COURSE === 'cnr' ? CNR_UNITS : PL_UNITS;
+export const UNITS: Unit[] = { pl: PL_UNITS, cnr: CNR_UNITS, en: EN_UNITS }[COURSE];
 
 export const ALL_ITEMS: LearningItem[] = UNITS.flatMap((u) => u.items);
 
@@ -143,7 +144,7 @@ export function getUnit(id: CourseUnitId): Unit {
 
 /** Situational prompt for the active-recall speaking challenge. */
 export function getSituation(item: LearningItem, lang: Lang): string {
-  const extra = COURSE === 'cnr' ? CNR_SITUATIONS[item.id] : EXTRA_SITUATIONS[item.id];
+  const extra = { pl: EXTRA_SITUATIONS, cnr: CNR_SITUATIONS, en: EN_SITUATIONS }[COURSE][item.id];
   const plain = COURSE === 'pl' ? SITUATIONS[item.id] : undefined;
   if (lang === 'he') return personalize(extra?.he ?? plain ?? `איך אומרים ${COURSE_INFO.inLang.he}: "${item.hebrew}"?`, currentProfile, 'he');
   return personalize(extra?.en ?? `How do you say "${item.english}" ${COURSE_INFO.inLang.en}?`, currentProfile, 'en');
@@ -171,4 +172,4 @@ const PL_LEGEND: { pl: string; he: string; en: string; noteHe: string; noteEn: s
   { pl: 'i', he: 'ִי', en: 'ee', noteHe: 'i רגילה – חיריק עם יוד', noteEn: 'ee as in "see"' },
 ];
 
-export const PHONETIC_LEGEND = COURSE === 'cnr' ? CNR_LEGEND : PL_LEGEND;
+export const PHONETIC_LEGEND = { pl: PL_LEGEND, cnr: CNR_LEGEND, en: EN_LEGEND }[COURSE];

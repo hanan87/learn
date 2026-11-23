@@ -42,6 +42,8 @@ export function buildClipCatalog(): ClipRequest[] {
     const key = clipKey(voice, speed, t);
     if (!out.has(key)) out.set(key, { key, voice, speed, text: t });
   };
+  // The English course is taught in Hebrew only: no English meaning or tip is ever read aloud.
+  const englishUi = COURSE_INFO.uiLangs.includes('en');
   const F = `${COURSE_INFO.clipPrefix}-f` as ClipVoice;
   const M = `${COURSE_INFO.clipPrefix}-m` as ClipVoice;
   const addPolish = (text: string, voice: ClipVoice = F, slow = false) => {
@@ -61,10 +63,10 @@ export function buildClipCatalog(): ClipRequest[] {
         phraseWords(item.polish).forEach((w) => addPolish(w));
         // Hands-free mode reads the meaning in the learner's language.
         add('he', 'n', item.hebrew);
-        add('en', 'n', item.english);
+        if (englishUi) add('en', 'n', item.english);
         // The articulation tip, read by the hands-free coach after repeated misses.
         add('he', 'n', `${COACH.tip.he} ${item.articulationTip}`);
-        add('en', 'n', `${COACH.tip.en} ${item.articulationTipEn}`);
+        if (englishUi) add('en', 'n', `${COACH.tip.en} ${item.articulationTipEn}`);
         if (item.genderAlt) addPolish(item.genderAlt.polish, item.genderAlt.gender === 'm' ? M : F);
       }
       for (const r of ROLEPLAYS) {
@@ -98,7 +100,7 @@ export function buildClipCatalog(): ClipRequest[] {
 
   for (const line of Object.values(COACH)) {
     add('he', 'n', line.he);
-    add('en', 'n', line.en);
+    if (englishUi) add('en', 'n', line.en);
   }
 
   return [...out.values()];

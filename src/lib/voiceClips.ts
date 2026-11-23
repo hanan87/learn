@@ -11,7 +11,8 @@
 
 import { isStandaloneBuild } from './env';
 
-export type ClipVoice = 'pl-f' | 'pl-m' | 'cnr-f' | 'cnr-m' | 'he' | 'en';
+/** Course voices ('<course>-f' teacher, '<course>-m' male) and the meaning readers 'he' / 'en'. */
+export type ClipVoice = 'pl-f' | 'pl-m' | 'cnr-f' | 'cnr-m' | 'en-f' | 'en-m' | 'he' | 'en';
 export type ClipSpeed = 'n' | 's';
 
 export interface ClipManifest {
@@ -93,7 +94,7 @@ export function setNaturalVoiceEnabled(on: boolean): void {
  */
 export function findClip(text: string, speed: ClipSpeed, voice: ClipVoice = 'pl-f'): string | null {
   if (!manifest || !naturalVoiceEnabled()) return null;
-  const pair: Partial<Record<ClipVoice, ClipVoice>> = { 'pl-f': 'pl-m', 'pl-m': 'pl-f', 'cnr-f': 'cnr-m', 'cnr-m': 'cnr-f' };
+  const pair: Partial<Record<ClipVoice, ClipVoice>> = { 'pl-f': 'pl-m', 'pl-m': 'pl-f', 'cnr-f': 'cnr-m', 'cnr-m': 'cnr-f', 'en-f': 'en-m', 'en-m': 'en-f' };
   const order: ClipVoice[] = pair[voice] ? [voice, pair[voice]!] : [voice];
   // Single words are also recorded without punctuation ("mlekiem." → "mlekiem").
   const bare = text.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');

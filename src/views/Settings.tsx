@@ -30,7 +30,7 @@ export function Settings() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${C.id === 'cnr' ? 'montenegrin' : 'polish'}-learn-backup-${todayKey()}.json`;
+    a.download = `${C.name.en.toLowerCase()}-learn-backup-${todayKey()}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -70,6 +70,7 @@ export function Settings() {
         </p>
       </section>
 
+      {C.uiLangs.length > 1 && (
       <section className={card}>
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -81,6 +82,7 @@ export function Settings() {
           <LangSwitch />
         </div>
       </section>
+      )}
 
       <section className={card}>
         <p className="flex items-center gap-1.5 font-bold">

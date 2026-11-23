@@ -95,8 +95,8 @@ export function App() {
                 'No Bosnian, Croatian or Serbian voice was found on this device – playback may sound foreign. For a natural voice: Settings → Teacher voice → Natural cloud voice. Or install a voice: Android: Settings → Language → Text-to-speech → Croatian or Serbian; iPhone: Settings → Accessibility → Spoken Content → Voices → Croatian.',
               )
             : tr(
-                'לא נמצא קול פולני במכשיר – ההקראה עשויה להישמע במבטא זר. באנדרואיד: הגדרות ← שפה ← המרת טקסט לדיבור ← התקינו פולנית. ב-iPhone: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← פולנית.',
-                'No Polish voice was found on this device – playback may sound foreign. Android: Settings → Language → Text-to-speech → install Polish. iPhone: Settings → Accessibility → Spoken Content → Voices → Polish.',
+                `לא נמצא קול ${C.inLang.he} במכשיר – ההקראה עשויה להישמע במבטא זר. באנדרואיד: הגדרות ← שפה ← המרת טקסט לדיבור ← התקינו ${C.name.he}. ב-iPhone: הגדרות ← נגישות ← תוכן מוקרא ← קולות ← ${C.name.he}.`,
+                `No ${C.name.en} voice was found on this device – playback may sound foreign. Android: Settings → Language → Text-to-speech → install ${C.name.en}. iPhone: Settings → Accessibility → Spoken Content → Voices → ${C.name.en}.`,
               )}
             </span>
           </p>

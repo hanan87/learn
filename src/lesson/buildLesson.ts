@@ -58,17 +58,19 @@ export function tokens(text: string): string[] {
 }
 
 /** Forms of address that make good "register" blanks, with the look-alikes offered next to them. */
-const REGISTER_SWAPS: Record<string, string[]> =
-  COURSE === 'cnr'
-    ? { ste: ['si', 'sam'], si: ['ste', 'sam'], Vi: ['ti', 'Vam'], ti: ['Vi', 'te'], Izvinite: ['Izvini', 'Izvoli'] }
-    : {
-        Pan: ['Pani', 'ty'],
-        Pani: ['Pan', 'ty'],
-        Panu: ['Pani', 'ci'],
-        masz: ['ma', 'mam'],
-        ma: ['masz', 'mam'],
-        ty: ['Pan', 'Pani'],
-      };
+const REGISTER_SWAPS: Record<string, string[]> = {
+  pl: {
+    Pan: ['Pani', 'ty'],
+    Pani: ['Pan', 'ty'],
+    Panu: ['Pani', 'ci'],
+    masz: ['ma', 'mam'],
+    ma: ['masz', 'mam'],
+    ty: ['Pan', 'Pani'],
+  },
+  cnr: { ste: ['si', 'sam'], si: ['ste', 'sam'], Vi: ['ti', 'Vam'], ti: ['Vi', 'te'], Izvinite: ['Izvini', 'Izvoli'] },
+  // English has no formal "you"; politeness lives in whole phrases (Could you…), not in one word.
+  en: {},
+}[COURSE];
 const REGISTER_WORDS = Object.keys(REGISTER_SWAPS);
 
 /** Items used for distractors: the item's own unit, or the whole course for custom words. */

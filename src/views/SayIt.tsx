@@ -191,7 +191,7 @@ export function SayIt({ onOpenItem }: { onOpenItem: (id: string) => void }) {
             autoCorrect="off"
             spellCheck={false}
             maxLength={300}
-            placeholder={mode === 'target' ? (C.id === 'cnr' ? 'npr. Gdje je autobuska stanica?' : 'np. Gdzie jest dworzec?') : tr('למשל: איפה תחנת האוטובוס?', 'e.g. Where is the bus station?')}
+            placeholder={mode === 'target' ? { pl: 'np. Gdzie jest dworzec?', cnr: 'npr. Gdje je autobuska stanica?', en: 'e.g. Where is the bus station?' }[C.id] : tr('למשל: איפה תחנת האוטובוס?', 'e.g. Where is the bus station?')}
             aria-label={mode === 'target' ? tr(`טקסט ${C.inLang.he}`, `Text ${C.inLang.en}`) : tr('מילה או משפט בעברית', 'Word or sentence in English')}
             data-testid="say-input"
             className={`min-w-0 flex-1 rounded-xl bg-white px-3 py-3 text-base ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-brand-500 ${mode === 'target' ? 'polish' : ''}`}

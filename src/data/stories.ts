@@ -252,7 +252,7 @@ export const SPEAKER_VOICE: Record<string, 'f' | 'm'> = {
 };
 
 /** Mini stories of the active course (the Montenegrin starter course has none yet). */
-export const STORIES: Story[] = COURSE === 'cnr' ? [] : PL_STORIES;
+export const STORIES: Story[] = COURSE === 'pl' ? PL_STORIES : [];
 
 export const speakerVoice = (speaker: string): 'f' | 'm' => SPEAKER_VOICE[speaker] ?? 'f';
 

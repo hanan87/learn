@@ -57,7 +57,7 @@ export function cleanText(text: string): string {
   return text
     .normalize('NFC')
     .toLocaleLowerCase()
-    .replace(/[.,!?;:"„”“'«»()\-–—…¿¡]/g, ' ')
+    .replace(/[.,!?;:"„”“'’‘«»()\-–—…¿¡]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -66,6 +66,8 @@ const PL_DIGRAPHS = ['dż', 'dź', 'dz', 'ch', 'cz', 'rz', 'sz'];
 const PL_VOWELS = new Set(['a', 'ą', 'e', 'ę', 'i', 'o', 'ó', 'u', 'y']);
 const PL_SOFTEN: Record<string, string> = { s: 'ś', c: 'ć', z: 'ź', n: 'ń', dz: 'dź' };
 const CNR_DIGRAPHS = ['dž', 'lj', 'nj'];
+/** English letter groups that are one sound (the recognizer spells words correctly, so letters are compared). */
+const EN_DIGRAPHS = ['th', 'sh', 'ch', 'ck', 'ng', 'ph', 'wh', 'ee', 'oo'];
 
 function graphemes(word: string, digraphs: string[]): string[] {
   const out: string[] = [];
@@ -113,6 +115,11 @@ function cnrPhones(word: string): Phone[] {
   return graphemes(word, CNR_DIGRAPHS).map((g) => ({ p: g, orig: g }));
 }
 
+/** English: letters, with th, sh, ee… as single sounds (ck = k, ph = f, wh = w). */
+function enPhones(word: string): Phone[] {
+  return graphemes(word, EN_DIGRAPHS).map((g) => ({ p: g === 'ck' ? 'k' : g === 'ph' ? 'f' : g === 'wh' ? 'w' : g, orig: g }));
+}
+
 /** Pairs of sounds that are close (half a mistake). */
 const SIMILAR: Record<CourseId, string[][]> = {
   pl: [
@@ -151,6 +158,19 @@ const SIMILAR: Record<CourseId, string[][]> = {
     ['h', 'k'],
     ['i', 'j'],
   ],
+  en: [
+    ['th', 's', 't', 'f', 'd', 'z'],
+    ['w', 'v'],
+    ['v', 'b', 'f'],
+    ['i', 'ee', 'e'],
+    ['a', 'e', 'u'],
+    ['b', 'p'],
+    ['d', 't'],
+    ['g', 'k'],
+    ['s', 'z'],
+    ['r', 'l'],
+    ['n', 'ng'],
+  ],
 };
 
 function similarSet(course: CourseId): Set<string> {
@@ -158,7 +178,7 @@ function similarSet(course: CourseId): Set<string> {
   for (const group of SIMILAR[course]) for (const a of group) for (const b of group) if (a !== b) set.add(`${a}|${b}`);
   return set;
 }
-const SIMILAR_SETS: Record<CourseId, Set<string>> = { pl: similarSet('pl'), cnr: similarSet('cnr') };
+const SIMILAR_SETS: Record<CourseId, Set<string>> = { pl: similarSet('pl'), cnr: similarSet('cnr'), en: similarSet('en') };
 
 interface Scorer {
   phones: (word: string) => Phone[];
@@ -168,7 +188,7 @@ interface Scorer {
 function scorer(course: CourseId): Scorer {
   const near = SIMILAR_SETS[course];
   return {
-    phones: course === 'cnr' ? cnrPhones : plPhones,
+    phones: { pl: plPhones, cnr: cnrPhones, en: enPhones }[course],
     sub: (a, b) => (a === b ? 0 : near.has(`${a}|${b}`) ? 0.5 : 1),
   };
 }

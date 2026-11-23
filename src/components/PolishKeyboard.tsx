@@ -5,8 +5,9 @@ import { haptic } from '../lib/haptics';
 
 import { COURSE, COURSE_INFO as C } from '../lib/course';
 
-const LETTERS = COURSE === 'cnr' ? ['č', 'ć', 'đ', 'š', 'ž'] : ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'];
-const DIGRAPHS = COURSE === 'cnr' ? ['dž', 'lj', 'nj'] : ['sz', 'cz', 'rz', 'dz', 'dź', 'dż', 'ch'];
+// English has no special letters: the helper keyboard is not shown.
+const LETTERS = { pl: ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'], cnr: ['č', 'ć', 'đ', 'š', 'ž'], en: [] as string[] }[COURSE];
+const DIGRAPHS = { pl: ['sz', 'cz', 'rz', 'dz', 'dź', 'dż', 'ch'], cnr: ['dž', 'lj', 'nj'], en: [] as string[] }[COURSE];
 
 interface Props {
   inputRef: RefObject<HTMLInputElement | null>;
@@ -84,6 +85,7 @@ export function PolishKeyboard({ inputRef, value, onChange }: Props) {
     },
   });
 
+  if (!LETTERS.length) return null;
   return (
     <div className="space-y-2 rounded-2xl bg-slate-200/70 p-2" dir="ltr" aria-label={tr(`מקלדת עזר ${C.name.he}`, `${C.name.en} helper keyboard`)}>
       <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${LETTERS.length}, minmax(0, 1fr))` }}>

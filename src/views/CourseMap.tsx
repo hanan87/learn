@@ -5,6 +5,7 @@ import {
   AudioLines,
   BookOpen,
   Bus,
+  Plane,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -64,6 +65,12 @@ const UNIT_ICON: Record<string, LucideIcon> = {
   m2: Smile,
   m3: Compass,
   m4: Coffee,
+  e1: AudioLines,
+  e2: Smile,
+  e3: Coffee,
+  e4: Compass,
+  e5: ShoppingBag,
+  e6: Plane,
 };
 const unitIcon = (id: string) => UNIT_ICON[id] ?? BookOpen;
 

@@ -17,13 +17,13 @@ const PL_DIACRITICS: Record<string, string> = {
   ż: 'z',
 };
 const CNR_DIACRITICS: Record<string, string> = { č: 'c', ć: 'c', đ: 'd', š: 's', ž: 'z', ś: 's', ź: 'z' };
-const DIACRITIC_MAP = COURSE === 'cnr' ? CNR_DIACRITICS : PL_DIACRITICS;
+const DIACRITIC_MAP: Record<string, string> = { pl: PL_DIACRITICS, cnr: CNR_DIACRITICS, en: {} }[COURSE];
 
 /** Lowercase, strip punctuation, collapse whitespace. */
 export function normalize(text: string): string {
   return text
     .toLocaleLowerCase('pl-PL')
-    .replace(/[.,!?;:"„”'«»()\-–—…]/g, ' ')
+    .replace(/[.,!?;:"„”'’‘«»()\-–—…]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -80,7 +80,7 @@ const CNR_EXPLANATIONS: Record<string, { he: string; en: string }> = {
 };
 
 /** Explanations of the active course's special letters. */
-export const DIACRITIC_EXPLANATIONS = COURSE === 'cnr' ? CNR_EXPLANATIONS : PL_EXPLANATIONS;
+export const DIACRITIC_EXPLANATIONS: Record<string, { he: string; en: string }> = { pl: PL_EXPLANATIONS, cnr: CNR_EXPLANATIONS, en: {} }[COURSE];
 
 export interface DiacriticIssue {
   expected: string;

@@ -1,24 +1,26 @@
 import { expect, type Page } from '@playwright/test';
 
 /** Start the app with a chosen language/theme and fail the test on any uncaught error or console error. */
-export async function openApp(page: Page, opts: { lang?: 'he' | 'en'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown; course?: 'pl' | 'cnr' } = {}) {
+type Course = 'pl' | 'cnr' | 'en';
+const progressKey = (course?: Course) => (course && course !== 'pl' ? `polish-learn:progress:${course}:v1` : 'polish-learn:progress:v1');
+
+export async function openApp(page: Page, opts: { lang?: 'he' | 'en'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown; course?: Course } = {}) {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(`console: ${m.text()}`);
   });
   await page.addInitScript(
-    ({ lang, theme, progress, course }) => {
+    ({ lang, theme, progress, course, key }) => {
       if (sessionStorage.getItem('e2e-init')) return;
       sessionStorage.setItem('e2e-init', '1');
       localStorage.clear();
       if (lang) localStorage.setItem('polish-learn:lang', lang);
       if (theme) localStorage.setItem('polish-learn:theme', theme);
       if (course) localStorage.setItem('polish-learn:course', course);
-      const key = course === 'cnr' ? 'polish-learn:progress:cnr:v1' : 'polish-learn:progress:v1';
       if (progress) localStorage.setItem(key, JSON.stringify(progress));
     },
-    { lang: opts.lang, theme: opts.theme, progress: opts.progress, course: opts.course },
+    { lang: opts.lang, theme: opts.theme, progress: opts.progress, course: opts.course, key: progressKey(opts.course) },
   );
   await page.goto(`/${opts.hash ?? '#/map'}`);
   return errors;
@@ -30,9 +32,8 @@ export function expectNoErrors(errors: string[]) {
   expect(real, real.join('\n')).toEqual([]);
 }
 
-export async function progress(page: Page, course: 'pl' | 'cnr' = 'pl') {
-  const key = course === 'cnr' ? 'polish-learn:progress:cnr:v1' : 'polish-learn:progress:v1';
-  return page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? 'null'), key);
+export async function progress(page: Page, course: Course = 'pl') {
+  return page.evaluate((k) => JSON.parse(localStorage.getItem(k) ?? 'null'), progressKey(course));
 }
 
 /**

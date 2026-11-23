@@ -9,7 +9,7 @@ import { useProgress } from '../state/ProgressContext';
 /**
  * First-run screen.
  * Step 1: choose Hebrew or English as the interface and learning language.
- * Step 2: the language to learn (Polish or Montenegrin), then speaker gender and (optional) first
+ * Step 2: the language to learn (Polish, Montenegrin, or English for Hebrew speakers), then speaker gender and (optional) first
  *         name, so gendered phrases match the learner.
  * Everything is saved only at the end, because saving the language closes the welcome screen; a
  * course other than the loaded one reloads the page into it (the profile carries over).
@@ -21,7 +21,7 @@ export function Welcome() {
   const [course, setCourseChoice] = useState<CourseId>(COURSE);
 
   const options: { lang: Lang; title: string; sub: string; sample: string; dir: 'rtl' | 'ltr' }[] = [
-    { lang: 'he', title: 'לדוברי עברית', sub: 'ממשק בעברית, תרגומים, תעתיק מנוקד וטיפים בעברית', sample: 'גֶ׳נְ·[קוּ]·יֶה', dir: 'rtl' },
+    { lang: 'he', title: 'לדוברי עברית', sub: 'פולנית, מונטנגרית או אנגלית – ממשק, תרגומים, תעתיק מנוקד וטיפים בעברית', sample: 'גֶ׳נְ·[קוּ]·יֶה', dir: 'rtl' },
     { lang: 'en', title: 'For English speakers', sub: 'English interface, translations, respelling and tips', sample: 'jen·KOO·yeh', dir: 'ltr' },
   ];
 
@@ -70,9 +70,9 @@ export function Welcome() {
       <img src={logoUrl} alt="" className="size-24 rounded-3xl shadow-lg" />
       <div>
         <p className="polish font-serif text-4xl leading-tight font-semibold tracking-tight text-slate-900" dir="ltr">
-          Polski<span className="text-slate-300"> · </span>Crnogorski
+          Polski<span className="text-slate-300"> · </span>Crnogorski<span className="text-slate-300"> · </span>English
         </p>
-        <p className="mt-1 text-slate-500">פולנית ומונטנגרית מאפס · Polish and Montenegrin from zero</p>
+        <p className="mt-1 text-slate-500">פולנית, מונטנגרית ואנגלית מדוברת · Polish and Montenegrin from zero</p>
       </div>
       <div className="grid w-full max-w-md gap-3">
         {options.map((o) => (

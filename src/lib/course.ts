@@ -1,11 +1,11 @@
 /**
- * The language being learned. The app ships two courses – Polish and Montenegrin – that share every
- * screen and exercise type. The active course is read once at start-up, so every data module (units,
+ * The language being learned. The app ships three courses – Polish, Montenegrin and English (for
+ * Hebrew speakers) – that share every screen and exercise type. The active course is read once at start-up, so every data module (units,
  * roleplays, sound groups, phonetics) is built for it; switching stores the choice and reloads.
  * Each course keeps its own progress; the interface language, theme and voice settings are shared.
  */
 
-export type CourseId = 'pl' | 'cnr';
+export type CourseId = 'pl' | 'cnr' | 'en';
 
 export interface CourseInfo {
   id: CourseId;
@@ -28,7 +28,11 @@ export interface CourseInfo {
   /** Device voice language prefixes, best first. */
   voicePrefixes: string[];
   /** Prefix of the pre-recorded clip voices ('pl' → 'pl-f' / 'pl-m'). */
-  clipPrefix: 'pl' | 'cnr';
+  clipPrefix: CourseId;
+  /** Interface languages the course is taught in (English is taught to Hebrew speakers only). */
+  uiLangs: ('he' | 'en')[];
+  /** Flag colours (CSS background) shown next to the course name. */
+  flag: string;
   /** Names of the neural voices (female teacher, male) and the language they speak. */
   voiceNames: { f: string; m: string; he: string; en: string };
   /** Phrase played to preview a voice in Settings. */
@@ -57,6 +61,8 @@ export const COURSES: Record<CourseId, CourseInfo> = {
     ttsLang: 'pl-PL',
     voicePrefixes: ['pl'],
     clipPrefix: 'pl',
+    uiLangs: ['he', 'en'],
+    flag: 'linear-gradient(180deg, #ffffff 50%, #dc143c 50%)',
     voiceNames: { f: 'Zofia', m: 'Marek', he: 'פולנית', en: 'Polish' },
     voiceSample: 'Dzień dobry! Miło mi Cię poznać.',
     progressKey: 'polish-learn:progress:v1',
@@ -79,6 +85,8 @@ export const COURSES: Record<CourseId, CourseInfo> = {
     ttsLang: 'hr-HR',
     voicePrefixes: ['sr-me', 'cnr', 'bs', 'hr', 'sr-latn', 'sr'],
     clipPrefix: 'cnr',
+    uiLangs: ['he', 'en'],
+    flag: 'radial-gradient(circle, #d4af37 0 25%, #c40308 28%)',
     voiceNames: { f: 'Vesna', m: 'Goran', he: 'בוסנית – הכי קרובה למונטנגרית', en: 'Bosnian – the closest to Montenegrin' },
     voiceSample: 'Dobar dan! Drago mi je.',
     progressKey: 'polish-learn:progress:cnr:v1',
@@ -86,12 +94,37 @@ export const COURSES: Record<CourseId, CourseInfo> = {
     niceToMeet: 'Drago mi je!',
     writePrompt: 'Napiši na crnogorskom…',
   },
+  en: {
+    id: 'en',
+    name: { he: 'אנגלית', en: 'English', native: 'English' },
+    adjHe: 'אמריקאי',
+    inLang: { he: 'באנגלית', en: 'in English' },
+    title: 'Everyday English',
+    titleHe: 'אנגלית מדוברת',
+    titleEn: 'Everyday English',
+    htmlLang: 'en',
+    sttLang: 'en-US',
+    ttsLang: 'en-US',
+    voicePrefixes: ['en-us', 'en'],
+    clipPrefix: 'en',
+    uiLangs: ['he'],
+    flag: 'linear-gradient(90deg, #3c3b6e 0 42%, transparent 42%), repeating-linear-gradient(180deg, #b22234 0 15%, #ffffff 15% 30%)',
+    voiceNames: { f: 'Jenny', m: 'Guy', he: 'אנגלית אמריקאית', en: 'American English' },
+    voiceSample: 'Hi! Nice to meet you.',
+    progressKey: 'polish-learn:progress:en:v1',
+    defaultNames: { m: 'Daniel', f: 'Maya' },
+    niceToMeet: 'Nice to meet you!',
+    writePrompt: 'Write in English…',
+  },
 };
+
+/** Order of the courses in pickers. */
+export const COURSE_ORDER: CourseId[] = ['pl', 'cnr', 'en'];
 
 export const COURSE_KEY = 'polish-learn:course';
 
 export function isCourseId(v: unknown): v is CourseId {
-  return v === 'pl' || v === 'cnr';
+  return v === 'pl' || v === 'cnr' || v === 'en';
 }
 
 function readCourse(): CourseId {

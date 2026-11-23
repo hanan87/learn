@@ -34,7 +34,9 @@ function readStored(): Lang | null {
 
 export function LangProvider({ children }: { children: ReactNode }) {
   const [stored, setStored] = useState<Lang | null>(readStored);
-  const lang: Lang = stored ?? (navigator.language?.startsWith('he') ? 'he' : 'en');
+  const preferred: Lang = stored ?? (navigator.language?.startsWith('he') ? 'he' : 'en');
+  // A course taught in one language only (English → Hebrew speakers) always uses it.
+  const lang: Lang = C.uiLangs.includes(preferred) ? preferred : C.uiLangs[0];
 
   useEffect(() => {
     document.documentElement.lang = lang;

@@ -1,5 +1,5 @@
 import { Moon, Settings, Sun } from 'lucide-react';
-import { COURSE, COURSE_INFO as C } from '../lib/course';
+import { COURSE_INFO as C } from '../lib/course';
 import { useLang } from '../i18n/LangContext';
 import { useTheme } from '../i18n/ThemeContext';
 import { StandaloneDownload } from './StandaloneDownload';
@@ -7,6 +7,8 @@ import { StandaloneDownload } from './StandaloneDownload';
 /** HE | EN segmented switch for the interface + learning language. */
 export function LangSwitch() {
   const { lang, setLang, tr } = useLang();
+  // English is taught in Hebrew only: nothing to switch.
+  if (C.uiLangs.length < 2) return null;
   return (
     <div className="flex shrink-0 rounded-xl bg-slate-100 p-0.5 text-xs font-bold ring-1 ring-slate-200/80" dir="ltr" role="group" aria-label={tr('שפת ממשק', 'Interface language')}>
       {(['he', 'en'] as const).map((l) => (
@@ -24,13 +26,13 @@ export function LangSwitch() {
   );
 }
 
-/** Flag mark of the active course (Poland white/red, Montenegro red/gold). */
+/** Flag mark of the active course. */
 export function CourseMark({ className = 'h-5 w-7' }: { className?: string }) {
   return (
     <span
       aria-hidden
       className={`block shrink-0 rounded-[5px] ring-1 ring-black/10 ${className}`}
-      style={{ background: COURSE === 'cnr' ? 'radial-gradient(circle, #d4af37 0 24%, #c40308 27%)' : 'linear-gradient(180deg, #ffffff 50%, #dc143c 50%)' }}
+      style={{ background: C.flag }}
     />
   );
 }

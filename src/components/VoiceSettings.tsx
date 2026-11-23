@@ -129,10 +129,15 @@ export function VoiceSettings() {
                   'לא נמצא במכשיר קול בוסני, קרואטי או סרבי. ב-Edge יש קולות "Natural" איכותיים בחינם; באנדרואיד: הגדרות ← המרת טקסט לדיבור ← קרואטית או סרבית; ב-iPhone: נגישות ← תוכן מוקרא ← קולות ← קרואטית.',
                   'No Bosnian, Croatian or Serbian device voice found. Edge offers free high-quality "Natural" voices; Android: Settings → Text-to-speech → Croatian or Serbian; iPhone: Accessibility → Spoken Content → Voices → Croatian.',
                 )
-              : tr(
-                  'לא נמצא קול פולני במכשיר. ב-Edge יש קולות "Natural" איכותיים בחינם; באנדרואיד: הגדרות ← המרת טקסט לדיבור ← פולנית; ב-iPhone: נגישות ← תוכן מוקרא ← קולות ← פולנית ← Zosia (משופר).',
-                  'No Polish device voice found. Edge offers free high-quality "Natural" voices; Android: Settings → Text-to-speech → Polish; iPhone: Accessibility → Spoken Content → Voices → Polish → Zosia (Enhanced).',
-                )}
+              : C.id === 'pl'
+                ? tr(
+                    'לא נמצא קול פולני במכשיר. ב-Edge יש קולות "Natural" איכותיים בחינם; באנדרואיד: הגדרות ← המרת טקסט לדיבור ← פולנית; ב-iPhone: נגישות ← תוכן מוקרא ← קולות ← פולנית ← Zosia (משופר).',
+                    'No Polish device voice found. Edge offers free high-quality "Natural" voices; Android: Settings → Text-to-speech → Polish; iPhone: Accessibility → Spoken Content → Voices → Polish → Zosia (Enhanced).',
+                  )
+                : tr(
+                    `לא נמצא קול ${C.inLang.he} במכשיר. באנדרואיד: הגדרות ← המרת טקסט לדיבור ← ${C.name.he}; ב-iPhone: נגישות ← תוכן מוקרא ← קולות ← ${C.name.he}.`,
+                    `No ${C.name.en} device voice found. Android: Settings → Text-to-speech → ${C.name.en}; iPhone: Accessibility → Spoken Content → Voices → ${C.name.en}.`,
+                  )}
           </p>
         ) : (
           <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200" role="radiogroup" aria-label={tr('קול המכשיר', 'Device voice')}>

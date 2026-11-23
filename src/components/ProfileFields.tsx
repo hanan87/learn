@@ -7,8 +7,10 @@ import { isLatinName, type Gender, type LearnerProfile } from '../lib/personaliz
 const SAMPLES: Record<CourseInfo['id'], Record<Gender, string>> = {
   pl: { m: 'Chciałbym · gotowy', f: 'Chciałabym · gotowa' },
   cnr: { m: 'Htio bih · gladan', f: 'Htjela bih · gladna' },
+  // English verbs do not change with the speaker; only the Hebrew meanings and Mr. / Ms. do.
+  en: { m: 'Mr. · he', f: 'Ms. · she' },
 };
-const NAME_PHRASES: Record<CourseInfo['id'], string> = { pl: 'Mam na imię', cnr: 'Zovem se' };
+const NAME_PHRASES: Record<CourseInfo['id'], string> = { pl: 'Mam na imię', cnr: 'Zovem se', en: 'My name is' };
 
 interface Props {
   lang: Lang;

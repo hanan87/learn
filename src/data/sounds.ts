@@ -8,7 +8,9 @@ import { COURSE } from '../lib/course';
 
 export type PlSoundKey = 'sz' | 'cz' | 'ż/rz' | 'ś' | 'ć' | 'ź' | 'dź' | 'ń' | 'ł' | 'w' | 'ą' | 'ę' | 'y' | 'ch';
 export type CnrSoundKey = 'č' | 'ć' | 'dž' | 'đ' | 'š' | 'ž' | 'lj' | 'nj' | 'h' | 'r' | 'c' | 'ije';
-export type SoundKey = PlSoundKey | CnrSoundKey;
+/** English sounds Hebrew speakers find hard: th, w vs v, the American r, ship vs sheep, bad vs bed. */
+export type EnSoundKey = 'th' | 'w' | 'v' | 'r' | 'ih' | 'ee' | 'ae';
+export type SoundKey = PlSoundKey | CnrSoundKey | EnSoundKey;
 
 export interface SoundInfo {
   key: SoundKey;
@@ -54,8 +56,18 @@ export const CNR_SOUND_INFO: Record<CnrSoundKey, SoundInfo> = {
   ije: { key: 'ije', name: 'ije', tip: 'ije נהגית כהברה אחת: "יֶה" (lijepo = לְיֶה·פּוֹ). זו ה"ייקאבית" – סימן ההיכר של מונטנגרית.', nameEn: 'ije', tipEn: 'ije is said as one syllable, "yeh" (lijepo = LYEH-poh). This Ijekavian ije is a hallmark of Montenegrin.' },
 };
 
+export const EN_SOUND_INFO: Record<EnSoundKey, SoundInfo> = {
+  th: { key: 'th', name: 'th', tip: 'th: הוציאו את קצה הלשון מעט בין השיניים ונשפו – בלי ס ובלי ט. think = תִ׳נְק, this = דִ׳ס (עם קול).', nameEn: 'th', tipEn: 'th: put the tongue tip lightly between the teeth and blow – no s and no t. think is voiceless, this is voiced.', groupId: 'en-th' },
+  w: { key: 'w', name: 'w', tip: 'w: עגלו את השפתיים כמו לשריקה ושחררו – "וּ" קצרה. השיניים לא נוגעות בשפה.', nameEn: 'w', tipEn: 'w: round the lips as if to whistle and open them – a quick "oo". The teeth do not touch the lip.', groupId: 'en-wv' },
+  v: { key: 'v', name: 'v', tip: 'v: השיניים העליונות נוגעות בשפה התחתונה, עם קול – כמו ב בלי דגש.', nameEn: 'v', tipEn: 'v: the upper teeth touch the lower lip, with voice.', groupId: 'en-wv' },
+  r: { key: 'r', name: 'r אמריקאית', tip: 'r אמריקאית: לא מהגרון! מסלסלים את קצה הלשון מעט אחורה, בלי שייגע בחך, והשפתיים מעט מעוגלות.', nameEn: 'American r', tipEn: 'American r: not from the throat. Curl the tongue tip slightly back without touching the palate, lips a little rounded.' },
+  ih: { key: 'ih', name: 'i קצרה', tip: 'i קצרה (ship, sit, live): קצרה ורפויה, הפה כמעט לא מחייך – בין "אִ" ל"אֶ".', nameEn: 'short i', tipEn: 'Short i (ship, sit, live): short and relaxed, hardly smiling – between "ih" and "eh".', groupId: 'en-ih-ee' },
+  ee: { key: 'ee', name: 'ee ארוכה', tip: 'ee ארוכה (sheep, seat, leave): מחייכים ומאריכים – "אִיי".', nameEn: 'long ee', tipEn: 'Long ee (sheep, seat, leave): smile and hold it – "eee".', groupId: 'en-ih-ee' },
+  ae: { key: 'ae', name: 'a פתוחה (bad)', tip: 'a של bad, man, have: פותחים את הפה רחב ומורידים את הלסת – בין "אֶ" ל"אַ". bed היא "אֶ" רגילה.', nameEn: 'open a (bad)', tipEn: 'The a of bad, man, have: open the mouth wide and drop the jaw – between "eh" and "ah". bed is a plain "eh".', groupId: 'en-ae-e' },
+};
+
 /** Sound table of the active course (only its own keys occur in its data and progress). */
-export const SOUND_INFO = (COURSE === 'cnr' ? CNR_SOUND_INFO : PL_SOUND_INFO) as Record<SoundKey, SoundInfo>;
+export const SOUND_INFO = ({ pl: PL_SOUND_INFO, cnr: CNR_SOUND_INFO, en: EN_SOUND_INFO } as Record<string, Record<string, SoundInfo>>)[COURSE] as Record<SoundKey, SoundInfo>;
 
 /** Thresholds for marking a sound as needing reinforcement. */
 export const WEAK_SOUND_MIN_ATTEMPTS = 3;
@@ -80,4 +92,11 @@ const CNR_GROUP_SOUNDS: Record<string, SoundKey[]> = {
   'cnr-soft': ['lj', 'nj'],
 };
 
-export const GROUP_SOUNDS: Record<string, SoundKey[]> = COURSE === 'cnr' ? CNR_GROUP_SOUNDS : PL_GROUP_SOUNDS;
+const EN_GROUP_SOUNDS: Record<string, SoundKey[]> = {
+  'en-th': ['th'],
+  'en-wv': ['w', 'v'],
+  'en-ih-ee': ['ih', 'ee'],
+  'en-ae-e': ['ae'],
+};
+
+export const GROUP_SOUNDS: Record<string, SoundKey[]> = { pl: PL_GROUP_SOUNDS, cnr: CNR_GROUP_SOUNDS, en: EN_GROUP_SOUNDS }[COURSE];
