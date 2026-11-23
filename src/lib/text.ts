@@ -2,7 +2,7 @@
  * Text comparison utilities: normalization, Levenshtein distance and diacritic diagnostics
  * (the pronunciation score is in lib/pronScore).
  */
-
+import type { Lang } from '../i18n/lang';
 import { COURSE } from './course';
 
 const PL_DIACRITICS: Record<string, string> = {
@@ -93,7 +93,9 @@ export type WritingVerdict =
   | { kind: 'wrong'; distance: number };
 
 /** Explanation of a single diacritic mistake in the active language. */
-export function explainDiacritic(issue: DiacriticIssue, lang: 'he' | 'en'): string {
+export function explainDiacritic(issue: DiacriticIssue, uiLang: Lang): string {
+  // Only the Polish and Montenegrin courses have special letters, and they are taught in Hebrew / English.
+  const lang = uiLang === 'he' ? 'he' : 'en';
   const exp = DIACRITIC_EXPLANATIONS[issue.expected]?.[lang];
   if (exp) return exp;
   const typedExp = DIACRITIC_EXPLANATIONS[issue.typed]?.[lang] ?? '';

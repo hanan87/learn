@@ -11,12 +11,12 @@ const STYLES: Record<Formality, string> = {
 const ICONS = { formal: Briefcase, casual: Coffee, neutral: Scale };
 
 export function FormalityBadge({ formality }: { formality: Formality }) {
-  const { lang } = useLang();
+  const { loc } = useLang();
   const Icon = ICONS[formality];
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${STYLES[formality]}`}>
       <Icon className="size-3.5" aria-hidden />
-      {FORMALITY_LABELS[formality][lang]}
+      {loc(FORMALITY_LABELS[formality])}
     </span>
   );
 }

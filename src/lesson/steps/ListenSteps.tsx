@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Snail, Volume2 } from 'lucide-react';
 import { getItem } from '../../data';
+import { pairMeaning } from '../../data/minimalPairs';
 import { GROUP_SOUNDS } from '../../data/sounds';
 import { itemText } from '../../data/types';
 import { Phonetic } from '../../components/Phonetic';
@@ -112,7 +113,7 @@ export function ListenPairStep({ step, answered, onAnswered }: StepProps<PairSte
           <strong dir="ltr" className="polish">
             {target.polish}
           </strong>{' '}
-          ({lang === 'he' ? target.hebrew : target.english}) – {tr('עם', 'with')}{' '}
+          ({pairMeaning(target, lang)}) – {tr('עם', 'with')}{' '}
           <strong dir="ltr" className="polish">
             {sound}
           </strong>
@@ -150,7 +151,7 @@ export function ListenPairStep({ step, answered, onAnswered }: StepProps<PairSte
             >
               <PolishSyllables notation={w.syllablesPolish} size="md" />
               <Phonetic he={w.phoneticHebrew} en={toEnglishPhonetic(w.polish)} size="sm" />
-              <span className="block text-xs text-slate-500">{lang === 'he' ? w.hebrew : w.english}</span>
+              <span className="block text-xs text-slate-500">{pairMeaning(w, lang)}</span>
             </button>
           );
         })}

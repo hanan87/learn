@@ -5,7 +5,7 @@ import { CourseSwitch } from '../components/CourseSwitch';
 import { ProfileFields } from '../components/ProfileFields';
 import { VoiceSettings } from '../components/VoiceSettings';
 import { haptic, hapticsSupported, setHapticsEnabled } from '../lib/haptics';
-import { useLang } from '../i18n/LangContext';
+import { LOCALES, useLang } from '../i18n/LangContext';
 import { useTheme, type ThemeChoice } from '../i18n/ThemeContext';
 import { MicTest } from '../components/MicTest';
 import { versionLabel } from '../lib/pwaUpdate';
@@ -56,7 +56,7 @@ export function Settings() {
       <div>
         <h2 className="text-xl font-black">{tr('הגדרות', 'Settings')}</h2>
         <p className="text-xs text-slate-500" data-testid="app-version">
-          {tr('גרסה', 'Version')} {versionLabel(lang === 'he' ? 'he-IL' : 'en-GB')}
+          {tr('גרסה', 'Version')} {versionLabel(LOCALES[lang])}
         </p>
       </div>
 
@@ -76,7 +76,14 @@ export function Settings() {
           <div>
             <p className="font-bold">{tr('שפת ממשק ולימוד', 'Interface & learning language')}</p>
             <p className="text-xs text-slate-500">
-              {tr('עברית: תרגומים, תעתיק מנוקד וטיפים בעברית. English: translations, respelling and tips in English.', 'עברית: Hebrew translations, vocalized transcription and tips. English: English translations, respelling and tips.')}
+              {C.uiLangs.includes('en')
+                ? tr('עברית: תרגומים, תעתיק מנוקד וטיפים בעברית. English: translations, respelling and tips in English.', 'עברית: Hebrew translations, vocalized transcription and tips. English: English translations, respelling and tips.')
+                : tr({
+                    he: 'עברית: תרגומים, תעתיק מנוקד וטיפים בעברית. PL / CNR: הכל בפולנית או במונטנגרית, עם תעתיק באותיות לטיניות.',
+                    en: 'HE: Hebrew translations, vocalized transcription and tips. PL / CNR: everything in Polish or Montenegrin, with a Latin respelling.',
+                    pl: 'PL: interfejs, tłumaczenia, zapis wymowy i wskazówki po polsku. HE / CNR: to samo po hebrajsku lub czarnogórsku.',
+                    cnr: 'CNR: interfejs, prevodi, zapis izgovora i savjeti na crnogorskom. HE / PL: isto na hebrejskom ili poljskom.',
+                  })}
             </p>
           </div>
           <LangSwitch />

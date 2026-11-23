@@ -16,7 +16,8 @@
  */
 
 import { EN_LEXICON } from '../data/en/lexicon';
-import { EN_SOUND_INFO, type EnSoundKey, type SoundKey } from '../data/sounds';
+import { EN_SOUND_INFO, soundText, type EnSoundKey, type SoundKey } from '../data/sounds';
+import type { Lang } from '../i18n/lang';
 
 interface Entry {
   syl: string;
@@ -407,13 +408,22 @@ export function autoBackchain(text: string): [string, string, string] {
   return [rime, tail, clean];
 }
 
+const STRESS_ON: Record<Lang, string> = { he: 'ההטעמה על:', en: 'Stress on:', pl: 'Akcent na:', cnr: 'Naglasak je na:' };
+const LISTEN: Record<Lang, string> = {
+  he: 'הקשיבו לדוברת וחזרו לאט, הברה אחר הברה.',
+  en: 'Listen to the speaker and repeat slowly, syllable by syllable.',
+  pl: 'Posłuchaj lektorki i powtarzaj powoli, sylaba po sylabie.',
+  cnr: 'Poslušajte govornicu i ponavljajte polako, slog po slog.',
+};
+
 /** Pronunciation tip for a learner-added phrase: its hard sounds, then where the stress is. */
-export function autoTip(text: string, lang: 'he' | 'en' = 'he'): string {
+export function autoTip(text: string, lang: Lang = 'he'): string {
   const parts = detectSounds(text)
     .slice(0, 3)
-    .map((s) => (lang === 'he' ? EN_SOUND_INFO[s as EnSoundKey]?.tip : EN_SOUND_INFO[s as EnSoundKey]?.tipEn))
-    .filter(Boolean) as string[];
+    .map((s) => EN_SOUND_INFO[s as EnSoundKey])
+    .filter(Boolean)
+    .map((info) => soundText(info, lang).tip);
   const stressed = [...toSyllableNotation(text).matchAll(/\[([^\]]+)\]/g)].map((m) => m[1]);
-  if (stressed.length) parts.push(lang === 'he' ? `ההטעמה על: ${stressed.join(', ')}.` : `Stress on: ${stressed.join(', ')}.`);
-  return parts.join(' ') || (lang === 'he' ? 'הקשיבו לדוברת וחזרו לאט, הברה אחר הברה.' : 'Listen to the speaker and repeat slowly, syllable by syllable.');
+  if (stressed.length) parts.push(`${STRESS_ON[lang]} ${stressed.join(', ')}.`);
+  return parts.join(' ') || LISTEN[lang];
 }

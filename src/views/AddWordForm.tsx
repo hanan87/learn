@@ -1,7 +1,7 @@
 import { COURSE_INFO as C } from '../lib/course';
 import { useEffect, useState } from 'react';
 import { CheckCircle2, Sparkles, Volume2 } from 'lucide-react';
-import type { Formality, LearningItem } from '../data/types';
+import { FORMALITY_LABELS, type Formality, type LearningItem } from '../data/types';
 import { Phonetic } from '../components/Phonetic';
 import { PolishSyllables } from '../components/PolishSyllables';
 import { useLang } from '../i18n/LangContext';
@@ -30,8 +30,10 @@ const EMPTY: Fields = { polish: '', hebrew: '', english: '', syllables: '', phon
  * automatically and can be edited before saving to the personal dictionary.
  */
 export function AddWordForm({ onDone }: { onDone: () => void }) {
-  const { tr, lang } = useLang();
+  const { tr, lang, loc } = useLang();
   const { addCustomItem } = useProgress();
+  // Polish and Montenegrin speakers (English course) type one translation, in their own language.
+  const latin = lang === 'pl' || lang === 'cnr';
   const [f, setF] = useState<Fields>(EMPTY);
   // Fields the learner edited by hand are not overwritten by the auto-suggestion.
   const [touched, setTouched] = useState<Set<keyof Fields>>(new Set());
@@ -77,6 +79,7 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
       phoneticEnglish: f.phoneticEn.trim() || toEnglishPhonetic(polish),
       articulationTip: lang === 'he' && f.tip.trim() ? f.tip.trim() : autoTip(polish, 'he'),
       articulationTipEn: lang === 'en' && f.tip.trim() ? f.tip.trim() : autoTip(polish, 'en'),
+      loc: latin ? { [lang]: { meaning: f.english.trim(), tip: f.tip.trim() || autoTip(polish, lang) } } : undefined,
       backchainingSteps: autoBackchain(polish),
       formality: f.formality,
       custom: true,
@@ -130,6 +133,14 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
         </div>
       </div>
 
+      {latin ? (
+        <div>
+          <label className={label} htmlFor="aw-en">
+            {lang === 'pl' ? 'Tłumaczenie na polski *' : 'Prevod na crnogorski *'}
+          </label>
+          <input id="aw-en" value={f.english} onChange={(e) => set('english', e.target.value)} dir="ltr" className={input} />
+        </div>
+      ) : (
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className={label} htmlFor="aw-he">
@@ -144,15 +155,16 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
           <input id="aw-en" value={f.english} onChange={(e) => set('english', e.target.value)} dir="ltr" className={input} />
         </div>
       </div>
+      )}
 
       <div>
         <span className={label}>{tr('רמת רשמיות', 'Register')}</span>
         <div className="grid grid-cols-3 gap-2">
           {(
             [
-              ['neutral', tr('ניטרלי', 'Neutral')],
-              ['formal', tr('רשמי (Pan/Pani)', 'Formal (Pan/Pani)')],
-              ['casual', tr('יומיומי (ty)', 'Casual (ty)')],
+              ['neutral', loc(FORMALITY_LABELS.neutral)],
+              ['formal', loc(FORMALITY_LABELS.formal)],
+              ['casual', loc(FORMALITY_LABELS.casual)],
             ] as const
           ).map(([value, text]) => (
             <button
@@ -183,6 +195,8 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
           <input id="aw-syl" value={f.syllables} onChange={(e) => set('syllables', e.target.value)} dir="ltr" lang={C.htmlLang} className={`${input} polish`} />
           {!syllablesValid && <p className="mt-1 text-xs text-rose-600">{tr(`החלוקה לא תואמת לטקסט ה${C.adjHe}.`, `The syllables do not match the ${C.name.en} text.`)}</p>}
         </div>
+        {/* Polish and Montenegrin speakers see the respelling derived from these in the preview. */}
+        {!latin && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className={label} htmlFor="aw-phe">
@@ -197,6 +211,7 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
             <input id="aw-pen" value={f.phoneticEn} onChange={(e) => set('phoneticEn', e.target.value)} dir="ltr" className={`${input} font-mono`} />
           </div>
         </div>
+        )}
         <div>
           <label className={label} htmlFor="aw-tip">
             {tr('טיפ הגייה', 'Pronunciation tip')}

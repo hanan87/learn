@@ -95,7 +95,7 @@ function playAudioElement(audio: HTMLAudioElement): Promise<void> {
 
 export function PronunciationPractice({ target, itemId, articulationTip, backchainingSteps, onResult, prompt, confusableWith, compact = false }: Props) {
   const mic = useMic();
-  const { tr, lang } = useLang();
+  const { tr, loc } = useLang();
   const { recordPronunciation } = useProgress();
   const recorder = useSpeechRecorder({ target });
   const [attempt, setAttempt] = useState<Attempt | null>(null);
@@ -232,7 +232,7 @@ export function PronunciationPractice({ target, itemId, articulationTip, backcha
         <div className="space-y-3 rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-200">
           <p className="flex items-start gap-2 text-sm text-amber-900">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-            {MIC_STATUS_MESSAGES[mic.status][lang]}
+            {loc(MIC_STATUS_MESSAGES[mic.status])}
           </p>
           {RETRYABLE.includes(mic.status) && (
             <button
@@ -460,7 +460,7 @@ function fixHints(scoring: PronunciationResult): { text: string; heard: string; 
 }
 
 function ScoreView({ scoring, selfRated }: { scoring: PronunciationResult; selfRated: boolean }) {
-  const { tr, lang } = useLang();
+  const { tr, lang, loc } = useLang();
   const { score } = scoring;
   const tone = score >= PASS_SCORE ? 'good' : score >= 60 ? 'mid' : 'low';
   const TONE = {
@@ -574,7 +574,7 @@ function ScoreView({ scoring, selfRated }: { scoring: PronunciationResult; selfR
                     </span>
                   )}
                 </span>
-                {h.tip && <span className="mt-0.5 block leading-relaxed text-slate-600">{lang === 'he' ? h.tip.he : h.tip.en}</span>}
+                {h.tip && <span className="mt-0.5 block leading-relaxed text-slate-600">{loc(h.tip)}</span>}
               </span>
             </li>
           ))}

@@ -1,10 +1,11 @@
 import { Check } from 'lucide-react';
+import { localize, type Lang } from '../i18n/LangContext';
 import { COURSE, COURSE_ORDER, COURSES, setCourse, type CourseId } from '../lib/course';
 
 /**
  * Choice of the language to learn. "cards" for the welcome screen and Settings, "pills" for the map.
  * Without onChange the switch takes effect at once (the page reloads into the chosen course).
- * Only courses taught in the interface language are offered (English is for Hebrew speakers).
+ * Only courses taught in the interface language are offered (Polish and Montenegrin speakers learn English).
  */
 export function CourseSwitch({
   lang,
@@ -12,7 +13,7 @@ export function CourseSwitch({
   onChange,
   variant = 'cards',
 }: {
-  lang: 'he' | 'en';
+  lang: Lang;
   value?: CourseId;
   onChange?: (id: CourseId) => void;
   variant?: 'cards' | 'pills';
@@ -22,7 +23,7 @@ export function CourseSwitch({
 
   if (variant === 'pills') {
     return (
-      <div className="inline-flex rounded-xl bg-slate-100 p-0.5 text-xs font-semibold ring-1 ring-slate-200/80" dir="ltr" role="group" aria-label={lang === 'he' ? 'שפת לימוד' : 'Course language'}>
+      <div className="inline-flex rounded-xl bg-slate-100 p-0.5 text-xs font-semibold ring-1 ring-slate-200/80" dir="ltr" role="group" aria-label={localize({ he: 'שפת לימוד', en: 'Course language', pl: 'Język kursu', cnr: 'Jezik kursa' }, lang)}>
         {ORDER.map((id) => (
           <button
             key={id}
@@ -41,7 +42,7 @@ export function CourseSwitch({
   }
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={lang === 'he' ? 'מה תרצו ללמוד?' : 'What would you like to learn?'}>
+    <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={localize({ he: 'מה תרצו ללמוד?', en: 'What would you like to learn?' }, lang)}>
       {ORDER.map((id) => {
         const c = COURSES[id];
         const on = id === value;
@@ -60,7 +61,7 @@ export function CourseSwitch({
               <span className="polish block text-lg leading-tight font-semibold" dir="ltr" lang={c.htmlLang}>
                 {c.name.native}
               </span>
-              <span className="block text-xs text-slate-500">{lang === 'he' ? c.name.he : c.name.en}</span>
+              <span className="block text-xs text-slate-500">{localize(c.name, lang)}</span>
             </span>
             {on && (
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-600 text-white">

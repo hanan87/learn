@@ -1,4 +1,6 @@
 import { ALL_ITEMS, applyProfile, getProfile } from '../data';
+import { itemText } from '../data/types';
+import { localize } from '../i18n/lang';
 import { COURSE_INFO } from './course';
 import { COACH } from '../data/coach';
 import { ROLEPLAYS } from '../data/dialogues';
@@ -42,8 +44,11 @@ export function buildClipCatalog(): ClipRequest[] {
     const key = clipKey(voice, speed, t);
     if (!out.has(key)) out.set(key, { key, voice, speed, text: t });
   };
-  // The English course is taught in Hebrew only: no English meaning or tip is ever read aloud.
+  // The English course is not taught in English: no English meaning or tip is ever read aloud there.
   const englishUi = COURSE_INFO.uiLangs.includes('en');
+  // Polish and Montenegrin speakers (English course) hear meanings and tips from the Polish / Montenegrin teacher.
+  const latinUis = (['pl', 'cnr'] as const).filter((l) => COURSE_INFO.uiLangs.includes(l));
+  const NATIVE = { pl: 'pl-f', cnr: 'cnr-f' } as const;
   const F = `${COURSE_INFO.clipPrefix}-f` as ClipVoice;
   const M = `${COURSE_INFO.clipPrefix}-m` as ClipVoice;
   const addPolish = (text: string, voice: ClipVoice = F, slow = false) => {
@@ -67,6 +72,11 @@ export function buildClipCatalog(): ClipRequest[] {
         // The articulation tip, read by the hands-free coach after repeated misses.
         add('he', 'n', `${COACH.tip.he} ${item.articulationTip}`);
         if (englishUi) add('en', 'n', `${COACH.tip.en} ${item.articulationTipEn}`);
+        for (const l of latinUis) {
+          const t = itemText(item, l);
+          add(NATIVE[l], 'n', t.meaning);
+          add(NATIVE[l], 'n', `${localize(COACH.tip, l)} ${t.tip}`);
+        }
         if (item.genderAlt) addPolish(item.genderAlt.polish, item.genderAlt.gender === 'm' ? M : F);
       }
       for (const r of ROLEPLAYS) {
@@ -101,6 +111,7 @@ export function buildClipCatalog(): ClipRequest[] {
   for (const line of Object.values(COACH)) {
     add('he', 'n', line.he);
     if (englishUi) add('en', 'n', line.en);
+    for (const l of latinUis) add(NATIVE[l], 'n', localize(line, l));
   }
 
   return [...out.values()];

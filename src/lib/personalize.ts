@@ -1,3 +1,4 @@
+import type { Lang } from '../i18n/lang';
 import { COURSE_INFO } from './course';
 import { toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from './phonetics';
 
@@ -53,8 +54,8 @@ export function polishName(p: LearnerProfile, gender: Gender = effectiveGender(p
   return p.name.trim() && isLatinName(p.name) ? capitalize(p.name) : DEFAULT_NAMES[gender].latin;
 }
 
-/** The name as shown in Hebrew / English translations. */
-export function displayName(p: LearnerProfile, lang: 'he' | 'en', gender: Gender = effectiveGender(p)): string {
+/** The name as shown in translations (Hebrew letters allowed only in the Hebrew interface). */
+export function displayName(p: LearnerProfile, lang: Lang, gender: Gender = effectiveGender(p)): string {
   const typed = p.name.trim();
   if (typed && (lang === 'he' || isLatinName(typed))) return isLatinName(typed) ? capitalize(typed) : typed;
   return lang === 'he' ? DEFAULT_NAMES[gender].he : DEFAULT_NAMES[gender].latin;

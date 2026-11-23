@@ -2,9 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { expectNoErrors, openApp, progress } from './helpers';
 
 /**
- * The English course for Hebrew speakers: chosen on the welcome screen in Hebrew only, its own
- * units with Hebrew-letter transcriptions, Sound Lab, roleplays and American speech recognition –
- * with no interface-language switch and no special-letter keyboard.
+ * The English course for Hebrew, Polish and Montenegrin speakers: chosen on the welcome screen, its
+ * own units with Hebrew-letter (or Polish / Montenegrin Latin) transcriptions, Sound Lab, roleplays
+ * and American speech recognition – with no special-letter keyboard.
  */
 
 /** Mock recognizer that records the language it was started with and "hears" the given text. */
@@ -48,7 +48,7 @@ async function mockRecognition(page: Page, heard: string) {
 }
 
 test.describe('English course', () => {
-  test('welcome in Hebrew → English; offered only to Hebrew speakers', async ({ page }) => {
+  test('welcome in Hebrew → English; not offered to English speakers', async ({ page }) => {
     const errors = await openApp(page);
     // An English-speaking learner is not offered English.
     await page.getByRole('button', { name: /For English speakers/ }).click();
@@ -65,8 +65,9 @@ test.describe('English course', () => {
     await expect(page).toHaveTitle('אנגלית מדוברת');
     expect(await page.evaluate(() => localStorage.getItem('polish-learn:course'))).toBe('en');
     expect((await progress(page, 'en')).profile.gender).toBe('f');
-    // Taught in Hebrew only: no HE / EN switch.
+    // No HE / EN switch: the English course switches between HE / PL / CNR in Settings only.
     await expect(page.getByRole('button', { name: 'EN', exact: true })).toHaveCount(0);
+    await expect(page.getByTestId('lang-pl')).toHaveCount(0);
 
     // An item: the English phrase, its Hebrew-letter transcription and the Hebrew meaning.
     await page.goto('/#/map/item/e1-02');
@@ -74,6 +75,62 @@ test.describe('English course', () => {
     await expect(dialog.getByText('Thank').first()).toBeVisible();
     await expect(dialog.getByText('תודה!').first()).toBeVisible();
     await expect(dialog.locator('.phonetic').first()).toContainText('נְק');
+    expectNoErrors(errors);
+  });
+
+  test('welcome in Polish → the English course taught in Polish', async ({ page }) => {
+    const errors = await openApp(page);
+    await page.getByTestId('welcome-pl').click();
+    // Polish speakers learn English only.
+    await expect(page.getByTestId('course-en')).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId('course-pl')).toHaveCount(0);
+    await expect(page.getByText('Miło cię poznać!')).toBeVisible();
+    await page.getByRole('radio', { name: /^Kobieta/ }).click();
+    await page.getByRole('button', { name: 'Zaczynamy' }).click();
+
+    await expect(page.getByTestId('continue-lesson')).toContainText('Dźwięki, których nie ma w polskim');
+    await expect(page).toHaveTitle('Angielski na co dzień');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'pl');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+    expect(await page.evaluate(() => [localStorage.getItem('polish-learn:course'), localStorage.getItem('polish-learn:lang')])).toEqual(['en', 'pl']);
+    expect((await progress(page, 'en')).profile.gender).toBe('f');
+    await expect(page.getByRole('navigation').getByText('Słówka')).toBeVisible();
+
+    // An item: the English phrase, the Polish meaning and tip, and a respelling in Polish letters.
+    await page.goto('/#/map/item/e1-02');
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText('Dziękuję!').first()).toBeVisible();
+    await expect(dialog.getByText(/fenk ju/).first()).toBeVisible();
+    await expect(dialog.locator('p[lang="pl"]').first()).toContainText('THÆNK');
+    await expect(dialog.locator('.phonetic')).toHaveCount(0);
+
+    // A gendered meaning follows the learner.
+    await page.goto('/#/map/item/e4-11');
+    await expect(page.getByRole('dialog').getByText('Zgubiłam się.').first()).toBeVisible();
+    expectNoErrors(errors);
+  });
+
+  test('the Montenegrin interface: roleplays, Sound Lab and Settings', async ({ page }) => {
+    const errors = await openApp(page, { lang: 'cnr', course: 'en', hash: '#/map/item/e1-02' });
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText('Hvala!').first()).toBeVisible();
+    await expect(dialog.locator('p[lang="sr-Latn"]').first()).toContainText('THÆNK');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'sr-Latn-ME');
+
+    await page.goto('/#/talk');
+    await expect(page.getByText('Kafić u Njujorku', { exact: true })).toBeVisible();
+    await page.getByText('Kafić u Njujorku', { exact: true }).click();
+    await expect(page.getByText('Zdravo! Šta da vam spremim?')).toBeVisible();
+
+    await page.goto('/#/lab');
+    await expect(page.getByText('Obično s i t: jezik iza zuba.', { exact: false })).toBeVisible();
+    await page.getByText('Legenda zapisa izgovora').click();
+    await expect(page.getByText('zaokružene usne, zubi ne dodiruju usnu')).toBeVisible();
+
+    await page.goto('/#/map/settings');
+    await expect(page.getByRole('heading', { name: 'Podešavanja' })).toBeVisible();
+    await page.getByTestId('lang-pl').click();
+    await expect(page.getByRole('heading', { name: 'Ustawienia' })).toBeVisible();
     expectNoErrors(errors);
   });
 

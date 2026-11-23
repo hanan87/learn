@@ -29,7 +29,7 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
   const isPractice = lessonId === PRACTICE_LESSON_ID;
   const lesson = isPractice ? undefined : getLesson(lessonId);
   const progress = useProgress();
-  const { tr, lang } = useLang();
+  const { tr, loc } = useLang();
   const mic = useMic();
   // Steps are built once when the lesson opens, so new results do not reshuffle a running lesson.
   const [queue, setQueue] = useState<LessonStep[]>(() => (isPractice ? buildReinforcementLesson(progress.state) : lesson ? buildLesson(lesson) : []));
@@ -185,7 +185,7 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
         {step && (
           <p className="mx-auto max-w-2xl px-4 pb-2 text-xs font-bold tracking-wide text-brand-700">
             {isPractice && <span className="text-indigo-600">{tr('אימון חיזוק · ', 'Reinforcement · ')}</span>}
-            {STAGE_LABELS[step.kind][lang]}
+            {loc(STAGE_LABELS[step.kind])}
             {step.key.endsWith('-retry') && tr(' · חזרה על טעות', ' · retry')}
           </p>
         )}

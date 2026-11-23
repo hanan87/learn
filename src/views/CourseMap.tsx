@@ -35,7 +35,7 @@ import { UNITS, getItem } from '../data';
 import { LESSONS, lessonsOfUnit } from '../data/lessons';
 import { itemText, unitText, type UnitColor } from '../data/types';
 import { PolishSyllables } from '../components/PolishSyllables';
-import { useLang } from '../i18n/LangContext';
+import { LOCALES, useLang } from '../i18n/LangContext';
 import { useProgress } from '../state/ProgressContext';
 
 /** Tile palette per unit color: tinted tile, icon, number, progress bar and the ring of an open tile. */
@@ -145,7 +145,7 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree }: Props) 
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-sm text-slate-500">
-              {new Date().toLocaleDateString(lang === 'he' ? 'he-IL' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date().toLocaleDateString(LOCALES[lang], { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
             <h2 className="mt-0.5 text-[1.75rem] leading-tight">
               {greeting}

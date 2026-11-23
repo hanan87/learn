@@ -1,5 +1,9 @@
 import { autoBackchain, toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from '../../lib/enPhonetics';
+import type { Loc } from '../../i18n/lang';
+import type { LegendRow } from '..';
 import type { CourseUnitId, Formality, LearningItem, Unit, UnitColor } from '../types';
+import { EN_CNR } from './cnr';
+import { EN_PL } from './pl';
 
 /**
  * Everyday English for Hebrew speakers who already know a little: the sounds Hebrew lacks, then
@@ -10,7 +14,8 @@ import type { CourseUnitId, Formality, LearningItem, Unit, UnitColor } from '../
  * hand-written lexicon (data/en/lexicon via lib/enPhonetics), so every word is spelled out the same
  * way everywhere. Tips focus on what Hebrew speakers get wrong: th, w/v, the American r, short vs
  * long i, the open a of "bad", word stress and the way words run together ("Can I" = "ke-NAI").
- * The course is taught in Hebrew only, so the English fields simply repeat the phrase.
+ * The course is taught in Hebrew, Polish and Montenegrin; the English fields simply repeat the phrase.
+ * Polish and Montenegrin texts live in data/en/pl and data/en/cnr, keyed by item id.
  */
 
 interface EnItem {
@@ -770,6 +775,16 @@ const SOURCES: EnUnit[] = [
   },
 ];
 
+/** Polish and Montenegrin text of an item (data/en/pl, data/en/cnr). */
+function itemLoc(id: string): LearningItem['loc'] {
+  const loc: LearningItem['loc'] = {};
+  for (const [lang, src] of [['pl', EN_PL], ['cnr', EN_CNR]] as const) {
+    const t = src.items[id];
+    if (t) loc[lang] = { meaning: t.m, tip: t.tip, note: t.note };
+  }
+  return loc;
+}
+
 function build(c: EnItem): LearningItem {
   return {
     id: c.id,
@@ -785,17 +800,22 @@ function build(c: EnItem): LearningItem {
     formality: c.formality,
     culturalNote: c.note,
     culturalNoteEn: c.note,
+    loc: itemLoc(c.id),
   };
 }
 
-export const EN_UNITS: Unit[] = SOURCES.map(({ items, ...u }) => ({ ...u, items: items.map(build) }));
+export const EN_UNITS: Unit[] = SOURCES.map(({ items, ...u }) => ({
+  ...u,
+  loc: { pl: EN_PL.units[u.id], cnr: EN_CNR.units[u.id] },
+  items: items.map(build),
+}));
 
-export const EN_SITUATIONS: Record<string, { he: string; en: string }> = Object.fromEntries(
-  SOURCES.flatMap((u) => u.items.map((i) => [i.id, { he: i.sit, en: i.sit }])),
+export const EN_SITUATIONS: Record<string, Loc<string>> = Object.fromEntries(
+  SOURCES.flatMap((u) => u.items.map((i) => [i.id, { he: i.sit, en: i.sit, pl: EN_PL.items[i.id]?.sit, cnr: EN_CNR.items[i.id]?.sit }])),
 );
 
-/** Legend for the Hebrew-letter transcription of English (shown in the Sound Lab). */
-export const EN_LEGEND: { pl: string; he: string; en: string; noteHe: string; noteEn: string }[] = [
+/** Legend for the Hebrew-letter transcription of English (shown in the Sound Lab); Polish and Montenegrin rows are merged in below. */
+const LEGEND: LegendRow[] = [
   { pl: 'th (think)', he: 'ת׳', en: 'th', noteHe: 'לשון בין השיניים, בלי קול', noteEn: 'tongue between the teeth, voiceless' },
   { pl: 'th (this)', he: 'ד׳', en: 'th', noteHe: 'לשון בין השיניים, עם קול', noteEn: 'tongue between the teeth, voiced' },
   { pl: 'w', he: 'וו', en: 'w', noteHe: 'שפתיים בעיגול, בלי שיניים', noteEn: 'rounded lips, no teeth' },
@@ -814,3 +834,5 @@ export const EN_LEGEND: { pl: string; he: string; en: string; noteHe: string; no
   { pl: 'I / my', he: 'ַאי', en: 'eye', noteHe: 'אַאי', noteEn: 'eye' },
   { pl: 'ch / j', he: 'צ׳ / ג׳', en: 'ch / j', noteHe: 'כמו בעברית', noteEn: 'as in Hebrew' },
 ];
+
+export const EN_LEGEND: LegendRow[] = LEGEND.map((row) => ({ ...row, loc: { pl: EN_PL.legend[row.pl], cnr: EN_CNR.legend[row.pl] } }));

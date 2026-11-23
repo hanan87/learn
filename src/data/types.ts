@@ -10,8 +10,9 @@
  * (and upper-cases it in the English respelling, e.g. "jen·KOO·yeh").
  */
 
-import type { Lang } from '../i18n/LangContext';
+import { localize, type Bi, type Lang } from '../i18n/lang';
 import { COURSE } from '../lib/course';
+import { respell } from '../lib/latinRespell';
 import type { Gender } from '../lib/personalize';
 
 export type Formality = 'formal' | 'casual' | 'neutral';
@@ -46,6 +47,13 @@ export interface ItemSource {
   phoneticEnglish?: string;
 }
 
+/** Item text in Polish or Montenegrin (English course only). */
+export interface ItemLoc {
+  meaning: string;
+  tip: string;
+  note?: string;
+}
+
 /** Complete bilingual item used by the app. */
 export interface LearningItem extends ItemSource {
   english: string;
@@ -54,8 +62,10 @@ export interface LearningItem extends ItemSource {
   culturalNoteEn?: string;
   /** True for words the learner added to the personal dictionary. */
   custom?: boolean;
+  /** Meaning, tip and note for Polish and Montenegrin speakers (English course). */
+  loc?: Partial<Record<'pl' | 'cnr', ItemLoc>>;
   /** Set on gender-dependent items: how a speaker of the other gender says the same thing. */
-  genderAlt?: { gender: Gender; polish: string; hebrew: string; english: string };
+  genderAlt?: { gender: Gender; polish: string; hebrew: string; english: string; loc?: Partial<Record<'pl' | 'cnr', string>> };
 }
 
 export type UnitColor = 'rose' | 'amber' | 'sky' | 'emerald' | 'violet' | 'orange' | 'red' | 'teal';
@@ -70,14 +80,22 @@ export interface UnitSource {
   items: ItemSource[];
 }
 
+export interface UnitLoc {
+  title: string;
+  subtitle: string;
+  description: string;
+}
+
 export interface Unit extends Omit<UnitSource, 'items'> {
   titleEn: string;
   subtitleEn: string;
   descriptionEn: string;
+  /** Unit texts for Polish and Montenegrin speakers (English course). */
+  loc?: Partial<Record<'pl' | 'cnr', UnitLoc>>;
   items: LearningItem[];
 }
 
-export const FORMALITY_LABELS: Record<Formality, { he: string; en: string }> = {
+export const FORMALITY_LABELS: Record<Formality, Bi> = {
   pl: {
     formal: { he: 'רשמי (Pan/Pani)', en: 'Formal (Pan/Pani)' },
     casual: { he: 'יומיומי (ty)', en: 'Casual (ty)' },
@@ -95,15 +113,26 @@ export const FORMALITY_LABELS: Record<Formality, { he: string; en: string }> = {
   },
 }[COURSE];
 
-/** Localized view of an item for the active language. */
+/** Localized view of an item for the active language. Polish / Montenegrin fall back to English. */
 export function itemText(item: LearningItem, lang: Lang) {
-  return lang === 'he'
-    ? { meaning: item.hebrew, phonetic: item.phoneticHebrew, tip: item.articulationTip, note: item.culturalNote }
-    : { meaning: item.english, phonetic: item.phoneticEnglish, tip: item.articulationTipEn, note: item.culturalNoteEn };
+  if (lang === 'he') return { meaning: item.hebrew, phonetic: item.phoneticHebrew, tip: item.articulationTip, note: item.culturalNote };
+  if (lang === 'en') return { meaning: item.english, phonetic: item.phoneticEnglish, tip: item.articulationTipEn, note: item.culturalNoteEn };
+  const own = item.loc?.[lang];
+  return {
+    meaning: own?.meaning ?? item.english,
+    phonetic: respell(item.phoneticHebrew, lang),
+    tip: own?.tip ?? item.articulationTipEn,
+    note: own ? own.note : item.culturalNoteEn,
+  };
+}
+
+/** Meaning of a gender-dependent item's other form in the active language. */
+export function genderAltMeaning(alt: NonNullable<LearningItem['genderAlt']>, lang: Lang): string {
+  return localize({ he: alt.hebrew, en: alt.english, ...alt.loc }, lang);
 }
 
 export function unitText(unit: Unit, lang: Lang) {
-  return lang === 'he'
-    ? { title: unit.title, subtitle: unit.subtitle, description: unit.description }
-    : { title: unit.titleEn, subtitle: unit.subtitleEn, description: unit.descriptionEn };
+  if (lang === 'he') return { title: unit.title, subtitle: unit.subtitle, description: unit.description };
+  const own = lang === 'en' ? undefined : unit.loc?.[lang];
+  return own ?? { title: unit.titleEn, subtitle: unit.subtitleEn, description: unit.descriptionEn };
 }

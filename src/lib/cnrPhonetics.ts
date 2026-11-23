@@ -12,6 +12,7 @@
  */
 
 import { CNR_SOUND_INFO, type CnrSoundKey, type SoundKey } from '../data/sounds';
+import type { Lang } from '../i18n/lang';
 
 const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
 const DIGRAPHS = ['dž', 'lj', 'nj'];
@@ -354,7 +355,9 @@ export function autoBackchain(text: string): [string, string, string] {
 }
 
 /** Articulation tip assembled from the sounds in the text, plus the stress. */
-export function autoTip(text: string, lang: 'he' | 'en' = 'he'): string {
+export function autoTip(text: string, uiLang: Lang = 'he'): string {
+  // This course is taught in Hebrew and English only.
+  const lang = uiLang === 'he' ? 'he' : 'en';
   const parts = detectSounds(text)
     .slice(0, 3)
     .map((s) => (lang === 'he' ? CNR_SOUND_INFO[s as CnrSoundKey]?.tip : CNR_SOUND_INFO[s as CnrSoundKey]?.tipEn))

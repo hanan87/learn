@@ -1,10 +1,11 @@
 import { ALL_ITEMS, getCustomItems } from '../data';
-import type { LearningItem } from '../data/types';
+import { itemText, type LearningItem } from '../data/types';
+import type { Lang } from '../i18n/lang';
 import { COURSE, type CourseId } from './course';
 
 /**
- * "How do I say…?" – translation between the learner's language (Hebrew / English) and the course
- * language. Order of sources:
+ * "How do I say…?" – translation between the learner's language (Hebrew, English, Polish or
+ * Montenegrin) and the course language. Order of sources:
  *   1. the course itself: a phrase whose meaning matches exactly comes with hand-checked syllables,
  *      transcription and tips
  *   2. MyMemory (free, no key, allows browser calls). Its machine translation of the exact input is
@@ -15,7 +16,10 @@ import { COURSE, type CourseId } from './course';
  * and then gets the Montenegrin forms (sutra → sjutra, kava → kafa…).
  */
 
-export type NativeLang = 'he' | 'en';
+export type NativeLang = Lang;
+
+/** Engine language of each interface language (Montenegrin goes through Bosnian, like the course). */
+const NATIVE_ENGINE: Record<Lang, string> = { he: 'he', en: 'en', pl: 'pl', cnr: 'bs' };
 export type TranslateSource = 'course' | 'online' | 'device';
 
 export interface TranslateResult {
@@ -52,7 +56,7 @@ export function normalizeMeaning(text: string): string {
 
 /** All the ways an item's meaning is written ("Please / You're welcome / Pardon?" → three). */
 function meaningVariants(item: LearningItem, lang: NativeLang): string[] {
-  const meaning = lang === 'he' ? item.hebrew : item.english;
+  const meaning = itemText(item, lang).meaning;
   return [meaning, ...meaning.split(/\s+\/\s+/)].map(normalizeMeaning).filter(Boolean);
 }
 
@@ -202,7 +206,7 @@ async function viaDevice(text: string, from: string, targets: string[]): Promise
   return null;
 }
 
-/** Translate from Hebrew / English into the active course language. */
+/** Translate from the learner's language into the active course language. */
 export async function translateToCourse(input: string, from: NativeLang, course: CourseId = COURSE): Promise<TranslateResult> {
   const text = input.trim();
   if (!text) throw new TranslateError('empty');
@@ -213,28 +217,30 @@ export async function translateToCourse(input: string, from: NativeLang, course:
   const targets = ENGINE_LANGS[course];
   const finish = (out: string) => (course === 'cnr' ? toMontenegrin(out) : out);
   try {
-    return { text: finish(await viaMyMemory(text, from, targets[0])), source: 'online' };
+    return { text: finish(await viaMyMemory(text, NATIVE_ENGINE[from], targets[0])), source: 'online' };
   } catch (e) {
-    const device = await viaDevice(text, from, targets);
+    const device = await viaDevice(text, NATIVE_ENGINE[from], targets);
     if (device) return { text: finish(device.text), source: 'device' };
     throw e instanceof TranslateError ? e : new TranslateError('failed');
   }
 }
 
-/** Meaning of a course-language phrase in Hebrew / English (when the learner typed the phrase itself). */
+/** Meaning of a course-language phrase in the learner's language (when the learner typed the phrase itself). */
 export async function translateFromCourse(input: string, to: NativeLang, course: CourseId = COURSE): Promise<TranslateResult> {
   const text = input.trim();
   if (!text) throw new TranslateError('empty');
   if (course === COURSE) {
     const item = courseItemByText(text);
-    if (item) return { text: to === 'he' ? item.hebrew : item.english, source: 'course', itemId: item.id };
+    if (item) return { text: itemText(item, to).meaning, source: 'course', itemId: item.id };
   }
   const from = ENGINE_LANGS[course][0];
+  const into = NATIVE_ENGINE[to];
+  const finish = (out: string) => (to === 'cnr' ? toMontenegrin(out) : out);
   try {
-    return { text: await viaMyMemory(text, from, to), source: 'online' };
+    return { text: finish(await viaMyMemory(text, from, into)), source: 'online' };
   } catch (e) {
-    const device = await viaDevice(text, from, [to]);
-    if (device) return { text: device.text, source: 'device' };
+    const device = await viaDevice(text, from, [into]);
+    if (device) return { text: finish(device.text), source: 'device' };
     throw e instanceof TranslateError ? e : new TranslateError('failed');
   }
 }

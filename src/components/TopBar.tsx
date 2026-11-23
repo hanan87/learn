@@ -4,19 +4,19 @@ import { useLang } from '../i18n/LangContext';
 import { useTheme } from '../i18n/ThemeContext';
 import { StandaloneDownload } from './StandaloneDownload';
 
-/** HE | EN segmented switch for the interface + learning language. */
+/** Segmented switch for the interface + learning language (HE | EN, or HE | PL | CNR in the English course). */
 export function LangSwitch() {
   const { lang, setLang, tr } = useLang();
-  // English is taught in Hebrew only: nothing to switch.
   if (C.uiLangs.length < 2) return null;
   return (
     <div className="flex shrink-0 rounded-xl bg-slate-100 p-0.5 text-xs font-bold ring-1 ring-slate-200/80" dir="ltr" role="group" aria-label={tr('שפת ממשק', 'Interface language')}>
-      {(['he', 'en'] as const).map((l) => (
+      {C.uiLangs.map((l) => (
         <button
           key={l}
           type="button"
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
+          data-testid={`lang-${l}`}
           className={`rounded-[0.625rem] px-2.5 py-1.5 transition ${lang === l ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
         >
           {l.toUpperCase()}
@@ -41,7 +41,7 @@ const iconBtn = 'grid size-10 shrink-0 place-items-center rounded-xl bg-white te
 
 /** Sticky header: course mark and title, language switch, theme, download and settings. */
 export function TopBar({ title, onOpenSettings }: { title: string; onOpenSettings: () => void }) {
-  const { tr, lang } = useLang();
+  const { tr, loc } = useLang();
   const theme = useTheme();
 
   return (
@@ -49,10 +49,11 @@ export function TopBar({ title, onOpenSettings }: { title: string; onOpenSetting
       <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-2.5 sm:gap-2.5">
         <CourseMark />
         <div className="min-w-0 flex-1 leading-tight">
-          <p className="truncate text-[15px] font-bold text-slate-900">{lang === 'he' ? C.titleHe : C.titleEn}</p>
+          <p className="truncate text-[15px] font-bold text-slate-900">{loc(C.titles)}</p>
           <h1 className="truncate text-xs font-medium text-slate-500">{title}</h1>
         </div>
-        <LangSwitch />
+        {/* The English course's three audiences switch in Settings; the bar keeps the HE | EN toggle only. */}
+        {C.uiLangs.includes('en') && <LangSwitch />}
         <button
           type="button"
           onClick={theme.toggle}

@@ -7,12 +7,13 @@ import { PolishKeyboard } from '../components/PolishKeyboard';
 import { PolishSyllables } from '../components/PolishSyllables';
 import { PronunciationPractice } from '../components/PronunciationPractice';
 import { SpeakControls } from '../components/SpeakControls';
-import { useLang } from '../i18n/LangContext';
+import { useLang, type Lang } from '../i18n/LangContext';
 import { COURSE, COURSE_INFO as C } from '../lib/course';
 import { autoBackchain, autoTip, toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from '../lib/phonetics';
 import { courseItemByText, translateFromCourse, translateToCourse, TranslateError, type TranslateFailure, type TranslateSource } from '../lib/translate';
 import { speak, stopSpeaking } from '../lib/tts';
 import { useProgress } from '../state/ProgressContext';
+import { respell } from '../lib/latinRespell';
 
 /**
  * "How do I say…?": the learner types a word or sentence in their own language (or in the course
@@ -51,7 +52,7 @@ function saveHistory(list: Result[]): void {
 }
 
 /** Personal-dictionary item for a phrase from this screen (same shape as the add-word form). */
-function customItem(target: string, meaning: string): LearningItem {
+function customItem(target: string, meaning: string, lang: Lang): LearningItem {
   return {
     id: `c-${Date.now().toString(36)}`,
     polish: target,
@@ -63,6 +64,7 @@ function customItem(target: string, meaning: string): LearningItem {
     phoneticEnglish: toEnglishPhonetic(target),
     articulationTip: autoTip(target, 'he'),
     articulationTipEn: autoTip(target, 'en'),
+    loc: lang === 'pl' || lang === 'cnr' ? { [lang]: { meaning, tip: autoTip(target, lang) } } : undefined,
     backchainingSteps: autoBackchain(target),
     formality: 'neutral',
     custom: true,
@@ -292,7 +294,7 @@ function SayResult({
 
   const save = () => {
     const m = result.meaning.trim() || target;
-    addCustomItem(customItem(target, m));
+    addCustomItem(customItem(target, m, lang));
     setSaved(true);
   };
 
@@ -360,7 +362,7 @@ function SayResult({
                     {w}
                   </span>
                   <span className={`text-xs text-slate-500 ${lang === 'he' ? 'phonetic' : ''}`} dir={lang === 'he' ? 'rtl' : 'ltr'}>
-                    {(lang === 'he' ? toHebrewPhonetic(w) : toEnglishPhonetic(w)).replace(/[[\]]/g, '')}
+                    {(lang === 'he' ? toHebrewPhonetic(w) : lang === 'en' ? toEnglishPhonetic(w) : respell(toHebrewPhonetic(w), lang)).replace(/[[\]]/g, '')}
                   </span>
                 </button>
               </li>

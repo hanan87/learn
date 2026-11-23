@@ -1,3 +1,4 @@
+import { localize, type Lang } from '../i18n/lang';
 import { COURSE } from '../lib/course';
 import { CNR_CONTRAST_GROUPS } from './cnr/pairs';
 import { EN_CONTRAST_GROUPS } from './en/pairs';
@@ -13,6 +14,8 @@ export interface PairWord {
   english: string;
   hebrew: string;
   phoneticHebrew: string;
+  /** Meaning for Polish and Montenegrin speakers (English course). */
+  loc?: Partial<Record<'pl' | 'cnr', string>>;
 }
 
 export interface MinimalPair {
@@ -30,7 +33,21 @@ export interface ContrastGroup {
   descriptionB: string;
   descriptionAEn: string;
   descriptionBEn: string;
+  /** Descriptions for Polish and Montenegrin speakers (English course). */
+  loc?: Partial<Record<'pl' | 'cnr', { descriptionA: string; descriptionB: string }>>;
   pairs: MinimalPair[];
+}
+
+/** Meaning of a minimal-pair word in the interface language. */
+export function pairMeaning(w: PairWord, lang: Lang): string {
+  return localize({ he: w.hebrew, en: w.english, ...w.loc }, lang);
+}
+
+/** Description of one side of a contrast group in the interface language. */
+export function groupDescription(g: ContrastGroup, side: 'a' | 'b', lang: Lang): string {
+  const own = lang === 'pl' || lang === 'cnr' ? g.loc?.[lang] : undefined;
+  if (side === 'a') return own?.descriptionA ?? (lang === 'he' ? g.descriptionA : g.descriptionAEn);
+  return own?.descriptionB ?? (lang === 'he' ? g.descriptionB : g.descriptionBEn);
 }
 
 const PL_CONTRAST_GROUPS: ContrastGroup[] = [

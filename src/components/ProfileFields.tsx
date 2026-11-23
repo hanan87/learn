@@ -1,5 +1,5 @@
 import { UserRound } from 'lucide-react';
-import type { Lang } from '../i18n/LangContext';
+import { localize, type Lang } from '../i18n/LangContext';
 import { COURSE_INFO, type CourseInfo } from '../lib/course';
 import { isLatinName, type Gender, type LearnerProfile } from '../lib/personalize';
 
@@ -27,7 +27,7 @@ interface Props {
 export function ProfileFields({ lang, profile, onChange, course = COURSE_INFO }: Props) {
   const C = course;
   const NAME_PHRASE = NAME_PHRASES[C.id];
-  const t = (he: string, en: string) => (lang === 'he' ? he : en);
+  const t = (he: string, en: string) => localize({ he, en }, lang);
   const options: [Gender, string, string][] = [
     ['m', t('זכר', 'Male'), SAMPLES[C.id].m],
     ['f', t('נקבה', 'Female'), SAMPLES[C.id].f],

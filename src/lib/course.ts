@@ -1,6 +1,8 @@
+import type { Lang, Loc } from '../i18n/lang';
+
 /**
  * The language being learned. The app ships three courses – Polish, Montenegrin and English (for
- * Hebrew speakers) – that share every screen and exercise type. The active course is read once at start-up, so every data module (units,
+ * Hebrew, Polish and Montenegrin speakers) – that share every screen and exercise type. The active course is read once at start-up, so every data module (units,
  * roleplays, sound groups, phonetics) is built for it; switching stores the choice and reloads.
  * Each course keeps its own progress; the interface language, theme and voice settings are shared.
  */
@@ -9,16 +11,18 @@ export type CourseId = 'pl' | 'cnr' | 'en';
 
 export interface CourseInfo {
   id: CourseId;
-  /** The language's name in Hebrew, in English and in the language itself. */
-  name: { he: string; en: string; native: string };
+  /** The language's name in each interface language and in the language itself. */
+  name: Required<Loc<string>> & { native: string };
   /** Masculine Hebrew adjective ("הדובר הפולני"); the feminine equals name.he. */
   adjHe: string;
   /** "in Polish" – used inside prompts ("How do you say … in Polish?"). */
-  inLang: { he: string; en: string };
+  inLang: Required<Loc<string>>;
   /** Course title shown on the welcome screen and the map. */
   title: string;
   titleHe: string;
   titleEn: string;
+  /** Course title in every interface language that teaches it. */
+  titles: Loc<string>;
   /** Value of the HTML lang attribute on target-language text. */
   htmlLang: string;
   /** Speech recognition language (Chrome / Android). */
@@ -29,12 +33,12 @@ export interface CourseInfo {
   voicePrefixes: string[];
   /** Prefix of the pre-recorded clip voices ('pl' → 'pl-f' / 'pl-m'). */
   clipPrefix: CourseId;
-  /** Interface languages the course is taught in (English is taught to Hebrew speakers only). */
-  uiLangs: ('he' | 'en')[];
+  /** Interface languages the course is taught in (English: Hebrew, Polish and Montenegrin speakers). */
+  uiLangs: Lang[];
   /** Flag colours (CSS background) shown next to the course name. */
   flag: string;
   /** Names of the neural voices (female teacher, male) and the language they speak. */
-  voiceNames: { f: string; m: string; he: string; en: string };
+  voiceNames: { f: string; m: string } & Loc<string>;
   /** Phrase played to preview a voice in Settings. */
   voiceSample: string;
   /** localStorage key of this course's progress. */
@@ -50,12 +54,13 @@ export interface CourseInfo {
 export const COURSES: Record<CourseId, CourseInfo> = {
   pl: {
     id: 'pl',
-    name: { he: 'פולנית', en: 'Polish', native: 'Polski' },
+    name: { he: 'פולנית', en: 'Polish', pl: 'polski', cnr: 'poljski', native: 'Polski' },
     adjHe: 'פולני',
-    inLang: { he: 'בפולנית', en: 'in Polish' },
+    inLang: { he: 'בפולנית', en: 'in Polish', pl: 'po polsku', cnr: 'na poljskom' },
     title: 'Polski od zera',
     titleHe: 'פולנית מאפס',
     titleEn: 'Polish from Zero',
+    titles: { he: 'פולנית מאפס', en: 'Polish from Zero' },
     htmlLang: 'pl',
     sttLang: 'pl-PL',
     ttsLang: 'pl-PL',
@@ -72,12 +77,13 @@ export const COURSES: Record<CourseId, CourseInfo> = {
   },
   cnr: {
     id: 'cnr',
-    name: { he: 'מונטנגרית', en: 'Montenegrin', native: 'Crnogorski' },
+    name: { he: 'מונטנגרית', en: 'Montenegrin', pl: 'czarnogórski', cnr: 'crnogorski', native: 'Crnogorski' },
     adjHe: 'מונטנגרי',
-    inLang: { he: 'במונטנגרית', en: 'in Montenegrin' },
+    inLang: { he: 'במונטנגרית', en: 'in Montenegrin', pl: 'po czarnogórsku', cnr: 'na crnogorskom' },
     title: 'Crnogorski od nule',
     titleHe: 'מונטנגרית מאפס',
     titleEn: 'Montenegrin from Zero',
+    titles: { he: 'מונטנגרית מאפס', en: 'Montenegrin from Zero' },
     htmlLang: 'cnr',
     // There is no Montenegrin recognizer or voice; Croatian recognition writes the same Latin
     // Ijekavian spelling (mlijeko, lijepo), and Bosnian / Croatian / Serbian voices read it naturally.
@@ -96,20 +102,21 @@ export const COURSES: Record<CourseId, CourseInfo> = {
   },
   en: {
     id: 'en',
-    name: { he: 'אנגלית', en: 'English', native: 'English' },
+    name: { he: 'אנגלית', en: 'English', pl: 'angielski', cnr: 'engleski', native: 'English' },
     adjHe: 'אמריקאי',
-    inLang: { he: 'באנגלית', en: 'in English' },
+    inLang: { he: 'באנגלית', en: 'in English', pl: 'po angielsku', cnr: 'na engleskom' },
     title: 'Everyday English',
     titleHe: 'אנגלית מדוברת',
     titleEn: 'Everyday English',
+    titles: { he: 'אנגלית מדוברת', en: 'Everyday English', pl: 'Angielski na co dzień', cnr: 'Engleski za svaki dan' },
     htmlLang: 'en',
     sttLang: 'en-US',
     ttsLang: 'en-US',
     voicePrefixes: ['en-us', 'en'],
     clipPrefix: 'en',
-    uiLangs: ['he'],
+    uiLangs: ['he', 'pl', 'cnr'],
     flag: 'linear-gradient(90deg, #3c3b6e 0 42%, transparent 42%), repeating-linear-gradient(180deg, #b22234 0 15%, #ffffff 15% 30%)',
-    voiceNames: { f: 'Jenny', m: 'Guy', he: 'אנגלית אמריקאית', en: 'American English' },
+    voiceNames: { f: 'Jenny', m: 'Guy', he: 'אנגלית אמריקאית', en: 'American English', pl: 'amerykański angielski', cnr: 'američki engleski' },
     voiceSample: 'Hi! Nice to meet you.',
     progressKey: 'polish-learn:progress:en:v1',
     defaultNames: { m: 'Daniel', f: 'Maya' },

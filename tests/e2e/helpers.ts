@@ -9,7 +9,7 @@ export const FREE_VOICE = 'https://learn-voice-ten.vercel.app/**';
 
 export async function openApp(
   page: Page,
-  opts: { lang?: 'he' | 'en'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown; course?: Course; freeVoice?: boolean } = {},
+  opts: { lang?: 'he' | 'en' | 'pl' | 'cnr'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown; course?: Course; freeVoice?: boolean } = {},
 ) {
   // Tests never reach the real voice server: unrecorded phrases use the device voice unless a test mocks it.
   if (!opts.freeVoice) await page.route(FREE_VOICE, (r) => r.abort());

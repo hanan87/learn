@@ -19,7 +19,7 @@ interface Inspect {
 
 /** Tap-to-inspect bubble: meaning, syllables, audio and the ending decoder. */
 function WordBubble({ story, token, onClose }: { story: Story; token: string; onClose: () => void }) {
-  const { tr, lang } = useLang();
+  const { tr, loc } = useLang();
   const clean = token.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
   const entry = lookupWord(story, token);
   const ending = entry?.base && wordKey(entry.base) !== wordKey(clean) ? splitEnding(entry.base, clean) : null;
@@ -40,7 +40,7 @@ function WordBubble({ story, token, onClose }: { story: Story; token: string; on
         <PolishSyllables notation={toSyllableNotation(clean)} size="lg" className="!text-white" />
       </div>
       <Phonetic he={toHebrewPhonetic(clean)} en={toEnglishPhonetic(clean)} size="sm" className="!text-[#e2e8f0]" />
-      <p className="text-lg font-bold text-[#fcd34d]">{entry ? entry.t[lang] : '—'}</p>
+      <p className="text-lg font-bold text-[#fcd34d]">{entry ? loc(entry.t) : '—'}</p>
       {ending && (
         <div className="rounded-xl bg-white/10 p-2.5 text-sm" data-testid="ending-decoder">
           <p className="mb-1 text-xs font-bold text-[#cbd5e1]">{tr('מפענח סיומות', 'Ending decoder')}</p>
@@ -57,13 +57,13 @@ function WordBubble({ story, token, onClose }: { story: Story; token: string; on
           </p>
         </div>
       )}
-      {entry?.note && <p className="text-sm leading-relaxed text-[#e2e8f0]">{entry.note[lang]}</p>}
+      {entry?.note && <p className="text-sm leading-relaxed text-[#e2e8f0]">{loc(entry.note)}</p>}
     </div>
   );
 }
 
 export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => void }) {
-  const { tr, lang, dir } = useLang();
+  const { tr, lang, dir, loc } = useLang();
   const { completeStory, state } = useProgress();
   const [shown, setShown] = useState(1);
   const [inspect, setInspect] = useState<Inspect | null>(null);
@@ -140,7 +140,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
         </button>
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 truncate font-serif text-xl font-semibold">
-            <StoryIcon id={story.id} className="size-5 shrink-0 text-brand-600" /> {story.title[lang]}
+            <StoryIcon id={story.id} className="size-5 shrink-0 text-brand-600" /> {loc(story.title)}
           </p>
           <p className="polish truncate text-xs text-slate-500" dir="ltr">
             {story.titlePl}
@@ -203,7 +203,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
                 </p>
                 {showTr && (
                   <p className="mt-1 text-sm text-slate-500" dir={lang === 'he' ? 'rtl' : 'ltr'}>
-                    {line.t[lang]}
+                    {loc(line.t)}
                   </p>
                 )}
               </div>
@@ -244,7 +244,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
           <button type="button" onClick={() => speak(question.q)} className="polish flex items-center gap-2 text-xl font-black" dir="ltr">
             {question.q} <Volume2 className="size-4 text-slate-400" />
           </button>
-          <p className="text-sm text-slate-500">{question.t[lang]}</p>
+          <p className="text-sm text-slate-500">{loc(question.t)}</p>
           <div className="grid gap-2">
             {options.map((opt) => {
               const isPicked = picked === opt.polish;
@@ -262,7 +262,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
                     <span className="polish block font-bold" dir="ltr">
                       {opt.polish}
                     </span>
-                    <span className="block text-xs text-slate-500">{opt.t[lang]}</span>
+                    <span className="block text-xs text-slate-500">{loc(opt.t)}</span>
                   </span>
                   {reveal && opt.correct && <CheckCircle2 className="size-5 text-emerald-600" />}
                   {reveal && isPicked && !opt.correct && <XCircle className="size-5 text-rose-600" />}

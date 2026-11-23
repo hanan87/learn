@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { HandsFreeButton } from './CourseMap';
 import { ALL_ITEMS, getCustomItems, getItem, getUnitOfItem, UNITS } from '../data';
-import { SOUND_INFO } from '../data/sounds';
+import { SOUND_INFO, soundText } from '../data/sounds';
 import { itemText, type LearningItem } from '../data/types';
 import { FormalityBadge } from '../components/FormalityBadge';
 import { MasteryDots } from '../components/ItemStats';
@@ -91,7 +91,9 @@ export function VocabReview({ onOpenItem, onStartPractice, onOpenSoundGroup, onO
             className="btn-secondary"
           >
             <ArrowLeftRight className="size-4" />
-            {direction === 'native-pl' ? tr(`עברית ← ${C.name.he}`, `English → ${C.name.en}`) : tr(`${C.name.he} ← עברית`, `${C.name.en} → English`)}
+            {direction === 'native-pl'
+              ? tr({ he: `עברית ← ${C.name.he}`, en: `English → ${C.name.en}`, pl: 'Polski → angielski', cnr: 'Crnogorski → engleski' })
+              : tr({ he: `${C.name.he} ← עברית`, en: `${C.name.en} → English`, pl: 'Angielski → polski', cnr: 'Engleski → crnogorski' })}
           </button>
         </div>
       </section>
@@ -173,7 +175,7 @@ function WeakSoundsPanel({ onOpenSoundGroup }: { onOpenSoundGroup: (g: string) =
                 <span dir="ltr" className="polish text-2xl font-black text-slate-900">
                   {s.key}
                 </span>
-                <span className="text-xs text-slate-500">{lang === 'he' ? info.name : info.nameEn}</span>
+                <span className="text-xs text-slate-500">{soundText(info, lang).name}</span>
                 {s.weak && (
                   <span className="ms-auto flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white">
                     <AlertTriangle className="size-3" /> {tr('דורש חיזוק', 'Needs work')}
@@ -187,7 +189,7 @@ function WeakSoundsPanel({ onOpenSoundGroup }: { onOpenSoundGroup: (g: string) =
                 {tr(`${s.attempts} ניסיונות · ${errPct}% שגיאות`, `${s.attempts} attempts · ${errPct}% errors`)}
                 {s.avgScore !== null && tr(` · ציון הגייה ${s.avgScore}%`, ` · speaking ${s.avgScore}%`)}
               </p>
-              {s.weak && <p className="mt-1 text-xs text-amber-900">{lang === 'he' ? info.tip : info.tipEn}</p>}
+              {s.weak && <p className="mt-1 text-xs text-amber-900">{soundText(info, lang).tip}</p>}
               {s.weak && info.groupId && (
                 <button type="button" onClick={() => onOpenSoundGroup(info.groupId!)} className="mt-2 text-xs font-bold text-indigo-700 underline">
                   {tr('תרגול זוגות מינימליים במעבדה', 'Practise minimal pairs in the lab')}
@@ -294,7 +296,7 @@ function ReviewSession({ ids, direction, onExit }: { ids: string[]; direction: D
 
 function Dictionary({ onOpenItem, onAdd }: { onOpenItem: (id: string) => void; onAdd: () => void }) {
   const { state, isLearned } = useProgress();
-  const { tr } = useLang();
+  const { tr, lang } = useLang();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('learned');
   const [unit, setUnit] = useState<string>('all');
@@ -313,9 +315,16 @@ function Dictionary({ onOpenItem, onAdd }: { onOpenItem: (id: string) => void; o
         return true;
       })
       .filter((i) => unit === 'all' || getUnitOfItem(i.id) === unit)
-      .filter((i) => !q || i.polish.toLocaleLowerCase('pl-PL').includes(q) || i.hebrew.includes(query.trim()) || i.english.toLowerCase().includes(q));
+      .filter(
+        (i) =>
+          !q ||
+          i.polish.toLocaleLowerCase('pl-PL').includes(q) ||
+          i.hebrew.includes(query.trim()) ||
+          i.english.toLowerCase().includes(q) ||
+          itemText(i, lang).meaning.toLocaleLowerCase('pl-PL').includes(q),
+      );
     // state.customItems is a dependency so newly added words appear immediately.
-  }, [query, filter, unit, state.items, state.customItems]);
+  }, [query, filter, unit, state.items, state.customItems, lang]);
 
   const filters: [Filter, string][] = [
     ['learned', tr('מילים שנלמדו', 'Learned')],

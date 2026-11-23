@@ -1,15 +1,18 @@
 import type { Roleplay, RoleplayOption } from '../dialogues';
+import { EN_CNR } from './cnr';
+import type { EnLocal } from './local';
+import { EN_PL } from './pl';
 
 /**
- * English roleplay scenarios (same format as data/dialogues). The course is taught in Hebrew only,
- * so the English translation fields repeat the English line.
+ * English roleplay scenarios (same format as data/dialogues). The English translation fields repeat
+ * the English line; Polish and Montenegrin come from data/en/pl and data/en/cnr (merged in below).
  */
 
 const ok = (text: string, he: string, fb: string): RoleplayOption => ({ polish: text, t: { he, en: text }, correct: true, feedback: { he: fb, en: fb } });
 const no = (text: string, he: string, fb: string): RoleplayOption => ({ polish: text, t: { he, en: text }, correct: false, feedback: { he: fb, en: fb } });
 const line = (text: string, he: string) => ({ polish: text, t: { he, en: text } });
 
-export const EN_ROLEPLAYS: Roleplay[] = [
+const SOURCES: Roleplay[] = [
   {
     id: 'nyc-coffee',
     title: { he: 'בית קפה בניו יורק', en: 'A coffee shop in New York' },
@@ -148,3 +151,27 @@ export const EN_ROLEPLAYS: Roleplay[] = [
     ],
   },
 ];
+
+/** Add the Polish and Montenegrin texts to a roleplay (turns and options in the same order). */
+function localize(r: Roleplay): Roleplay {
+  const pl = EN_PL.roleplays[r.id];
+  const cnr = EN_CNR.roleplays[r.id];
+  const turn = (src: EnLocal['roleplays'][string] | undefined, i: number) => src?.turns[i];
+  return {
+    ...r,
+    title: { ...r.title, pl: pl?.title, cnr: cnr?.title },
+    setting: { ...r.setting, pl: pl?.setting, cnr: cnr?.setting },
+    partner: { ...r.partner, pl: pl?.partner, cnr: cnr?.partner },
+    turns: r.turns.map((t, i) => ({
+      ...t,
+      line: { ...t.line, t: { ...t.line.t, pl: turn(pl, i)?.line, cnr: turn(cnr, i)?.line } },
+      options: t.options.map((o, j) => ({
+        ...o,
+        t: { ...o.t, pl: turn(pl, i)?.options[j]?.[0], cnr: turn(cnr, i)?.options[j]?.[0] },
+        feedback: { ...o.feedback, pl: turn(pl, i)?.options[j]?.[1], cnr: turn(cnr, i)?.options[j]?.[1] },
+      })),
+    })),
+  };
+}
+
+export const EN_ROLEPLAYS: Roleplay[] = SOURCES.map(localize);

@@ -1,3 +1,4 @@
+import type { Loc } from '../i18n/lang';
 import { COURSE } from '../lib/course';
 import { CNR_ROLEPLAYS } from './cnr/dialogues';
 import { EN_ROLEPLAYS } from './en/dialogues';
@@ -12,10 +13,8 @@ import type { Formality } from './types';
  * lines use them to address the learner (Pan/Pani), replies use them for the learner's own gender.
  */
 
-export interface Bilingual {
-  he: string;
-  en: string;
-}
+/** Text in the interface languages (Polish / Montenegrin only in the English course). */
+export type Bilingual = Loc<string>;
 
 export interface RoleplayOption {
   polish: string;

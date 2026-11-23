@@ -45,7 +45,7 @@ const TAB_IDS = TABS.map((t) => t.id);
 export function App() {
   const { segments, navigate } = useHashRoute('map');
   const { dueItemIds } = useProgress();
-  const { lang, unset, tr } = useLang();
+  const { unset, tr, loc } = useLang();
   const mic = useMic();
   const [voiceMissing, setVoiceMissing] = useState(false);
   const clips = useSyncExternalStore(subscribeManifest, () => clipCount(C.clipPrefix));
@@ -83,7 +83,7 @@ export function App() {
   return (
     <div className="flex min-h-dvh flex-col">
       {mic.blocked && mic.status !== 'no-device' && <StandaloneDownload />}
-      <TopBar title={tabInfo[lang]} onOpenSettings={() => navigate(`${tab}/settings`)} />
+      <TopBar title={loc(tabInfo)} onOpenSettings={() => navigate(`${tab}/settings`)} />
       {voiceMissing && clips === 0 && !cloud && (
         <div className="mx-auto mt-3 w-full max-w-3xl px-4">
           <p className="flex items-start gap-2 rounded-2xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">

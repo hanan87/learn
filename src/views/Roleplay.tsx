@@ -1,7 +1,7 @@
 import { COURSE_INFO as C } from '../lib/course';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, BedDouble, Coffee, Handshake, Mic, RotateCcw, TrainFront, Trophy, User, Volume2, XCircle, type LucideIcon } from 'lucide-react';
-import { ROLEPLAYS, type Roleplay as RoleplayT, type RoleplayOption } from '../data/dialogues';
+import { ROLEPLAYS, type Bilingual, type Roleplay as RoleplayT, type RoleplayOption } from '../data/dialogues';
 import { STORIES } from '../data/stories';
 import { StoryIcon } from '../components/StoryIcon';
 import { FormalityBadge } from '../components/FormalityBadge';
@@ -27,7 +27,7 @@ const ICONS: Record<string, LucideIcon> = {
 
 export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void }) {
   const { state } = useProgress();
-  const { tr, lang } = useLang();
+  const { tr, loc } = useLang();
   const { tx } = usePersonal();
   const [active, setActive] = useState<RoleplayT | null>(null);
 
@@ -54,7 +54,7 @@ export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void })
                   <span className="grid size-9 place-items-center rounded-lg bg-slate-100 text-slate-700">
                     <StoryIcon id={s.id} className="size-[18px]" />
                   </span>
-                  <span className="text-sm leading-tight font-bold text-slate-900">{s.title[lang]}</span>
+                  <span className="text-sm leading-tight font-bold text-slate-900">{loc(s.title)}</span>
                   <span className="polish text-xs text-slate-500" dir="ltr">
                     {s.titlePl}
                   </span>
@@ -93,7 +93,7 @@ export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void })
                   <span className="grid size-10 place-items-center rounded-2xl bg-brand-50 text-brand-600">
                     <Icon className="size-5" />
                   </span>
-                  <span className="flex-1 text-base font-bold text-slate-900">{r.title[lang]}</span>
+                  <span className="flex-1 text-base font-bold text-slate-900">{loc(r.title)}</span>
                   {done && (
                     <span className="flex items-center gap-1 text-xs font-bold text-amber-600">
                       <Trophy className="size-4" /> {done.bestScore}%
@@ -119,8 +119,8 @@ interface Turn {
   /** Clip voice: the partner's, or the learner's own gender for replies. */
   voice: 'f' | 'm';
   polish: string;
-  he: string;
-  en: string;
+  /** Meaning in the interface languages. */
+  t: Bilingual;
   score?: number;
 }
 
@@ -163,7 +163,7 @@ function Bubble({ entry, partnerName }: { entry: Turn; partnerName: string }) {
           <Volume2 className="mt-1 size-4 shrink-0 text-slate-400" />
         </button>
         <Phonetic he={toHebrewPhonetic(polish)} en={toEnglishPhonetic(polish)} size="sm" />
-        <p className="text-sm text-slate-500">{tx({ he: entry.he, en: entry.en })}</p>
+        <p className="text-sm text-slate-500">{tx(entry.t)}</p>
         <AltNote template={entry.polish} me={me} />
       </div>
     </div>
@@ -172,7 +172,7 @@ function Bubble({ entry, partnerName }: { entry: Turn; partnerName: string }) {
 
 function RoleplayRunner({ scenario, onExit }: { scenario: RoleplayT; onExit: () => void }) {
   const { completeDialogue } = useProgress();
-  const { tr, lang, dir } = useLang();
+  const { tr, dir, loc } = useLang();
   const { pl, tx, gender } = usePersonal();
   const [turn, setTurn] = useState(0);
   const [answers, setAnswers] = useState<Turn[]>([]);
@@ -192,7 +192,7 @@ function RoleplayRunner({ scenario, onExit }: { scenario: RoleplayT; onExit: () 
   const log = useMemo(() => {
     const entries: Turn[] = [];
     scenario.turns.slice(0, turn + 1).forEach((t, i) => {
-      entries.push({ speaker: 'partner', voice: t.voice ?? scenario.voice, polish: t.line.polish, he: t.line.t.he, en: t.line.t.en });
+      entries.push({ speaker: 'partner', voice: t.voice ?? scenario.voice, polish: t.line.polish, t: t.line.t });
       if (answers[i]) entries.push(answers[i]);
     });
     return entries;
@@ -226,7 +226,7 @@ function RoleplayRunner({ scenario, onExit }: { scenario: RoleplayT; onExit: () 
     if (!picked) return;
     setAnswers((a) => {
       const copy = [...a];
-      copy[turn] = { speaker: 'me', voice: gender, polish: picked.polish, he: picked.t.he, en: picked.t.en, score };
+      copy[turn] = { speaker: 'me', voice: gender, polish: picked.polish, t: picked.t, score };
       return copy;
     });
     setPicked(null);
@@ -262,7 +262,7 @@ function RoleplayRunner({ scenario, onExit }: { scenario: RoleplayT; onExit: () 
         <button type="button" onClick={onExit} className="grid size-10 place-items-center rounded-full hover:bg-slate-200" aria-label={tr('חזרה', 'Back')}>
           <BackIcon className="size-5" />
         </button>
-        <h2 className="flex-1 text-lg font-bold">{scenario.title[lang]}</h2>
+        <h2 className="flex-1 text-lg font-bold">{loc(scenario.title)}</h2>
         <span className="text-xs font-bold text-slate-500">
           {Math.min(turn + 1, scenario.turns.length)}/{scenario.turns.length}
         </span>
@@ -271,7 +271,7 @@ function RoleplayRunner({ scenario, onExit }: { scenario: RoleplayT; onExit: () 
 
       <div className="space-y-3">
         {log.map((entry, i) => (
-          <Bubble key={i} entry={entry} partnerName={scenario.partner[lang]} />
+          <Bubble key={i} entry={entry} partnerName={loc(scenario.partner)} />
         ))}
       </div>
 

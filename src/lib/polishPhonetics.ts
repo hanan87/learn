@@ -9,6 +9,7 @@
  */
 
 import { PL_SOUND_INFO as SOUND_INFO, type PlSoundKey, type SoundKey } from '../data/sounds';
+import type { Lang } from '../i18n/lang';
 
 const VOWELS = new Set(['a', 'ą', 'e', 'ę', 'i', 'o', 'ó', 'u', 'y']);
 const DIGRAPHS = ['dź', 'dż', 'dz', 'ch', 'cz', 'rz', 'sz'];
@@ -478,7 +479,9 @@ export function autoBackchain(text: string): [string, string, string] {
 }
 
 /** Articulation tip assembled from the sounds in the text, plus stress and devoicing notes. */
-export function autoTip(text: string, lang: 'he' | 'en' = 'he'): string {
+export function autoTip(text: string, uiLang: Lang = 'he'): string {
+  // This course is taught in Hebrew and English only.
+  const lang = uiLang === 'he' ? 'he' : 'en';
   const sounds = detectSounds(text);
   const parts = sounds.slice(0, 3).map((s) => (lang === 'he' ? SOUND_INFO[s as PlSoundKey].tip : SOUND_INFO[s as PlSoundKey].tipEn));
   const notation = toSyllableNotation(text);

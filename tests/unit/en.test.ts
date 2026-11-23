@@ -2,8 +2,14 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { autoBackchain, detectSounds, inLexicon, toHebrewPhonetic, toSyllableNotation } from '../../src/lib/enPhonetics';
 import { notationToPlain } from '../../src/lib/syllables';
 import { scorePronunciation } from '../../src/lib/pronScore';
+import { respell } from '../../src/lib/latinRespell';
+import { localize } from '../../src/i18n/lang';
+import { uiText } from '../../src/i18n/strings';
 
-/** The English course for Hebrew speakers: the pronunciation lexicon, course data and the course switch. */
+/**
+ * The English course for Hebrew, Polish and Montenegrin speakers: the pronunciation lexicon, the
+ * Latin respelling, course data in every interface language and the course switch.
+ */
 
 // Niqqud order inside a letter is not canonical in hand-typed text; compare normalized forms.
 const he = (text: string) => toHebrewPhonetic(text).normalize('NFC');
@@ -48,6 +54,65 @@ describe('English phonetics', () => {
   it('builds back-chaining steps from the end', () => {
     expect(autoBackchain('Could we see the menu?')).toEqual(['menu', 'the menu', 'Could we see the menu']);
     expect(autoBackchain('Keep the change.')[2]).toBe('Keep the change');
+  });
+});
+
+describe('Latin respelling for Polish and Montenegrin speakers', () => {
+  const pl = (text: string) => respell(toHebrewPhonetic(text), 'pl');
+  const cnr = (text: string) => respell(toHebrewPhonetic(text), 'cnr');
+
+  it('writes the hard English sounds with each language’s own letters', () => {
+    expect(pl('Thank you!')).toBe('[thænk] ju');
+    expect(cnr('Thank you!')).toBe('[thænk] ju');
+    expect(pl('this')).toBe('[dhys]');
+    expect(pl('water')).toBe('[ła]·der');
+    expect(cnr('water')).toBe('[wa]·der');
+    expect(pl('very')).toBe('[we]·ri');
+    expect(cnr('very')).toBe('[ve]·ri');
+    expect(pl('change')).toBe('[czejndż]');
+    expect(cnr('change')).toBe('[čejndž]');
+  });
+
+  it('keeps ship / sheep and bad / bed apart', () => {
+    expect(pl('ship')).toBe('[szyp]');
+    expect(pl('sheep')).toBe('[szip]');
+    expect(cnr('ship')).toBe('[šip]');
+    expect(cnr('sheep')).toBe('[šiip]');
+    expect(pl('bad')).toBe('[bæd]');
+    expect(pl('bed')).toBe('[bed]');
+  });
+
+  it('marks the long ee in Montenegrin only where it is stressed', () => {
+    expect(cnr('coffee')).toBe('[ka]·fi');
+    expect(cnr('me')).toBe('mi');
+  });
+
+  it('reads diphthongs and the open "ou" of go', () => {
+    expect(pl('fine')).toBe('[fajn]');
+    expect(pl('how')).toBe('[hał]');
+    expect(cnr('how')).toBe('[hau]');
+    expect(pl('hello')).toBe('he·[lou]');
+    expect(pl('call')).toBe('[kol]');
+    expect(pl('the')).toBe('dhe');
+  });
+});
+
+describe('Polish and Montenegrin interface strings', () => {
+  it('translates by the English text, with patterns for numbers', () => {
+    expect(uiText('Settings', 'pl')).toBe('Ustawienia');
+    expect(uiText('Settings', 'cnr')).toBe('Podešavanja');
+    expect(uiText('Lesson 3 of 7', 'pl')).toBe('Lekcja 3 z 7');
+    expect(uiText('Lesson 3 of 7', 'cnr')).toBe('Lekcija 3 od 7');
+    expect(uiText('Say it in English – from memory', 'pl')).toBe('Powiedz to po angielsku – z pamięci');
+    expect(uiText('No such string', 'pl')).toBe('No such string');
+    expect(uiText('Settings', 'en')).toBe('Settings');
+  });
+
+  it('localizes per-language values, falling back to the table, then English', () => {
+    expect(localize({ he: 'א', en: 'Settings' }, 'he')).toBe('א');
+    expect(localize({ he: 'א', en: 'Settings' }, 'pl')).toBe('Ustawienia');
+    expect(localize({ he: 'א', en: 'Settings', cnr: 'Moje' }, 'cnr')).toBe('Moje');
+    expect(localize({ he: 1, en: 2 }, 'cnr')).toBe(2);
   });
 });
 
@@ -96,10 +161,12 @@ describe('English course data (LEARN_COURSE=en)', () => {
     vi.resetModules();
   });
 
-  it('loads the English course, taught in Hebrew only', () => {
+  it('loads the English course, taught in Hebrew, Polish and Montenegrin', () => {
     expect(course.COURSE).toBe('en');
     expect(course.COURSE_INFO.sttLang).toBe('en-US');
-    expect(course.COURSE_INFO.uiLangs).toEqual(['he']);
+    expect(course.COURSE_INFO.uiLangs).toEqual(['he', 'pl', 'cnr']);
+    expect(course.COURSES.pl.uiLangs).toEqual(['he', 'en']);
+    expect(course.COURSES.cnr.uiLangs).toEqual(['he', 'en']);
     expect(data.UNITS.map((u) => u.id)).toEqual(['e1', 'e2', 'e3', 'e4', 'e5', 'e6']);
     expect(data.ALL_ITEMS.length).toBeGreaterThanOrEqual(75);
     expect(lessons.LESSONS[0].id).toBe('e1-L1');
@@ -153,13 +220,75 @@ describe('English course data (LEARN_COURSE=en)', () => {
     expect(data.PHONETIC_LEGEND[0].he).toBe('ת׳');
   });
 
-  it('records the course with Jenny and Guy, and Hebrew meanings only', () => {
+  it('records the course with Jenny and Guy, meanings in Hebrew, Polish and Montenegrin', () => {
     const list = catalog.buildClipCatalog();
     const keys = new Set(list.map((c) => c.key));
     expect(keys.has('en-f|s|Thank you!')).toBe(true);
     expect(keys.has('en-m|n|Hi there! What can I get you?')).toBe(true);
     expect(keys.has('he|n|תודה!')).toBe(true);
+    expect(keys.has('pl-f|n|Dziękuję!')).toBe(true);
+    expect(keys.has('cnr-f|n|Hvala!')).toBe(true);
+    expect(keys.has('pl-f|n|Świetnie!')).toBe(true);
+    expect(keys.has('pl-f|n|Zgubiłam się.')).toBe(true);
     expect(list.some((c) => c.voice === 'en')).toBe(false);
-    expect(list.some((c) => c.voice.startsWith('pl-') || c.voice.startsWith('cnr-'))).toBe(false);
+    // Polish and Montenegrin are only read as meanings and tips, by the teacher's voice.
+    expect(list.some((c) => c.voice === 'pl-m' || c.voice === 'cnr-m')).toBe(false);
+  });
+
+  it('teaches every phrase in Polish and Montenegrin', () => {
+    const hebrew = /[֐-׿]/;
+    for (const g of ['m', 'f'] as const) {
+      data.applyProfile({ gender: g, name: '' });
+      for (const item of data.ALL_ITEMS) {
+        for (const l of ['pl', 'cnr'] as const) {
+          const loc = item.loc?.[l];
+          expect(loc?.meaning, `${item.id} ${l}`).toBeTruthy();
+          expect(loc?.tip, `${item.id} ${l}`).toBeTruthy();
+          expect(`${loc?.meaning} ${loc?.tip} ${loc?.note ?? ''}`, `${item.id} ${l}`).not.toMatch(hebrew);
+          expect(`${loc?.meaning} ${loc?.tip}`, `${item.id} ${l}`).not.toMatch(/[{}]/);
+          expect(data.getSituation(item, l), `${item.id} ${l}`).not.toMatch(/^(Jak powiesz|Kako se kaže)/);
+        }
+        expect(!!item.loc?.pl?.note, item.id).toBe(!!item.culturalNote);
+        expect(!!item.loc?.cnr?.note, item.id).toBe(!!item.culturalNote);
+      }
+    }
+    for (const u of data.UNITS) for (const l of ['pl', 'cnr'] as const) expect(u.loc?.[l]?.title, `${u.id} ${l}`).toBeTruthy();
+    data.applyProfile({ gender: null, name: '' });
+  });
+
+  it('puts the learner into Polish and Montenegrin meanings', () => {
+    data.applyProfile({ gender: 'f', name: 'Kasia' });
+    expect(data.getItem('e4-11')!.loc?.pl?.meaning).toBe('Zgubiłam się.');
+    expect(data.getItem('e4-11')!.loc?.cnr?.meaning).toBe('Izgubila sam se.');
+    expect(data.getItem('e2-04')!.loc?.cnr?.meaning).toBe('Zovem se Kasia.');
+    data.applyProfile({ gender: 'm', name: '' });
+    expect(data.getItem('e4-11')!.loc?.pl?.meaning).toBe('Zgubiłem się.');
+    expect(data.getItem('e2-04')!.loc?.pl?.meaning).toBe('Mam na imię Daniel.');
+    data.applyProfile({ gender: null, name: '' });
+  });
+
+  it('has Polish and Montenegrin roleplays, Sound Lab and legend', () => {
+    for (const r of roleplays.ROLEPLAYS) {
+      for (const l of ['pl', 'cnr'] as const) {
+        expect(r.title[l], `${r.id} ${l}`).toBeTruthy();
+        expect(r.setting[l], `${r.id} ${l}`).toBeTruthy();
+        expect(r.partner[l], `${r.id} ${l}`).toBeTruthy();
+        for (const t of r.turns) {
+          expect(t.line.t[l], `${r.id} ${t.line.polish} ${l}`).toBeTruthy();
+          for (const o of t.options) {
+            expect(o.t[l], `${r.id} ${o.polish} ${l}`).toBeTruthy();
+            expect(o.feedback[l], `${r.id} ${o.polish} ${l}`).toBeTruthy();
+          }
+        }
+      }
+    }
+    for (const g of pairs.CONTRAST_GROUPS) {
+      for (const l of ['pl', 'cnr'] as const) {
+        expect(pairs.groupDescription(g, 'a', l)).toBe(g.loc?.[l]?.descriptionA);
+        expect(g.loc?.[l]?.descriptionB, g.id).toBeTruthy();
+        for (const p of g.pairs) for (const w of [p.a, p.b]) expect(w.loc?.[l], `${w.polish} ${l}`).toBeTruthy();
+      }
+    }
+    for (const row of data.PHONETIC_LEGEND) for (const l of ['pl', 'cnr'] as const) expect(row.loc?.[l]?.sound, `${row.pl} ${l}`).toBeTruthy();
   });
 });

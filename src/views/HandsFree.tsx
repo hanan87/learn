@@ -6,7 +6,7 @@ import { handsFreeQueue } from '../lib/handsFreeQueue';
 import { Phonetic } from '../components/Phonetic';
 import { PolishSyllables } from '../components/PolishSyllables';
 import { useSpeechRecorder, type RecorderResult } from '../hooks/useSpeechRecorder';
-import { useLang } from '../i18n/LangContext';
+import { localize, useLang } from '../i18n/LangContext';
 import { haptic } from '../lib/haptics';
 import { scorePronunciation, type WordResult } from '../lib/text';
 import { COACH, type CoachLine } from '../data/coach';
@@ -184,7 +184,7 @@ export function HandsFree({ source, onExit }: { source: 'map' | 'vocab'; onExit:
 
         // Say a coaching line in the learner's language (shown on screen as well).
         const coach = async (line: CoachLine) => {
-          await speakNative(COACH[line][lang], lang);
+          await speakNative(localize(COACH[line], lang), lang);
         };
 
         let misses = 0;
@@ -264,7 +264,7 @@ export function HandsFree({ source, onExit }: { source: 'map' | 'vocab'; onExit:
             if (!alive()) return;
             await speakSequence([...current.backchainingSteps], RATE_CHAIN, undefined, 700);
           } else if (h === 'tip') {
-            await speakNative(`${COACH.tip[lang]} ${text.tip}`, lang);
+            await speakNative(`${localize(COACH.tip, lang)} ${text.tip}`, lang);
             if (!alive()) return;
             await speak(current.polish, RATE_SLOW);
           } else {
@@ -335,19 +335,19 @@ export function HandsFree({ source, onExit }: { source: 'map' | 'vocab'; onExit:
     repeat: tr('חזרו אחרי הדובר בקול', 'Repeat aloud after the speaker'),
     feedback:
       outcome === 'pass'
-        ? `${COACH[attempt > 1 ? 'passAfterHelp' : 'pass'][lang]} ${score}%`
+        ? `${localize(COACH[attempt > 1 ? 'passAfterHelp' : 'pass'], lang)} ${score}%`
         : outcome === 'low'
-          ? `${COACH.low[lang]} (${score}%)`
+          ? `${localize(COACH.low, lang)} (${score}%)`
           : outcome === 'unclear'
-            ? COACH.unclear[lang]
+            ? localize(COACH.unclear, lang)
             : outcome === 'silent'
-              ? COACH.silent[lang]
+              ? localize(COACH.silent, lang)
               : outcome === 'unchecked'
                 ? tr('לא נבדק – השוו לדובר', 'Not checked – compare with the speaker')
                 : '',
     help:
       help === 'chunks'
-        ? COACH.chunks[lang]
+        ? localize(COACH.chunks, lang)
         : help === 'tip'
           ? tr('טיפ להגייה', 'Pronunciation tip')
           : tr('הקשיבו שוב: לאט, ואז רגיל', 'Listen again: slowly, then normal'),

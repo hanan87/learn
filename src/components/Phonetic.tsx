@@ -1,4 +1,5 @@
 import { useLang } from '../i18n/LangContext';
+import { respell } from '../lib/latinRespell';
 import { parseSyllables } from '../lib/syllables';
 
 interface Props {
@@ -16,15 +17,17 @@ const SIZES = { lg: 'text-2xl', md: 'text-xl', sm: 'text-base' } as const;
  * Phonetic transcription for the active language:
  *  - he: vocalized Hebrew, RTL, stressed syllable in the accent color
  *  - en: English respelling, LTR, stressed syllable UPPER-CASED and colored ("jen-KOO-yeh")
+ *  - pl / cnr (English course): Latin respelling in Polish / Montenegrin letters, derived from the
+ *    Hebrew transcription (lib/latinRespell), shown like the English one ("[THÆNK] ju")
  */
 export function Phonetic({ he, en, size = 'md', className = '' }: Props) {
   const { lang } = useLang();
   const isHe = lang === 'he';
-  const words = parseSyllables(isHe ? he : en);
+  const words = parseSyllables(isHe ? he : lang === 'en' ? en : respell(he, lang));
   return (
     <p
       dir={isHe ? 'rtl' : 'ltr'}
-      lang={isHe ? 'he' : 'en'}
+      lang={isHe ? 'he' : lang === 'cnr' ? 'sr-Latn' : lang}
       className={`${isHe ? 'phonetic' : 'font-mono tracking-wide'} leading-loose text-slate-700 ${SIZES[size]} ${className}`}
     >
       {words.map((word, wi) => (

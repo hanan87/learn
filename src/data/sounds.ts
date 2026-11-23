@@ -1,3 +1,4 @@
+import type { Lang } from '../i18n/lang';
 import { COURSE } from '../lib/course';
 
 /**
@@ -22,6 +23,14 @@ export interface SoundInfo {
   tipEn: string;
   /** Related minimal-pair group in the Sound Lab, if any. */
   groupId?: string;
+  /** Name and tip for Polish and Montenegrin speakers (English course). */
+  loc?: Partial<Record<'pl' | 'cnr', { name: string; tip: string }>>;
+}
+
+/** Name and tip of a sound in the interface language (Polish / Montenegrin fall back to English). */
+export function soundText(info: SoundInfo, lang: Lang): { name: string; tip: string } {
+  if (lang === 'he') return { name: info.name, tip: info.tip };
+  return (lang === 'en' ? undefined : info.loc?.[lang]) ?? { name: info.nameEn, tip: info.tipEn };
 }
 
 export const PL_SOUND_INFO: Record<PlSoundKey, SoundInfo> = {
@@ -57,13 +66,41 @@ export const CNR_SOUND_INFO: Record<CnrSoundKey, SoundInfo> = {
 };
 
 export const EN_SOUND_INFO: Record<EnSoundKey, SoundInfo> = {
-  th: { key: 'th', name: 'th', tip: 'th: הוציאו את קצה הלשון מעט בין השיניים ונשפו – בלי ס ובלי ט. think = תִ׳נְק, this = דִ׳ס (עם קול).', nameEn: 'th', tipEn: 'th: put the tongue tip lightly between the teeth and blow – no s and no t. think is voiceless, this is voiced.', groupId: 'en-th' },
-  w: { key: 'w', name: 'w', tip: 'w: עגלו את השפתיים כמו לשריקה ושחררו – "וּ" קצרה. השיניים לא נוגעות בשפה.', nameEn: 'w', tipEn: 'w: round the lips as if to whistle and open them – a quick "oo". The teeth do not touch the lip.', groupId: 'en-wv' },
-  v: { key: 'v', name: 'v', tip: 'v: השיניים העליונות נוגעות בשפה התחתונה, עם קול – כמו ב בלי דגש.', nameEn: 'v', tipEn: 'v: the upper teeth touch the lower lip, with voice.', groupId: 'en-wv' },
-  r: { key: 'r', name: 'r אמריקאית', tip: 'r אמריקאית: לא מהגרון! מסלסלים את קצה הלשון מעט אחורה, בלי שייגע בחך, והשפתיים מעט מעוגלות.', nameEn: 'American r', tipEn: 'American r: not from the throat. Curl the tongue tip slightly back without touching the palate, lips a little rounded.' },
-  ih: { key: 'ih', name: 'i קצרה', tip: 'i קצרה (ship, sit, live): קצרה ורפויה, הפה כמעט לא מחייך – בין "אִ" ל"אֶ".', nameEn: 'short i', tipEn: 'Short i (ship, sit, live): short and relaxed, hardly smiling – between "ih" and "eh".', groupId: 'en-ih-ee' },
-  ee: { key: 'ee', name: 'ee ארוכה', tip: 'ee ארוכה (sheep, seat, leave): מחייכים ומאריכים – "אִיי".', nameEn: 'long ee', tipEn: 'Long ee (sheep, seat, leave): smile and hold it – "eee".', groupId: 'en-ih-ee' },
-  ae: { key: 'ae', name: 'a פתוחה (bad)', tip: 'a של bad, man, have: פותחים את הפה רחב ומורידים את הלסת – בין "אֶ" ל"אַ". bed היא "אֶ" רגילה.', nameEn: 'open a (bad)', tipEn: 'The a of bad, man, have: open the mouth wide and drop the jaw – between "eh" and "ah". bed is a plain "eh".', groupId: 'en-ae-e' },
+  th: { key: 'th', name: 'th', tip: 'th: הוציאו את קצה הלשון מעט בין השיניים ונשפו – בלי ס ובלי ט. think = תִ׳נְק, this = דִ׳ס (עם קול).', nameEn: 'th', tipEn: 'th: put the tongue tip lightly between the teeth and blow – no s and no t. think is voiceless, this is voiced.', groupId: 'en-th',
+    loc: {
+      pl: { name: 'th', tip: 'th: wysuń czubek języka lekko między zęby i dmuchnij – to nie s, f ani t. think jest bezdźwięczne, this dźwięczne (dh).' },
+      cnr: { name: 'th', tip: 'th: vrh jezika lagano stavite između zuba i dunite – nije s, f ni t. think je bezvučno, this zvučno (dh).' },
+    } },
+  w: { key: 'w', name: 'w', tip: 'w: עגלו את השפתיים כמו לשריקה ושחררו – "וּ" קצרה. השיניים לא נוגעות בשפה.', nameEn: 'w', tipEn: 'w: round the lips as if to whistle and open them – a quick "oo". The teeth do not touch the lip.', groupId: 'en-wv',
+    loc: {
+      pl: { name: 'w (jak ł)', tip: 'w to polskie ł: zaokrąglone usta, zęby nie dotykają wargi. water to „łoter”, nie „woter”.' },
+      cnr: { name: 'w', tip: 'w: zaokružite usne kao za kratko „u” pa ih otvorite – zubi ne dodiruju usnu. water nije „voter”.' },
+    } },
+  v: { key: 'v', name: 'v', tip: 'v: השיניים העליונות נוגעות בשפה התחתונה, עם קול – כמו ב בלי דגש.', nameEn: 'v', tipEn: 'v: the upper teeth touch the lower lip, with voice.', groupId: 'en-wv',
+    loc: {
+      pl: { name: 'v (jak w)', tip: 'v to polskie w: górne zęby na dolnej wardze, z głosem.' },
+      cnr: { name: 'v', tip: 'v kao naše v: gornji zubi na donjoj usni, sa glasom.' },
+    } },
+  r: { key: 'r', name: 'r אמריקאית', tip: 'r אמריקאית: לא מהגרון! מסלסלים את קצה הלשון מעט אחורה, בלי שייגע בחך, והשפתיים מעט מעוגלות.', nameEn: 'American r', tipEn: 'American r: not from the throat. Curl the tongue tip slightly back without touching the palate, lips a little rounded.',
+    loc: {
+      pl: { name: 'amerykańskie r', tip: 'Amerykańskie r nie drga! Czubek języka lekko zawinięty do tyłu, nie dotyka podniebienia; usta lekko zaokrąglone.' },
+      cnr: { name: 'američko r', tip: 'Američko r ne treperi! Vrh jezika lagano savijen unazad, ne dodiruje nepce; usne malo zaokružene.' },
+    } },
+  ih: { key: 'ih', name: 'i קצרה', tip: 'i קצרה (ship, sit, live): קצרה ורפויה, הפה כמעט לא מחייך – בין "אִ" ל"אֶ".', nameEn: 'short i', tipEn: 'Short i (ship, sit, live): short and relaxed, hardly smiling – between "ih" and "eh".', groupId: 'en-ih-ee',
+    loc: {
+      pl: { name: 'krótkie i', tip: 'Krótkie i (ship, sit, live): prawie jak polskie y – krótko i luźno, bez uśmiechu.' },
+      cnr: { name: 'kratko i', tip: 'Kratko i (ship, sit, live): kratko i opušteno, skoro bez osmijeha – između i i e.' },
+    } },
+  ee: { key: 'ee', name: 'ee ארוכה', tip: 'ee ארוכה (sheep, seat, leave): מחייכים ומאריכים – "אִיי".', nameEn: 'long ee', tipEn: 'Long ee (sheep, seat, leave): smile and hold it – "eee".', groupId: 'en-ih-ee',
+    loc: {
+      pl: { name: 'długie i', tip: 'Długie i (sheep, seat, leave): uśmiechnij się i przeciągnij – „iii”.' },
+      cnr: { name: 'dugo i', tip: 'Dugo i (sheep, seat, leave): nasmiješite se i produžite – „iii”.' },
+    } },
+  ae: { key: 'ae', name: 'a פתוחה (bad)', tip: 'a של bad, man, have: פותחים את הפה רחב ומורידים את הלסת – בין "אֶ" ל"אַ". bed היא "אֶ" רגילה.', nameEn: 'open a (bad)', tipEn: 'The a of bad, man, have: open the mouth wide and drop the jaw – between "eh" and "ah". bed is a plain "eh".', groupId: 'en-ae-e',
+    loc: {
+      pl: { name: 'otwarte a (bad)', tip: 'a w bad, man, have: otwórz szeroko usta i opuść żuchwę – dźwięk między a i e. bed to zwykłe e.' },
+      cnr: { name: 'otvoreno a (bad)', tip: 'a u bad, man, have: široko otvorite usta i spustite vilicu – glas između a i e. bed je obično e.' },
+    } },
 };
 
 /** Sound table of the active course (only its own keys occur in its data and progress). */

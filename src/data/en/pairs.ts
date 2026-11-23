@@ -1,7 +1,9 @@
 import { toHebrewPhonetic, toSyllableNotation } from '../../lib/enPhonetics';
 import type { ContrastGroup, PairWord } from '../minimalPairs';
+import { EN_CNR } from './cnr';
+import { EN_PL } from './pl';
 
-/** English minimal pairs: real words that differ in one sound Hebrew speakers merge. */
+/** English minimal pairs: real words that differ in one sound Hebrew (and Polish / Montenegrin) speakers merge. */
 
 const w = (text: string, hebrew: string, english: string): PairWord => ({
   polish: text,
@@ -9,9 +11,10 @@ const w = (text: string, hebrew: string, english: string): PairWord => ({
   english,
   hebrew,
   phoneticHebrew: toHebrewPhonetic(text),
+  loc: { pl: EN_PL.words[text], cnr: EN_CNR.words[text] },
 });
 
-export const EN_CONTRAST_GROUPS: ContrastGroup[] = [
+const GROUPS: ContrastGroup[] = [
   {
     id: 'en-th',
     title: 'th מול s / t',
@@ -77,3 +80,11 @@ export const EN_CONTRAST_GROUPS: ContrastGroup[] = [
     ],
   },
 ];
+
+export const EN_CONTRAST_GROUPS: ContrastGroup[] = GROUPS.map((g) => ({
+  ...g,
+  loc: {
+    pl: EN_PL.pairs[g.id] && { descriptionA: EN_PL.pairs[g.id].a, descriptionB: EN_PL.pairs[g.id].b },
+    cnr: EN_CNR.pairs[g.id] && { descriptionA: EN_CNR.pairs[g.id].a, descriptionB: EN_CNR.pairs[g.id].b },
+  },
+}));

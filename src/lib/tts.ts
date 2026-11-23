@@ -15,7 +15,8 @@
  *  - Chrome on Android can get stuck in a paused state: call resume() before speaking.
  */
 
-import { COURSE_INFO } from './course';
+import type { Lang } from '../i18n/lang';
+import { COURSE_INFO, COURSES } from './course';
 import { cloudClipUrl } from './cloudVoice';
 import { ttsSupported } from './env';
 import { clipPlaying, findClip, playClip, stopClip, type ClipVoice } from './voiceClips';
@@ -191,23 +192,28 @@ export function findVoiceFor(prefix: string): SpeechSynthesisVoice | null {
   return voices.find((v) => /google|natural|online|enhanced|premium/i.test(v.name)) ?? voices[0];
 }
 
+/** Clip voice that reads the learner's own language: Hila, Jenny, or the Polish / Montenegrin teacher. */
+const NATIVE_CLIP: Record<Lang, ClipVoice> = { he: 'he', en: 'en', pl: 'pl-f', cnr: 'cnr-f' };
+
+/** Device voice language prefixes for each interface language, best first. */
+const NATIVE_PREFIXES: Record<Lang, string[]> = { he: ['he', 'iw'], en: ['en'], pl: ['pl'], cnr: COURSES.cnr.voicePrefixes };
+
 /**
- * Speak a translation in the learner's language (Hebrew or English).
+ * Speak a translation in the learner's language (Hebrew, English, Polish or Montenegrin).
  * Resolves false without speaking when the device has no voice for that language.
  */
-export async function speakNative(text: string, lang: 'he' | 'en', rate = 1): Promise<boolean> {
+export async function speakNative(text: string, lang: Lang, rate = 1): Promise<boolean> {
   const gen = ++speakGen;
-  const clip = findClip(text, 'n', lang) ?? (await cloudClipUrl(text, 'n', lang));
+  const voice = NATIVE_CLIP[lang];
+  const clip = findClip(text, 'n', voice) ?? (await cloudClipUrl(text, 'n', voice));
   if (gen !== speakGen) return true;
   if (clip && (await playClip(clip, rate))) return true;
   return speakNativeDevice(text, lang, rate);
 }
 
-function speakNativeDevice(text: string, lang: 'he' | 'en', rate: number): Promise<boolean> {
-  const voice = findVoiceFor(lang === 'he' ? 'he' : 'en');
+function speakNativeDevice(text: string, lang: Lang, rate: number): Promise<boolean> {
   // Older engines report Hebrew as "iw".
-  const fallback = lang === 'he' ? findVoiceFor('iw') : null;
-  const v = voice ?? fallback;
+  const v = NATIVE_PREFIXES[lang].map(findVoiceFor).find(Boolean) ?? null;
   if (!v || !text.trim()) return Promise.resolve(false);
   const synth = window.speechSynthesis;
   synth.cancel();

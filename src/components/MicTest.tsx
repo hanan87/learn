@@ -14,7 +14,7 @@ const PHRASE = 'Dzień dobry';
  * permission, input level, recorded bytes, speech recognition result or error – plus the event log.
  */
 export function MicTest() {
-  const { tr, lang } = useLang();
+  const { tr, loc } = useLang();
   const mic = useMic();
   const rec = useSpeechRecorder({ target: PHRASE, maxDurationMs: 8000 });
   const log = useSyncExternalStore(subscribeMicLog, getMicLog);
@@ -83,7 +83,7 @@ export function MicTest() {
         {row(mediaRecordingSupported, 'MediaRecorder', pickRecorderMimeType() ?? (mediaRecordingSupported ? 'default' : 'none'))}
         {row(!!getRecognizerCtor(), tr('זיהוי דיבור', 'Speech recognition'), getRecognizerCtor() ? 'available' : 'not available')}
         {row(permission === 'granted' ? true : permission === 'denied' ? false : null, tr('הרשאת מיקרופון', 'Mic permission'), permission)}
-        {row(mic.status === 'ready', tr('מצב מיקרופון', 'Mic status'), mic.status + (mic.status !== 'ready' ? ` – ${MIC_STATUS_MESSAGES[mic.status][lang]}` : ''))}
+        {row(mic.status === 'ready', tr('מצב מיקרופון', 'Mic status'), mic.status + (mic.status !== 'ready' ? ` – ${loc(MIC_STATUS_MESSAGES[mic.status])}` : ''))}
         {r && row(r.heardVoice, tr('קול נקלט', 'Voice captured'), `peak ${r.peakLevel}`)}
         {r && row(!!r.audioUrl && !r.audioLost, tr('הקלטה נשמרה', 'Recording saved'), r.audioUrl ? (r.audioLost ? 'track ended early' : 'yes') : 'no')}
         {r && row(r.recognized, tr('תמלול', 'Transcript'), r.transcript || r.sttError || 'empty')}

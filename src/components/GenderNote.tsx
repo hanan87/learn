@@ -1,5 +1,5 @@
 import { Users, Volume2 } from 'lucide-react';
-import type { LearningItem } from '../data/types';
+import { genderAltMeaning, type LearningItem } from '../data/types';
 import { useLang } from '../i18n/LangContext';
 import { speak } from '../lib/tts';
 
@@ -20,7 +20,7 @@ export function GenderNote({ item }: { item: LearningItem }) {
             <Volume2 className="size-3.5" />
           </button>
         </p>
-        <p className="text-xs text-violet-700">{lang === 'he' ? alt.hebrew : alt.english}</p>
+        <p className="text-xs text-violet-700">{genderAltMeaning(alt, lang)}</p>
       </div>
     </div>
   );

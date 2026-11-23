@@ -1,12 +1,12 @@
-import type { Lang } from '../i18n/LangContext';
+import type { Lang, Loc } from '../i18n/lang';
 import { COURSE, COURSE_INFO } from '../lib/course';
-import { DEFAULT_PROFILE, effectiveGender, hasGenderPair, hasTemplate, otherGender, personalize, type LearnerProfile } from '../lib/personalize';
+import { DEFAULT_PROFILE, effectiveGender, hasGenderPair, hasTemplate, otherGender, personalize, type Gender, type LearnerProfile } from '../lib/personalize';
 import { toEnglishPhonetic } from '../lib/polishPhonetics';
 import { CNR_LEGEND, CNR_SITUATIONS, CNR_UNITS } from './cnr/units';
 import { EN_LEGEND, EN_SITUATIONS, EN_UNITS } from './en/units';
 import { ITEM_EN, UNIT_EN } from './english';
 import { SITUATIONS } from './situations';
-import type { CourseUnitId, ItemSource, LearningItem, Unit, UnitId, UnitSource } from './types';
+import { itemText, type CourseUnitId, type ItemLoc, type ItemSource, type LearningItem, type Unit, type UnitId, type UnitSource } from './types';
 import { unit1 } from './unit1';
 import { unit2 } from './unit2';
 import { unit3 } from './unit3';
@@ -51,11 +51,33 @@ const ITEM_INDEX = new Map<string, LearningItem>(ALL_ITEMS.map((i) => [i.id, i])
  */
 type TemplateFields = Pick<
   LearningItem,
-  'polish' | 'syllablesPolish' | 'hebrew' | 'english' | 'phoneticHebrew' | 'phoneticEnglish' | 'articulationTip' | 'articulationTipEn' | 'culturalNote' | 'culturalNoteEn' | 'backchainingSteps'
+  'polish' | 'syllablesPolish' | 'hebrew' | 'english' | 'phoneticHebrew' | 'phoneticEnglish' | 'articulationTip' | 'articulationTipEn' | 'culturalNote' | 'culturalNoteEn' | 'backchainingSteps' | 'loc'
 >;
 
+const LOC_LANGS = ['pl', 'cnr'] as const;
+
+function locStrings(loc: LearningItem['loc']): (string | undefined)[] {
+  return LOC_LANGS.flatMap((l) => (loc?.[l] ? [loc[l].meaning, loc[l].tip, loc[l].note] : []));
+}
+
 function isTemplated(i: LearningItem): boolean {
-  return [i.polish, i.syllablesPolish, i.hebrew, i.english, i.phoneticHebrew, i.phoneticEnglish, i.articulationTip, i.articulationTipEn, i.culturalNote, i.culturalNoteEn, ...i.backchainingSteps].some(hasTemplate);
+  return [i.polish, i.syllablesPolish, i.hebrew, i.english, i.phoneticHebrew, i.phoneticEnglish, i.articulationTip, i.articulationTipEn, i.culturalNote, i.culturalNoteEn, ...i.backchainingSteps, ...locStrings(i.loc)].some(hasTemplate);
+}
+
+/** Polish / Montenegrin texts of an item resolved for a learner (names in Latin letters, as in English). */
+function personalizeLoc(loc: LearningItem['loc'], profile: LearnerProfile, gender?: Gender): LearningItem['loc'] {
+  if (!loc) return undefined;
+  const out: Partial<Record<'pl' | 'cnr', ItemLoc>> = {};
+  for (const l of LOC_LANGS) {
+    const v = loc[l];
+    if (!v) continue;
+    out[l] = {
+      meaning: personalize(v.meaning, profile, 'en', gender),
+      tip: personalize(v.tip, profile, 'en', gender),
+      note: v.note === undefined ? undefined : personalize(v.note, profile, 'en', gender),
+    };
+  }
+  return out;
 }
 
 const ITEM_TEMPLATES = new Map<string, TemplateFields>(
@@ -73,6 +95,7 @@ const ITEM_TEMPLATES = new Map<string, TemplateFields>(
       culturalNote: i.culturalNote,
       culturalNoteEn: i.culturalNoteEn,
       backchainingSteps: [...i.backchainingSteps] as [string, string, string],
+      loc: i.loc,
     },
   ]),
 );
@@ -107,8 +130,15 @@ export function applyProfile(profile: LearnerProfile): void {
       culturalNote: opt(t.culturalNote, 'he'),
       culturalNoteEn: opt(t.culturalNoteEn, 'en'),
       backchainingSteps: t.backchainingSteps.map((s) => personalize(s, profile)) as [string, string, string],
+      loc: personalizeLoc(t.loc, profile),
       genderAlt: hasGenderPair(t.polish)
-        ? { gender: o, polish: personalize(t.polish, profile, 'polish', o), hebrew: personalize(t.hebrew, profile, 'he', o), english: personalize(t.english, profile, 'en', o) }
+        ? {
+            gender: o,
+            polish: personalize(t.polish, profile, 'polish', o),
+            hebrew: personalize(t.hebrew, profile, 'he', o),
+            english: personalize(t.english, profile, 'en', o),
+            loc: Object.fromEntries(LOC_LANGS.filter((l) => t.loc?.[l]).map((l) => [l, personalizeLoc(t.loc, profile, o)![l]!.meaning])),
+          }
         : undefined,
     });
   }
@@ -144,14 +174,41 @@ export function getUnit(id: CourseUnitId): Unit {
 
 /** Situational prompt for the active-recall speaking challenge. */
 export function getSituation(item: LearningItem, lang: Lang): string {
-  const extra = { pl: EXTRA_SITUATIONS, cnr: CNR_SITUATIONS, en: EN_SITUATIONS }[COURSE][item.id];
+  const situations: Record<string, Loc<string>> = { pl: EXTRA_SITUATIONS, cnr: CNR_SITUATIONS, en: EN_SITUATIONS }[COURSE];
+  const extra = situations[item.id];
   const plain = COURSE === 'pl' ? SITUATIONS[item.id] : undefined;
   if (lang === 'he') return personalize(extra?.he ?? plain ?? `איך אומרים ${COURSE_INFO.inLang.he}: "${item.hebrew}"?`, currentProfile, 'he');
+  if (lang === 'pl' || lang === 'cnr') {
+    const meaning = itemText(item, lang).meaning;
+    const ask = lang === 'pl' ? `Jak powiesz ${COURSE_INFO.inLang.pl}: „${meaning}”?` : `Kako se kaže ${COURSE_INFO.inLang.cnr}: „${meaning}”?`;
+    return personalize(extra?.[lang] ?? ask, currentProfile, 'en');
+  }
   return personalize(extra?.en ?? `How do you say "${item.english}" ${COURSE_INFO.inLang.en}?`, currentProfile, 'en');
 }
 
+/** One row of the transcription legend: the spelling, its transcription and a note per interface language. */
+export interface LegendRow {
+  pl: string;
+  he: string;
+  en: string;
+  noteHe: string;
+  noteEn: string;
+  /** Respelling and note for Polish and Montenegrin speakers (English course). */
+  loc?: Partial<Record<'pl' | 'cnr', { sound: string; note: string }>>;
+}
+
+export function legendSound(row: LegendRow, lang: Lang): string {
+  if (lang === 'he') return row.he;
+  return (lang === 'en' ? undefined : row.loc?.[lang]?.sound) ?? row.en;
+}
+
+export function legendNote(row: LegendRow, lang: Lang): string {
+  if (lang === 'he') return row.noteHe;
+  return (lang === 'en' ? undefined : row.loc?.[lang]?.note) ?? row.noteEn;
+}
+
 /** Legend explaining the phonetic transcription conventions (Hebrew niqqud / English respelling). */
-const PL_LEGEND: { pl: string; he: string; en: string; noteHe: string; noteEn: string }[] = [
+const PL_LEGEND: LegendRow[] = [
   { pl: 'sz', he: 'שׁ', en: 'sh', noteHe: 'ש קשה – לשון אחורה, שפתיים מעוגלות', noteEn: 'hard sh – tongue back, lips rounded' },
   { pl: 'ś / si', he: 'שְׁי', en: 'sh(y)', noteHe: 'ש רכה – לשון קדימה, חיוך (ה-י מסמנת רכות)', noteEn: 'soft sh – tongue forward, smile (y marks softness)' },
   { pl: 'cz', he: 'צ׳', en: 'ch', noteHe: 'צ׳ קשה – לשון אחורה', noteEn: 'hard ch – tongue back' },
@@ -172,4 +229,4 @@ const PL_LEGEND: { pl: string; he: string; en: string; noteHe: string; noteEn: s
   { pl: 'i', he: 'ִי', en: 'ee', noteHe: 'i רגילה – חיריק עם יוד', noteEn: 'ee as in "see"' },
 ];
 
-export const PHONETIC_LEGEND = { pl: PL_LEGEND, cnr: CNR_LEGEND, en: EN_LEGEND }[COURSE];
+export const PHONETIC_LEGEND: LegendRow[] = { pl: PL_LEGEND, cnr: CNR_LEGEND, en: EN_LEGEND }[COURSE];

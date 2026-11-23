@@ -5,7 +5,7 @@ import { ALL_ITEMS } from '../data';
 import { BLITZ_SECONDS, blitzPool, comboMultiplier } from '../lib/blitz';
 import { itemText, type LearningItem } from '../data/types';
 import { PolishSyllables } from '../components/PolishSyllables';
-import { useLang } from '../i18n/LangContext';
+import { useLang, type Lang } from '../i18n/LangContext';
 import { haptic } from '../lib/haptics';
 import { pick, shuffle } from '../lib/random';
 import { speak, stopSpeaking } from '../lib/tts';
@@ -23,7 +23,7 @@ interface Question {
   options: LearningItem[];
 }
 
-function makeQuestion(pool: LearningItem[], lang: 'he' | 'en', previous?: string): Question {
+function makeQuestion(pool: LearningItem[], lang: Lang, previous?: string): Question {
   const candidates = pool.length > 1 ? pool.filter((i) => i.id !== previous) : pool;
   const item = pick(candidates);
   const meaning = (i: LearningItem) => itemText(i, lang).meaning;

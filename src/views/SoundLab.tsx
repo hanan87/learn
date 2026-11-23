@@ -1,8 +1,8 @@
 import { COURSE_INFO as C } from '../lib/course';
 import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Check, Ear, Headphones, HelpCircle, Mic, Play, Shuffle, Volume2, X } from 'lucide-react';
-import { CONTRAST_GROUPS, type ContrastGroup, type MinimalPair, type PairWord } from '../data/minimalPairs';
-import { PHONETIC_LEGEND, UNITS } from '../data';
+import { CONTRAST_GROUPS, groupDescription, pairMeaning, type ContrastGroup, type MinimalPair, type PairWord } from '../data/minimalPairs';
+import { legendNote, legendSound, PHONETIC_LEGEND, UNITS } from '../data';
 import { GROUP_SOUNDS } from '../data/sounds';
 import { Phonetic } from '../components/Phonetic';
 import { PolishSyllables } from '../components/PolishSyllables';
@@ -16,9 +16,8 @@ import { XP, summarizeSounds, useProgress } from '../state/ProgressContext';
 type Mode = 'compare' | 'ear' | 'speak';
 
 
-const meaning = (w: PairWord, lang: 'he' | 'en') => (lang === 'he' ? w.hebrew : w.english);
-const desc = (g: ContrastGroup, side: 'a' | 'b', lang: 'he' | 'en') =>
-  side === 'a' ? (lang === 'he' ? g.descriptionA : g.descriptionAEn) : lang === 'he' ? g.descriptionB : g.descriptionBEn;
+const meaning = pairMeaning;
+const desc = groupDescription;
 
 export function SoundLab({ onOpenItem, initialGroup }: { onOpenItem: (id: string) => void; initialGroup?: string }) {
   const { tr, lang } = useLang();
@@ -255,7 +254,7 @@ function EarTraining({ group }: { group: ContrastGroup }) {
               ? tr(`נכון! +${XP.earTraining} XP`, `Correct! +${XP.earTraining} XP`)
               : tr(
                   `השמענו "${target.polish}" (${target.hebrew}). האזינו שוב לאט – ההבדל ב-${sound}.`,
-                  `We played "${target.polish}" (${target.english}). Listen again slowly – the difference is the ${sound}.`,
+                  `We played "${target.polish}" (${meaning(target, lang)}). Listen again slowly – the difference is the ${sound}.`,
                 )}
           </p>
           <button type="button" onClick={next} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 py-3 font-bold text-white">
@@ -317,6 +316,13 @@ function Legend() {
   return (
     <details className="group rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <summary className="cursor-pointer text-base font-bold">{tr('מקרא התעתיק העברי', 'Respelling legend')}</summary>
+      {(lang === 'pl' || lang === 'cnr') && (
+        <p className="mt-2 text-sm text-slate-600">
+          {lang === 'pl'
+            ? 'Wymowę zapisujemy polskimi literami; wielkie litery to sylaba akcentowana. Na te dźwięki uważaj:'
+            : 'Izgovor pišemo našim slovima; velika slova su naglašeni slog. Na ove glasove pazite:'}
+        </p>
+      )}
       <table className="mt-3 w-full text-sm">
         <tbody>
           {PHONETIC_LEGEND.map((row) => (
@@ -324,8 +330,8 @@ function Legend() {
               <td dir="ltr" className="polish py-2 pe-2 text-start font-bold text-slate-900">
                 {row.pl}
               </td>
-              <td className={lang === 'he' ? 'phonetic px-2 text-lg' : 'px-2 font-mono'}>{lang === 'he' ? row.he : row.en}</td>
-              <td className="py-2 text-slate-600">{lang === 'he' ? row.noteHe : row.noteEn}</td>
+              <td className={lang === 'he' ? 'phonetic px-2 text-lg' : 'px-2 font-mono'}>{legendSound(row, lang)}</td>
+              <td className="py-2 text-slate-600">{legendNote(row, lang)}</td>
             </tr>
           ))}
         </tbody>
