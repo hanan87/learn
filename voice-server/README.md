@@ -5,8 +5,9 @@ app's neural voices (Vesna / Goran, Zofia / Marek, Jenny / Guy, Hila) through th
 no account, key or payment for the voices. The app uses it only for phrases without a recorded clip,
 above all the free text typed into "How do I say…?" (`src/lib/cloudVoice.ts`).
 
-- Deploy: import the repository in Vercel with **Root Directory = `voice-server`**; pushes to main
-  redeploy it.
+- Live: https://learn-voice-ten.vercel.app/api/tts (Vercel project `learn-voice`, Hobby plan).
+- Deploy: the repository is imported in Vercel with **Root Directory = `voice-server`** (Python
+  preset; `pyproject.toml` names the entry point); every push to main redeploys it.
 - Only the app's origins, voices and short texts are accepted (see the top of `api/tts.py`).
 - Local test: `python voice-server/dev_server.py`, then POST to `http://localhost:8787/api/tts`.
 

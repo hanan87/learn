@@ -4,7 +4,15 @@ import { expect, type Page } from '@playwright/test';
 type Course = 'pl' | 'cnr' | 'en';
 const progressKey = (course?: Course) => (course && course !== 'pl' ? `polish-learn:progress:${course}:v1` : 'polish-learn:progress:v1');
 
-export async function openApp(page: Page, opts: { lang?: 'he' | 'en'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown; course?: Course } = {}) {
+/** The app's free voice server (src/lib/cloudVoice FREE_VOICE_URL). */
+export const FREE_VOICE = 'https://learn-voice-ten.vercel.app/**';
+
+export async function openApp(
+  page: Page,
+  opts: { lang?: 'he' | 'en'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown; course?: Course; freeVoice?: boolean } = {},
+) {
+  // Tests never reach the real voice server: unrecorded phrases use the device voice unless a test mocks it.
+  if (!opts.freeVoice) await page.route(FREE_VOICE, (r) => r.abort());
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => {

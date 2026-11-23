@@ -1,6 +1,9 @@
 /**
- * Live neural voice (Azure AI Speech) for every phrase that has no pre-recorded clip – above all the
- * free text typed into "How do I say…?", the learner's own name and their own words.
+ * Live neural voice for every phrase that has no pre-recorded clip – above all the free text typed
+ * into "How do I say…?", the learner's own name and their own words. Two sources:
+ *   1. the learner's own Azure AI Speech key, if they added one (Settings → Teacher voice)
+ *   2. otherwise the app's free voice server (voice-server/, a Vercel function using Edge's neural
+ *      voices – the same voices as the recorded clips, no key or payment)
  *
  * The learner's Azure key is stored only on this device (localStorage) and sent only to Azure; it is
  * never part of the site, the git repository or a backup file. Azure allows browser calls (CORS), so
@@ -8,7 +11,7 @@
  * it is instant and also works offline.
  */
 
-import { AZURE_OUTPUT_FORMAT, azureTtsUrl, buildSsml } from './azureVoices';
+import { AZURE_OUTPUT_FORMAT, AZURE_VOICES, azureTtsUrl, buildSsml, prosodyRate } from './azureVoices';
 import { clipText, naturalVoiceEnabled, primeAudioElement, type ClipSpeed, type ClipVoice } from './voiceClips';
 
 export interface CloudVoiceConfig {
@@ -38,11 +41,17 @@ export const AZURE_REGIONS = [
   'australiaeast',
 ] as const;
 
+/** The app's free voice server (voice-server/api/tts.py on Vercel). */
+export const FREE_VOICE_URL = 'https://learn-voice-ten.vercel.app/api/tts';
+/** After a failure the free server is left alone for a while (the device voice is used meanwhile). */
+const FREE_RETRY_MS = 2 * 60 * 1000;
+
 const CONFIG_KEY = 'polish-learn:cloud-voice';
 const CACHE_NAME = 'cloud-voice';
 const MEMORY_LIMIT = 80;
 
 let status: CloudStatus = 'unknown';
+let freeDownUntil = 0;
 const listeners = new Set<() => void>();
 /** Object URLs of phrases played this session (oldest first), so a replay needs no lookup at all. */
 const memory = new Map<string, string>();
@@ -102,9 +111,14 @@ export function cloudConfigured(): boolean {
   return getCloudConfig() !== null;
 }
 
-/** True when speak() should try the live voice: a key is set, it was not rejected and natural voice is on. */
+/** True when speak() should try the learner's Azure key: one is set, it was not rejected and natural voice is on. */
 export function cloudAvailable(): boolean {
   return status !== 'bad-key' && naturalVoiceEnabled() && cloudConfigured();
+}
+
+/** True when unrecorded phrases can be read by the free voice server right now. */
+export function freeVoiceAvailable(): boolean {
+  return Boolean(FREE_VOICE_URL) && naturalVoiceEnabled() && Date.now() >= freeDownUntil;
 }
 
 /** Last four characters of the key, to show which key is stored without revealing it. */
@@ -180,23 +194,53 @@ async function request(config: CloudVoiceConfig, ssml: string, timeoutMs: number
   }
 }
 
+/** The free voice server: resolves the mp3 or null (then it is not asked again for a while). */
+async function requestFree(voice: ClipVoice, speed: ClipSpeed, text: string, timeoutMs: number): Promise<Blob | null> {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(FREE_VOICE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // The phrase goes in the body, so it never appears in a URL or an access log.
+      body: JSON.stringify({ text, voice: AZURE_VOICES[voice].name, rate: prosodyRate(voice, speed) }),
+      signal: ctrl.signal,
+      credentials: 'omit',
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error(`free voice ${res.status}`);
+    const blob = await res.blob();
+    if (!blob.size) throw new Error('empty audio');
+    return blob.type.startsWith('audio/') ? blob : new Blob([blob], { type: 'audio/mpeg' });
+  } catch {
+    freeDownUntil = Date.now() + FREE_RETRY_MS;
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
- * URL of the live neural voice saying `text` (an object URL), or null when the cloud voice is not
- * set up, offline without a cached copy, or the request failed – the caller then uses the device voice.
+ * URL of the live neural voice saying `text` (an object URL), or null when no live voice is usable,
+ * offline without a cached copy, or the request failed – the caller then uses the device voice.
+ * The learner's own Azure key wins; without one the free voice server is used.
  */
 export function cloudClipUrl(text: string, speed: ClipSpeed, voice: ClipVoice, timeoutMs = 6000): Promise<string | null> {
-  const config = getCloudConfig();
   const t = clipText(text);
-  if (!config || !t || !cloudAvailable()) return Promise.resolve(null);
-  const ssml = buildSsml(voice, speed, t);
-  const hit = memory.get(ssml);
+  if (!t || !naturalVoiceEnabled()) return Promise.resolve(null);
+  const config = cloudAvailable() ? getCloudConfig() : null;
+  if (!config && !freeVoiceAvailable()) return Promise.resolve(null);
+  // One id per source and phrase: memory, in-flight requests and the cache are keyed by it.
+  const id = config ? buildSsml(voice, speed, t) : `free|${AZURE_VOICES[voice].name}|${prosodyRate(voice, speed)}|${t}`;
+  const hit = memory.get(id);
   if (hit) return Promise.resolve(hit);
-  const pending = inflight.get(ssml);
+  const pending = inflight.get(id);
   if (pending) return pending;
 
   const job = (async () => {
     const cache = await openCache();
-    const cacheUrl = `${typeof location !== 'undefined' ? location.origin : 'https://app.invalid'}/__cloud-voice__/${await hashHex(ssml)}.mp3`;
+    const cacheUrl = `${typeof location !== 'undefined' ? location.origin : 'https://app.invalid'}/__cloud-voice__/${await hashHex(id)}.mp3`;
     let blob: Blob | null = null;
     try {
       const cached = await cache?.match(cacheUrl);
@@ -205,7 +249,8 @@ export function cloudClipUrl(text: string, speed: ClipSpeed, voice: ClipVoice, t
       blob = null;
     }
     if (!blob) {
-      blob = await request(config, ssml, timeoutMs);
+      // A cold server needs a little longer than Azure.
+      blob = config ? await request(config, id, timeoutMs) : await requestFree(voice, speed, t, timeoutMs + 4000);
       if (!blob) return null;
       try {
         await cache?.put(cacheUrl, new Response(blob, { headers: { 'Content-Type': blob.type || 'audio/mpeg' } }));
@@ -214,10 +259,10 @@ export function cloudClipUrl(text: string, speed: ClipSpeed, voice: ClipVoice, t
       }
     }
     const url = URL.createObjectURL(blob);
-    remember(ssml, url);
+    remember(id, url);
     return url;
-  })().finally(() => inflight.delete(ssml));
-  inflight.set(ssml, job);
+  })().finally(() => inflight.delete(id));
+  inflight.set(id, job);
   return job;
 }
 

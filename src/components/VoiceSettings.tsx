@@ -7,6 +7,7 @@ import {
   AZURE_REGIONS,
   clearCloudCache,
   cloudStatus,
+  FREE_VOICE_URL,
   getCloudConfig,
   maskedKey,
   setCloudConfig,
@@ -67,10 +68,15 @@ export function VoiceSettings() {
     count > 0
       ? cloudOn
         ? tr(`${count} הקלטות בקול נוירוני (${names}); כל השאר נקרא בזמן אמת בקול הענן.`, `${count} neural recordings (${names}); everything else is read live by the cloud voice.`)
-        : tr(
-            `${count} הקלטות בקול נוירוני איכותי (${names}). מה שלא הוקלט – למשל השם שלכם – נקרא בקול המכשיר.`,
-            `${count} high-quality neural recordings (${names}). Anything not recorded – like your own name – uses the device voice.`,
-          )
+        : FREE_VOICE_URL
+          ? tr(
+              `${count} הקלטות בקול נוירוני איכותי (${names}). מה שלא הוקלט – משפט שהקלדתם ב"איך אומרים?" או השם שלכם – נקרא בזמן אמת באותו קול טבעי (צריך אינטרנט; בלי חיבור – קול המכשיר).`,
+              `${count} high-quality neural recordings (${names}). Anything not recorded – a phrase you typed in "How do I say…?" or your own name – is read live in the same natural voice (needs internet; offline, the device voice is used).`,
+            )
+          : tr(
+              `${count} הקלטות בקול נוירוני איכותי (${names}). מה שלא הוקלט – למשל השם שלכם – נקרא בקול המכשיר.`,
+              `${count} high-quality neural recordings (${names}). Anything not recorded – like your own name – uses the device voice.`,
+            )
       : cloudOn
         ? tr(`קול הענן (${names}) מקריא הכול בזמן אמת.`, `The cloud voice (${names}) reads everything live.`)
         : tr('ההקלטות עדיין לא זמינות. אפשר לחבר קול ענן טבעי למטה; בינתיים משתמשים בקול המכשיר.', 'Recordings are not available yet. Connect a natural cloud voice below; meanwhile the device voice is used.');
@@ -246,11 +252,12 @@ function CloudVoiceSettings({ snapshot }: { snapshot: string }) {
       <div>
         <p className="flex items-center gap-1.5 font-semibold">
           <Cloud className="size-4 text-brand-600" /> {tr('קול ענן טבעי (Azure)', 'Natural cloud voice (Azure)')}
+          <span className="text-xs font-normal text-slate-500">{tr('– לא חובה', '– optional')}</span>
         </p>
         <p className="text-xs text-slate-500">
           {tr(
-            `קול נוירוני אנושי (${C.voiceNames.f} ו-${C.voiceNames.m}, ${C.voiceNames.he}) לכל משפט – גם מה שמקלידים ב"איך אומרים?". המפתח נשמר רק במכשיר הזה, נשלח רק ל-Microsoft ולא נכלל בקובץ הגיבוי.`,
-            `A human-sounding neural voice (${C.voiceNames.f} and ${C.voiceNames.m}, ${C.voiceNames.en}) for every phrase – including what you type in "How do I say?". The key stays on this device, is sent only to Microsoft and is not part of the backup file.`,
+            `האפליקציה כבר מקריאה כל משפט בקול טבעי (${C.voiceNames.f} ו-${C.voiceNames.m}, ${C.voiceNames.he}) בחינם – גם מה שמקלידים ב"איך אומרים?". מי שיש לו מפתח Azure משלו יכול להשתמש בו במקום (השירות הרשמי של Microsoft). המפתח נשמר רק במכשיר הזה, נשלח רק ל-Microsoft ולא נכלל בקובץ הגיבוי.`,
+            `The app already reads every phrase in a natural voice (${C.voiceNames.f} and ${C.voiceNames.m}, ${C.voiceNames.en}) for free – including what you type in "How do I say?". If you have your own Azure key you can use it instead (Microsoft's official service). The key stays on this device, is sent only to Microsoft and is not part of the backup file.`,
           )}
         </p>
       </div>

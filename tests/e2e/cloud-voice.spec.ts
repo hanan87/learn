@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { expectNoErrors, openApp } from './helpers';
+import { expectNoErrors, FREE_VOICE, openApp } from './helpers';
 
 /**
  * Live cloud voice (Azure AI Speech, mocked): the learner's key is checked before it is saved,
@@ -118,4 +118,31 @@ test('cloud voice: a wrong key is refused, a good key connects, stays out of the
   expect(await page.evaluate(() => localStorage.getItem('polish-learn:cloud-voice'))).toBeNull();
   // The wrong key's 401 is logged by the browser itself; it is the expected answer, not an app error.
   expectNoErrors(errors.filter((e) => !/status of 401/.test(e)));
+});
+
+test('without a key, a typed phrase is read by the free natural voice server', async ({ page }) => {
+  await spyOnSpeech(page);
+  const bodies: string[] = [];
+  await page.route(FREE_VOICE, async (route) => {
+    const req = route.request();
+    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
+    bodies.push(req.postData() ?? '');
+    return route.fulfill({ status: 200, headers: { ...CORS, 'content-type': 'audio/wav' }, body: silentWav() });
+  });
+  await page.route('https://api.mymemory.translated.net/**', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify({ responseStatus: 200, responseData: { translatedText: 'Gdje je stari most?', match: 0.85 }, matches: [] }),
+    }),
+  );
+  const errors = await openApp(page, { lang: 'en', course: 'cnr', hash: '#/say', freeVoice: true });
+
+  await page.getByTestId('say-input').fill('Where is the old bridge?');
+  await page.getByTestId('say-submit').click();
+  await expect(page.getByTestId('say-result')).toBeVisible();
+  await expect.poll(() => bodies.some((b) => b.includes('Gdje je stari most?') && b.includes('bs-BA-VesnaNeural'))).toBe(true);
+  await expect.poll(async () => (await spoken(page)).played.length).toBeGreaterThan(0);
+  expect((await spoken(page)).device).not.toContain('Gdje je stari most?');
+  expectNoErrors(errors);
 });
