@@ -71,6 +71,12 @@ const UNIT_ICON: Record<string, LucideIcon> = {
   e4: Compass,
   e5: ShoppingBag,
   e6: Plane,
+  h1: AudioLines,
+  h2: Smile,
+  h3: Coffee,
+  h4: ShoppingBag,
+  h5: Bus,
+  h6: HeartPulse,
 };
 const unitIcon = (id: string) => UNIT_ICON[id] ?? BookOpen;
 

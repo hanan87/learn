@@ -56,6 +56,8 @@ interface Phone {
 export function cleanText(text: string): string {
   return text
     .normalize('NFC')
+    // Hebrew vowel marks and the geresh are not sounds the recognizer writes.
+    .replace(/[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7׳״]/g, '')
     .toLocaleLowerCase()
     .replace(/[.,!?;:"„”“'’‘«»()\-–—…¿¡]/g, ' ')
     .replace(/\s+/g, ' ')
@@ -120,6 +122,43 @@ function enPhones(word: string): Phone[] {
   return graphemes(word, EN_DIGRAPHS).map((g) => ({ p: g === 'ck' ? 'k' : g === 'ph' ? 'f' : g === 'wh' ? 'w' : g, orig: g }));
 }
 
+const HE_FINALS: Record<string, string> = { ך: 'כ', ם: 'מ', ן: 'נ', ף: 'פ', ץ: 'צ' };
+
+/**
+ * Hebrew: letters (the recognizer writes words without niqqud, in the full spelling the course uses),
+ * final forms as their base letter and doubled וו / יי as one.
+ */
+function hePhones(word: string): Phone[] {
+  const out: Phone[] = [];
+  for (const ch of word) {
+    const p = HE_FINALS[ch] ?? ch;
+    if ((p === 'ו' || p === 'י') && out.at(-1)?.p === p) {
+      out[out.length - 1].orig += ch;
+      continue;
+    }
+    out.push({ p, orig: ch });
+  }
+  return out;
+}
+
+const HE_UNITS = ['', 'אחת', 'שתיים', 'שלוש', 'ארבע', 'חמש', 'שש', 'שבע', 'שמונה', 'תשע'];
+const HE_TEENS = ['עשר', 'אחת עשרה', 'שתים עשרה', 'שלוש עשרה', 'ארבע עשרה', 'חמש עשרה', 'שש עשרה', 'שבע עשרה', 'שמונה עשרה', 'תשע עשרה'];
+const HE_TENS = ['', '', 'עשרים', 'שלושים', 'ארבעים', 'חמישים', 'שישים', 'שבעים', 'שמונים', 'תשעים'];
+
+/** Hebrew number words for 0–99 (the counting forms), as the course writes prices and numbers. */
+function heNumber(n: number): string {
+  if (n === 0) return 'אפס';
+  if (n < 10) return HE_UNITS[n];
+  if (n < 20) return HE_TEENS[n - 10];
+  const tens = HE_TENS[Math.floor(n / 10)];
+  return n % 10 ? `${tens} ו${HE_UNITS[n % 10]}` : tens;
+}
+
+/** The Hebrew recognizer writes numbers as digits ("20 ₪"); the course writes them as words. */
+export function heDigitsToWords(text: string): string {
+  return text.replace(/₪/g, ' שקל ').replace(/\d+/g, (d) => (Number(d) < 100 ? ` ${heNumber(Number(d))} ` : d)).replace(/\s+/g, ' ').trim();
+}
+
 /** Pairs of sounds that are close (half a mistake). */
 const SIMILAR: Record<CourseId, string[][]> = {
   pl: [
@@ -171,6 +210,19 @@ const SIMILAR: Record<CourseId, string[][]> = {
     ['r', 'l'],
     ['n', 'ng'],
   ],
+  // Letters that sound the same or close in Israeli Hebrew.
+  he: [
+    ['ח', 'כ', 'ה'],
+    ['א', 'ע', 'ה'],
+    ['ט', 'ת'],
+    ['ק', 'כ'],
+    ['ב', 'ו'],
+    ['ב', 'פ'],
+    ['ס', 'ש', 'צ'],
+    ['ז', 'ס'],
+    ['ד', 'ט'],
+    ['ג', 'ק'],
+  ],
 };
 
 function similarSet(course: CourseId): Set<string> {
@@ -178,7 +230,7 @@ function similarSet(course: CourseId): Set<string> {
   for (const group of SIMILAR[course]) for (const a of group) for (const b of group) if (a !== b) set.add(`${a}|${b}`);
   return set;
 }
-const SIMILAR_SETS: Record<CourseId, Set<string>> = { pl: similarSet('pl'), cnr: similarSet('cnr'), en: similarSet('en') };
+const SIMILAR_SETS: Record<CourseId, Set<string>> = { pl: similarSet('pl'), cnr: similarSet('cnr'), en: similarSet('en'), he: similarSet('he') };
 
 interface Scorer {
   phones: (word: string) => Phone[];
@@ -188,7 +240,7 @@ interface Scorer {
 function scorer(course: CourseId): Scorer {
   const near = SIMILAR_SETS[course];
   return {
-    phones: { pl: plPhones, cnr: cnrPhones, en: enPhones }[course],
+    phones: { pl: plPhones, cnr: cnrPhones, en: enPhones, he: hePhones }[course],
     sub: (a, b) => (a === b ? 0 : near.has(`${a}|${b}`) ? 0.5 : 1),
   };
 }
@@ -253,6 +305,7 @@ type Step =
 /** Score a recognized transcript against the target phrase. */
 export function scorePronunciation(target: string, transcript: string, course: CourseId = COURSE): PronunciationResult {
   const s = scorer(course);
+  if (course === 'he') transcript = heDigitsToWords(transcript);
   const display = target.split(/\s+/).filter(Boolean);
   const tWords = display.map(cleanText);
   const heardRaw = transcript.split(/\s+/).filter((w) => cleanText(w));

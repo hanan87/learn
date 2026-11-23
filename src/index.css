@@ -132,11 +132,18 @@ h2.font-black,
   }
 }
 
-/* Polish text: always LTR, slightly open tracking for readability of diacritics. */
+/* Course-language text: LTR, slightly open tracking for readability of diacritics. */
 .polish {
   direction: ltr;
   unicode-bidi: isolate;
   letter-spacing: 0.01em;
+}
+
+/* Hebrew – the Hebrew course's text (main.tsx sets data-course), or a Hebrew course name – reads right to left. */
+.polish[lang='he'],
+:root[data-course='he'] .polish:not([lang]) {
+  direction: rtl;
+  letter-spacing: 0;
 }
 
 /* Vocalized Hebrew needs extra line height so niqqud marks do not collide. */

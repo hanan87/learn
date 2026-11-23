@@ -11,7 +11,9 @@ export type PlSoundKey = 'sz' | 'cz' | 'ż/rz' | 'ś' | 'ć' | 'ź' | 'dź' | '�
 export type CnrSoundKey = 'č' | 'ć' | 'dž' | 'đ' | 'š' | 'ž' | 'lj' | 'nj' | 'h' | 'r' | 'c' | 'ije';
 /** English sounds Hebrew speakers find hard: th, w vs v, the American r, ship vs sheep, bad vs bed. */
 export type EnSoundKey = 'th' | 'w' | 'v' | 'r' | 'ih' | 'ee' | 'ae';
-export type SoundKey = PlSoundKey | CnrSoundKey | EnSoundKey;
+/** Hebrew sounds English, Polish and Montenegrin speakers find hard: the throaty kh, the light h, the Israeli r and ts. */
+export type HeSoundKey = 'kh' | 'h' | 'r' | 'ts';
+export type SoundKey = PlSoundKey | CnrSoundKey | EnSoundKey | HeSoundKey;
 
 export interface SoundInfo {
   key: SoundKey;
@@ -103,8 +105,38 @@ export const EN_SOUND_INFO: Record<EnSoundKey, SoundInfo> = {
     } },
 };
 
+/** The Hebrew course is not taught in Hebrew: the Hebrew-interface fields repeat the English ones. */
+const he = (key: HeSoundKey, nameEn: string, tipEn: string, groupId: string | undefined, loc: NonNullable<SoundInfo['loc']>): SoundInfo => ({
+  key,
+  name: nameEn,
+  nameEn,
+  tip: tipEn,
+  tipEn,
+  groupId,
+  loc,
+});
+
+export const HE_SOUND_INFO: Record<HeSoundKey, SoundInfo> = {
+  kh: he('kh', 'throaty kh (ח, כ)', 'kh (ח, כ): a rough sound from the back of the throat, like the ch in Bach – not a plain h and not a k.', 'he-kh-k', {
+    pl: { name: 'gardłowe ch (ח, כ)', tip: 'ch (ח, כ): jak polskie ch, tylko głębiej, z tyłu gardła.' },
+    cnr: { name: 'grleno h (ח, כ)', tip: 'h (ח, כ): kao naše h, samo dublje, iz grla.' },
+  }),
+  h: he('h', 'light h (ה)', 'h (ה): just a light breath, as in "hello". At the end of a word it is silent.', 'he-kh-h', {
+    pl: { name: 'lekkie h (ה)', tip: 'h (ה): tylko lekki wydech, jak w angielskim „hello” – słabsze niż polskie h. Na końcu wyrazu nieme.' },
+    cnr: { name: 'lagano h (ה)', tip: 'h (ה): samo lagan izdah, kao u engleskom „hello” – slabije od našeg h. Na kraju riječi se ne čuje.' },
+  }),
+  r: he('r', 'Israeli r (ר)', 'r (ר): the Israeli r comes from the throat, like the French r – a light gargle. Do not roll it or curl the tongue.', undefined, {
+    pl: { name: 'izraelskie r (ר)', tip: 'r (ר): izraelskie r jest gardłowe, jak francuskie r – lekko „gulgoczące”. Nie drga czubkiem języka.' },
+    cnr: { name: 'izraelsko r (ר)', tip: 'r (ר): izraelsko r je grleno, kao francusko r. Ne treperi vrhom jezika.' },
+  }),
+  ts: he('ts', 'ts (צ)', 'ts (צ): t and s glued into one sound, as in "cats" – also at the start of a word.', 'he-ts-s', {
+    pl: { name: 'c (צ)', tip: 'c (צ): dokładnie jak polskie c.' },
+    cnr: { name: 'c (צ)', tip: 'c (צ): tačno kao naše c.' },
+  }),
+};
+
 /** Sound table of the active course (only its own keys occur in its data and progress). */
-export const SOUND_INFO = ({ pl: PL_SOUND_INFO, cnr: CNR_SOUND_INFO, en: EN_SOUND_INFO } as Record<string, Record<string, SoundInfo>>)[COURSE] as Record<SoundKey, SoundInfo>;
+export const SOUND_INFO = ({ pl: PL_SOUND_INFO, cnr: CNR_SOUND_INFO, en: EN_SOUND_INFO, he: HE_SOUND_INFO } as Record<string, Record<string, SoundInfo>>)[COURSE] as Record<SoundKey, SoundInfo>;
 
 /** Thresholds for marking a sound as needing reinforcement. */
 export const WEAK_SOUND_MIN_ATTEMPTS = 3;
@@ -136,4 +168,10 @@ const EN_GROUP_SOUNDS: Record<string, SoundKey[]> = {
   'en-ae-e': ['ae'],
 };
 
-export const GROUP_SOUNDS: Record<string, SoundKey[]> = { pl: PL_GROUP_SOUNDS, cnr: CNR_GROUP_SOUNDS, en: EN_GROUP_SOUNDS }[COURSE];
+const HE_GROUP_SOUNDS: Record<string, SoundKey[]> = {
+  'he-kh-h': ['kh', 'h'],
+  'he-kh-k': ['kh'],
+  'he-ts-s': ['ts'],
+};
+
+export const GROUP_SOUNDS: Record<string, SoundKey[]> = { pl: PL_GROUP_SOUNDS, cnr: CNR_GROUP_SOUNDS, en: EN_GROUP_SOUNDS, he: HE_GROUP_SOUNDS }[COURSE];

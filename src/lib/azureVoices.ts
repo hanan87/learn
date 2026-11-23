@@ -12,6 +12,8 @@ export const AZURE_VOICES: Record<ClipVoice, { locale: string; name: string }> =
   'cnr-m': { locale: 'bs-BA', name: 'bs-BA-GoranNeural' },
   'en-f': { locale: 'en-US', name: 'en-US-JennyNeural' },
   'en-m': { locale: 'en-US', name: 'en-US-GuyNeural' },
+  'he-f': { locale: 'he-IL', name: 'he-IL-HilaNeural' },
+  'he-m': { locale: 'he-IL', name: 'he-IL-AvriNeural' },
   he: { locale: 'he-IL', name: 'he-IL-HilaNeural' },
   en: { locale: 'en-US', name: 'en-US-JennyNeural' },
 };

@@ -17,11 +17,20 @@ const PL_DIACRITICS: Record<string, string> = {
   ż: 'z',
 };
 const CNR_DIACRITICS: Record<string, string> = { č: 'c', ć: 'c', đ: 'd', š: 's', ž: 'z', ś: 's', ź: 'z' };
-const DIACRITIC_MAP: Record<string, string> = { pl: PL_DIACRITICS, cnr: CNR_DIACRITICS, en: {} }[COURSE];
+const DIACRITIC_MAP: Record<string, string> = { pl: PL_DIACRITICS, cnr: CNR_DIACRITICS, en: {}, he: {} }[COURSE];
 
-/** Lowercase, strip punctuation, collapse whitespace. */
+const HE_FINALS: Record<string, string> = { ך: 'כ', ם: 'מ', ן: 'נ', ף: 'פ', ץ: 'צ' };
+
+/**
+ * Lowercase, strip punctuation, collapse whitespace. Hebrew loses its vowel marks (learners type
+ * without niqqud), a geresh typed as an apostrophe (צ'יפס) and final letter forms.
+ */
 export function normalize(text: string): string {
   return text
+    .normalize('NFC')
+    .replace(/[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7׳״]/g, '')
+    .replace(/([א-ת])['’]/g, '$1')
+    .replace(/[ךםןףץ]/g, (c) => HE_FINALS[c])
     .toLocaleLowerCase('pl-PL')
     .replace(/[.,!?;:"„”'’‘«»()\-–—…]/g, ' ')
     .replace(/\s+/g, ' ')
@@ -80,7 +89,7 @@ const CNR_EXPLANATIONS: Record<string, { he: string; en: string }> = {
 };
 
 /** Explanations of the active course's special letters. */
-export const DIACRITIC_EXPLANATIONS: Record<string, { he: string; en: string }> = { pl: PL_EXPLANATIONS, cnr: CNR_EXPLANATIONS, en: {} }[COURSE];
+export const DIACRITIC_EXPLANATIONS: Record<string, { he: string; en: string }> = { pl: PL_EXPLANATIONS, cnr: CNR_EXPLANATIONS, en: {}, he: {} }[COURSE];
 
 export interface DiacriticIssue {
   expected: string;

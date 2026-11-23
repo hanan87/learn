@@ -28,11 +28,11 @@ const PROFILES: LearnerProfile[] = [
   { gender: 'f', name: '' },
 ];
 
-/** Words of a phrase without surrounding punctuation (for word-by-word playback). */
+/** Words of a phrase without surrounding punctuation (for word-by-word playback); Hebrew vowel marks stay. */
 export function phraseWords(text: string): string[] {
   return text
     .split(/\s+/)
-    .map((w) => w.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, ''))
+    .map((w) => w.replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu, ''))
     .filter(Boolean);
 }
 
@@ -44,8 +44,10 @@ export function buildClipCatalog(): ClipRequest[] {
     const key = clipKey(voice, speed, t);
     if (!out.has(key)) out.set(key, { key, voice, speed, text: t });
   };
-  // The English course is not taught in English: no English meaning or tip is ever read aloud there.
+  // The English course is not taught in English, nor the Hebrew course in Hebrew: meanings and tips
+  // are read only in the course's interface languages.
   const englishUi = COURSE_INFO.uiLangs.includes('en');
+  const hebrewUi = COURSE_INFO.uiLangs.includes('he');
   // Polish and Montenegrin speakers (English course) hear meanings and tips from the Polish / Montenegrin teacher.
   const latinUis = (['pl', 'cnr'] as const).filter((l) => COURSE_INFO.uiLangs.includes(l));
   const NATIVE = { pl: 'pl-f', cnr: 'cnr-f' } as const;
@@ -67,10 +69,10 @@ export function buildClipCatalog(): ClipRequest[] {
         item.backchainingSteps.forEach((s) => addPolish(s));
         phraseWords(item.polish).forEach((w) => addPolish(w));
         // Hands-free mode reads the meaning in the learner's language.
-        add('he', 'n', item.hebrew);
+        if (hebrewUi) add('he', 'n', item.hebrew);
         if (englishUi) add('en', 'n', item.english);
         // The articulation tip, read by the hands-free coach after repeated misses.
-        add('he', 'n', `${COACH.tip.he} ${item.articulationTip}`);
+        if (hebrewUi) add('he', 'n', `${COACH.tip.he} ${item.articulationTip}`);
         if (englishUi) add('en', 'n', `${COACH.tip.en} ${item.articulationTipEn}`);
         for (const l of latinUis) {
           const t = itemText(item, l);
@@ -100,7 +102,7 @@ export function buildClipCatalog(): ClipRequest[] {
   for (const s of STORIES) {
     for (const line of s.lines) {
       addPolish(line.polish, speakerVoice(line.speaker) === 'm' ? M : F);
-      for (const w of line.polish.split(/\s+/)) if (wordKey(w)) addPolish(w.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, ''));
+      for (const w of line.polish.split(/\s+/)) if (wordKey(w)) addPolish(w.replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu, ''));
     }
     for (const q of s.questions) {
       addPolish(q.q);
@@ -109,7 +111,7 @@ export function buildClipCatalog(): ClipRequest[] {
   }
 
   for (const line of Object.values(COACH)) {
-    add('he', 'n', line.he);
+    if (hebrewUi) add('he', 'n', line.he);
     if (englishUi) add('en', 'n', line.en);
     for (const l of latinUis) add(NATIVE[l], 'n', localize(line, l));
   }

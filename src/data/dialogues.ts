@@ -2,6 +2,7 @@ import type { Loc } from '../i18n/lang';
 import { COURSE } from '../lib/course';
 import { CNR_ROLEPLAYS } from './cnr/dialogues';
 import { EN_ROLEPLAYS } from './en/dialogues';
+import { HE_ROLEPLAYS } from './he/dialogues';
 import type { Formality } from './types';
 
 /**
@@ -254,4 +255,4 @@ const PL_ROLEPLAYS: Roleplay[] = [
 ];
 
 /** Roleplays of the active course. */
-export const ROLEPLAYS: Roleplay[] = { pl: PL_ROLEPLAYS, cnr: CNR_ROLEPLAYS, en: EN_ROLEPLAYS }[COURSE];
+export const ROLEPLAYS: Roleplay[] = { pl: PL_ROLEPLAYS, cnr: CNR_ROLEPLAYS, en: EN_ROLEPLAYS, he: HE_ROLEPLAYS }[COURSE];

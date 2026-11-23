@@ -38,7 +38,7 @@ export class TranslateError extends Error {
 }
 
 /** Language codes of each course for the translation engines (Bosnian first for Montenegrin). */
-export const ENGINE_LANGS: Record<CourseId, string[]> = { pl: ['pl'], cnr: ['bs', 'hr'], en: ['en'] };
+export const ENGINE_LANGS: Record<CourseId, string[]> = { pl: ['pl'], cnr: ['bs', 'hr'], en: ['en'], he: ['he'] };
 
 const MYMEMORY = 'https://api.mymemory.translated.net/get';
 

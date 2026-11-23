@@ -8,6 +8,8 @@ const SIZES = {
   sm: 'font-semibold text-lg',
 } as const;
 
+const STRESS_UNDERLINE = 'text-brand-700 underline decoration-brand-300 decoration-2 underline-offset-[0.22em]';
+
 interface Props {
   notation: string;
   size?: keyof typeof SIZES;
@@ -16,20 +18,21 @@ interface Props {
   className?: string;
 }
 
-/** Polish text rendered LTR, with the stressed syllable painted in the accent color. */
+/**
+ * Course-language text in its own direction, with the stressed syllable painted in the accent color
+ * (underlined too, except in vocalized Hebrew, where the line would cut through the niqqud).
+ */
 export function PolishSyllables({ notation, size = 'lg', showDots = true, className = '' }: Props) {
   const words = parseSyllables(notation);
   return (
-    <p dir="ltr" lang={C.htmlLang} className={`polish leading-snug text-slate-900 ${SIZES[size]} ${className}`}>
+    <p dir={C.dir} lang={C.htmlLang} className={`polish leading-snug text-slate-900 ${SIZES[size]} ${className}`}>
       {words.map((word, wi) => (
         <span key={wi} className="inline-block whitespace-nowrap">
           {word.map((syl, si) => (
             <span key={si}>
               {si > 0 && showDots && <span className="mx-[0.06em] text-slate-300">·</span>}
               <span
-                className={
-                  syl.stressed ? 'text-brand-700 underline decoration-brand-300 decoration-2 underline-offset-[0.22em]' : ''
-                }
+                className={syl.stressed ? (C.dir === 'rtl' ? 'text-brand-700' : STRESS_UNDERLINE) : ''}
               >
                 {syl.text}
               </span>

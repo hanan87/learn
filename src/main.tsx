@@ -14,8 +14,11 @@ import { ProgressProvider } from './state/ProgressContext';
 import { MicProvider } from './state/MicContext';
 import { initPwaUpdates } from './lib/pwaUpdate';
 import { loadManifest } from './lib/voiceClips';
+import { COURSE } from './lib/course';
 
 initPwaUpdates();
+// Styles that depend on the course (Hebrew course text reads right to left, index.css).
+document.documentElement.dataset.course = COURSE;
 // Natural-voice clip index; until it arrives (or if it is missing) the device voice is used.
 void loadManifest();
 

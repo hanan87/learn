@@ -38,7 +38,13 @@ const EN_MISTAKES: [RegExp, string][] = [
   [/a/, 'e'],
   [/r/, 'l'],
 ];
-const MISTAKES = { pl: PL_MISTAKES, cnr: CNR_MISTAKES, en: EN_MISTAKES }[COURSE];
+const HE_MISTAKES: [RegExp, string][] = [
+  [/ח/, 'ה'],
+  [/צ/, 'ס'],
+  [/כ/, 'ק'],
+  [/ר/, 'ל'],
+];
+const MISTAKES = { pl: PL_MISTAKES, cnr: CNR_MISTAKES, en: EN_MISTAKES, he: HE_MISTAKES }[COURSE];
 
 export function mispronounce(target: string): string {
   let out = target.toLocaleLowerCase('pl-PL');

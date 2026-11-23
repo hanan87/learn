@@ -2,6 +2,7 @@ import { localize, type Lang } from '../i18n/lang';
 import { COURSE } from '../lib/course';
 import { CNR_CONTRAST_GROUPS } from './cnr/pairs';
 import { EN_CONTRAST_GROUPS } from './en/pairs';
+import { HE_CONTRAST_GROUPS } from './he/pairs';
 
 /**
  * Minimal pairs for the Sound Lab: two real words that differ in a single sound
@@ -218,4 +219,4 @@ const PL_CONTRAST_GROUPS: ContrastGroup[] = [
 ];
 
 /** Sound Lab groups of the active course. */
-export const CONTRAST_GROUPS: ContrastGroup[] = { pl: PL_CONTRAST_GROUPS, cnr: CNR_CONTRAST_GROUPS, en: EN_CONTRAST_GROUPS }[COURSE];
+export const CONTRAST_GROUPS: ContrastGroup[] = { pl: PL_CONTRAST_GROUPS, cnr: CNR_CONTRAST_GROUPS, en: EN_CONTRAST_GROUPS, he: HE_CONTRAST_GROUPS }[COURSE];

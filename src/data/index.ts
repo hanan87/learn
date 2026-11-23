@@ -4,6 +4,7 @@ import { DEFAULT_PROFILE, effectiveGender, hasGenderPair, hasTemplate, otherGend
 import { toEnglishPhonetic } from '../lib/polishPhonetics';
 import { CNR_LEGEND, CNR_SITUATIONS, CNR_UNITS } from './cnr/units';
 import { EN_LEGEND, EN_SITUATIONS, EN_UNITS } from './en/units';
+import { HE_LEGEND, HE_UNITS } from './he/units';
 import { ITEM_EN, UNIT_EN } from './english';
 import { SITUATIONS } from './situations';
 import { itemText, type CourseUnitId, type ItemLoc, type ItemSource, type LearningItem, type Unit, type UnitId, type UnitSource } from './types';
@@ -38,7 +39,7 @@ function localizeUnit(u: UnitSource): Unit {
 const PL_UNITS: Unit[] = [...[unit1, unit2, unit3, unit4].map(localizeUnit), ...EXTRA_UNITS];
 
 /** Units of the active course (lib/course). */
-export const UNITS: Unit[] = { pl: PL_UNITS, cnr: CNR_UNITS, en: EN_UNITS }[COURSE];
+export const UNITS: Unit[] = { pl: PL_UNITS, cnr: CNR_UNITS, en: EN_UNITS, he: HE_UNITS }[COURSE];
 
 export const ALL_ITEMS: LearningItem[] = UNITS.flatMap((u) => u.items);
 
@@ -174,7 +175,7 @@ export function getUnit(id: CourseUnitId): Unit {
 
 /** Situational prompt for the active-recall speaking challenge. */
 export function getSituation(item: LearningItem, lang: Lang): string {
-  const situations: Record<string, Loc<string>> = { pl: EXTRA_SITUATIONS, cnr: CNR_SITUATIONS, en: EN_SITUATIONS }[COURSE];
+  const situations: Record<string, Loc<string>> = { pl: EXTRA_SITUATIONS, cnr: CNR_SITUATIONS, en: EN_SITUATIONS, he: {} }[COURSE];
   const extra = situations[item.id];
   const plain = COURSE === 'pl' ? SITUATIONS[item.id] : undefined;
   if (lang === 'he') return personalize(extra?.he ?? plain ?? `איך אומרים ${COURSE_INFO.inLang.he}: "${item.hebrew}"?`, currentProfile, 'he');
@@ -229,4 +230,4 @@ const PL_LEGEND: LegendRow[] = [
   { pl: 'i', he: 'ִי', en: 'ee', noteHe: 'i רגילה – חיריק עם יוד', noteEn: 'ee as in "see"' },
 ];
 
-export const PHONETIC_LEGEND: LegendRow[] = { pl: PL_LEGEND, cnr: CNR_LEGEND, en: EN_LEGEND }[COURSE];
+export const PHONETIC_LEGEND: LegendRow[] = { pl: PL_LEGEND, cnr: CNR_LEGEND, en: EN_LEGEND, he: HE_LEGEND }[COURSE];

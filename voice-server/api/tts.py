@@ -34,6 +34,7 @@ VOICES = {
     "en-US-JennyNeural",
     "en-US-GuyNeural",
     "he-IL-HilaNeural",
+    "he-IL-AvriNeural",
 }
 RATE = re.compile(r"^[+-]\d{1,2}%$")
 MAX_TEXT = 300

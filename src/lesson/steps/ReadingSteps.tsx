@@ -76,7 +76,7 @@ export function AssembleStep({ step, answered, onAnswered }: StepProps<AssembleS
     <div className="space-y-4">
       <h2 className="text-xl font-bold">{tr(`הרכיבו את המשפט ${C.inLang.he}`, `Build the sentence ${C.inLang.en}`)}</h2>
       <ContextBox itemId={item.id} />
-      <div dir="ltr" className="flex min-h-16 flex-wrap content-start gap-2 rounded-2xl border-b-2 border-slate-300 p-2">
+      <div dir={C.dir} className="flex min-h-16 flex-wrap content-start gap-2 rounded-2xl border-b-2 border-slate-300 p-2">
         {chosen.map((bankIdx, pos) => (
           <button
             key={`${bankIdx}-${pos}`}
@@ -89,7 +89,7 @@ export function AssembleStep({ step, answered, onAnswered }: StepProps<AssembleS
           </button>
         ))}
       </div>
-      <div dir="ltr" className="flex flex-wrap justify-center gap-2">
+      <div dir={C.dir} className="flex flex-wrap justify-center gap-2">
         {step.bank.map((word, idx) => {
           const used = chosen.includes(idx);
           return (

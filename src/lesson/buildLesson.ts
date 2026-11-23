@@ -70,6 +70,8 @@ const REGISTER_SWAPS: Record<string, string[]> = {
   cnr: { ste: ['si', 'sam'], si: ['ste', 'sam'], Vi: ['ti', 'Vam'], ti: ['Vi', 'te'], Izvinite: ['Izvini', 'Izvoli'] },
   // English has no formal "you"; politeness lives in whole phrases (Could you…), not in one word.
   en: {},
+  // Hebrew has no formal "you" either.
+  he: {},
 }[COURSE];
 const REGISTER_WORDS = Object.keys(REGISTER_SWAPS);
 

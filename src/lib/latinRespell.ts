@@ -1,4 +1,5 @@
 import type { Lang } from '../i18n/lang';
+import { COURSE } from './course';
 
 /**
  * Latin respelling of English for Polish and Montenegrin speakers, written with their own letters
@@ -32,6 +33,32 @@ import type { Lang } from '../i18n/lang';
  */
 
 export type RespellLang = Exclude<Lang, 'he' | 'en'>;
+
+/**
+ * Hebrew course: its transcription is already Latin, written English-style (sh kh ts ch j zh y,
+ * ai / ei – lib/hePhonetics). Polish and Montenegrin speakers get it in their own letters:
+ *
+ *   Latin   Polish   Montenegrin   Hebrew
+ *   sh      sz       š             שׁ
+ *   kh      ch       h             ח כ
+ *   ts      c        c             צ
+ *   ch      cz       č             צ׳
+ *   j       dż       dž            ג׳
+ *   zh      ż        ž             ז׳
+ *   y       j        j             י
+ *   v       w        v             ב ו
+ *   ai, ei  aj, ej   aj, ej        ַי ֵי
+ */
+const HE_LATIN: Record<RespellLang, Record<string, string>> = {
+  pl: { sh: 'sz', kh: 'ch', ts: 'c', ch: 'cz', j: 'dż', zh: 'ż', y: 'j', v: 'w', ai: 'aj', ei: 'ej', oi: 'oj', ui: 'uj' },
+  cnr: { sh: 'š', kh: 'h', ts: 'c', ch: 'č', j: 'dž', zh: 'ž', y: 'j', ai: 'aj', ei: 'ej', oi: 'oj', ui: 'uj' },
+};
+
+/** The Hebrew course's Latin transcription in Polish / Montenegrin letters ("sha·[lom]" → "sza·[lom]"). */
+export function respellHebrewLatin(latin: string, lang: RespellLang): string {
+  const map = HE_LATIN[lang];
+  return latin.replace(/sh|kh|ts|ch|zh|ai|ei|oi|ui|j|y|v/g, (m) => map[m] ?? m);
+}
 
 const SHVA = 'ְ';
 const HATAF_SEGOL = 'ֱ';
@@ -190,6 +217,7 @@ function openO(units: (Unit | string)[], i: number): boolean {
  * in Polish). Square brackets and "·" are kept, so the stressed syllable is still marked.
  */
 export function respell(he: string, lang: RespellLang): string {
+  if (COURSE === 'he') return respellHebrewLatin(he, lang);
   const L = LETTERS[lang];
   const units = parse(he);
   let out = '';

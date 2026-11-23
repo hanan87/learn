@@ -97,7 +97,7 @@ export function WritingStep({ step, answered, onAnswered }: StepProps<Step>) {
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && value.trim() && !answered && check()}
         disabled={answered}
-        dir="ltr"
+        dir={C.dir}
         lang={C.htmlLang}
         autoCapitalize="off"
         autoCorrect="off"

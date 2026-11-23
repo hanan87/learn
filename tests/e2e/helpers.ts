@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 
 /** Start the app with a chosen language/theme and fail the test on any uncaught error or console error. */
-type Course = 'pl' | 'cnr' | 'en';
+type Course = 'pl' | 'cnr' | 'en' | 'he';
 const progressKey = (course?: Course) => (course && course !== 'pl' ? `polish-learn:progress:${course}:v1` : 'polish-learn:progress:v1');
 
 /** The app's free voice server (src/lib/cloudVoice FREE_VOICE_URL). */

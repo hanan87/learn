@@ -9,8 +9,9 @@ const SAMPLES: Record<CourseInfo['id'], Record<Gender, string>> = {
   cnr: { m: 'Htio bih · gladan', f: 'Htjela bih · gladna' },
   // English verbs do not change with the speaker; only the Hebrew meanings and Mr. / Ms. do.
   en: { m: 'Mr. · he', f: 'Ms. · she' },
+  he: { m: 'אֲנִי רוֹצֶה · רָעֵב', f: 'אֲנִי רוֹצָה · רְעֵבָה' },
 };
-const NAME_PHRASES: Record<CourseInfo['id'], string> = { pl: 'Mam na imię', cnr: 'Zovem se', en: 'My name is' };
+const NAME_PHRASES: Record<CourseInfo['id'], string> = { pl: 'Mam na imię', cnr: 'Zovem se', en: 'My name is', he: 'קוֹרְאִים לִי' };
 
 interface Props {
   lang: Lang;
@@ -58,7 +59,7 @@ export function ProfileFields({ lang, profile, onChange, course = COURSE_INFO }:
             <span className="flex items-center gap-1.5 font-bold">
               <UserRound className="size-4" /> {label}
             </span>
-            <span dir="ltr" className={`polish mt-1 block text-xs ${profile.gender === g ? 'text-white/75' : 'text-slate-500'}`}>
+            <span dir={C.dir} lang={C.htmlLang} className={`polish mt-1 block text-xs ${profile.gender === g ? 'text-white/75' : 'text-slate-500'}`}>
               {sample}
             </span>
           </button>
@@ -77,9 +78,14 @@ export function ProfileFields({ lang, profile, onChange, course = COURSE_INFO }:
           className="w-full rounded-xl bg-white px-3 py-2.5 text-base ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-brand-500"
         />
         <span className={`block text-xs ${nonLatin ? 'text-amber-700' : 'text-slate-500'}`}>
+          {/* The Hebrew course does not put the name into its phrases, only into the map's greeting. */}
           {nonLatin
-            ? t(`כדי שהקול ה${C.adjHe} יוכל להגות את השם, כתבו אותו באותיות לטיניות (כמו בדרכון). עד אז נשתמש ב-${C.defaultNames[profile.gender ?? 'm']}.`, `Write the name in Latin letters so the ${C.name.en} voice can say it.`)
-            : t(`השם יופיע במשפטים כמו "${NAME_PHRASE}…" ובסימולציות השיחה.`, `Your name appears in phrases like "${NAME_PHRASE}…" and in the conversations.`)}
+            ? C.id === 'he'
+              ? t('כתבו את השם באותיות לטיניות.', 'Write the name in Latin letters.')
+              : t(`כדי שהקול ה${C.adjHe} יוכל להגות את השם, כתבו אותו באותיות לטיניות (כמו בדרכון). עד אז נשתמש ב-${C.defaultNames[profile.gender ?? 'm']}.`, `Write the name in Latin letters so the ${C.name.en} voice can say it.`)
+            : C.id === 'he'
+              ? t('השם יופיע בברכה במפת הקורס.', 'Your name appears in the greeting on the course map.')
+              : t(`השם יופיע במשפטים כמו "${NAME_PHRASE}…" ובסימולציות השיחה.`, `Your name appears in phrases like "${NAME_PHRASE}…" and in the conversations.`)}
         </span>
       </label>
     </div>

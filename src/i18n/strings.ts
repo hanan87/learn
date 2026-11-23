@@ -1,7 +1,8 @@
 /**
  * Polish and Montenegrin interface strings, keyed by the English text of tr(he, en) and of the
- * { he, en } labels (LangContext.localize). Only the English course is taught in these languages,
- * so course names inside the keys are always "English" ("Say it in English – from memory").
+ * { he, en } labels (LangContext.localize). The English and Hebrew courses are taught in these
+ * languages; course names inside the keys are "English" ("Say it in English – from memory"), and the
+ * Hebrew course's strings are found through them (uiText swaps the language name).
  *
  * Keys with {} are patterns for strings built with numbers or words: {} matches any text and {1},
  * {2}… in the translation put the matched parts back ("Lesson {} of {}" → "Lekcja {1} z {2}").
@@ -38,6 +39,11 @@ const ROWS: Row[] = [
     'Na tym urządzeniu nie znaleziono angielskiego głosu – odtwarzanie może brzmieć obco. Android: Ustawienia → Język → Zamiana tekstu na mowę → zainstaluj angielski. iPhone: Ustawienia → Dostępność → Treść mówiona → Głosy → angielski.',
     'Na ovom uređaju nije pronađen engleski glas – reprodukcija može zvučati strano. Android: Podešavanja → Jezik → Pretvaranje teksta u govor → instalirajte engleski. iPhone: Podešavanja → Pristupačnost → Izgovoreni sadržaj → Glasovi → engleski.',
   ],
+  [
+    'No Hebrew voice was found on this device – playback may sound foreign. Android: Settings → Language → Text-to-speech → install Hebrew. iPhone: Settings → Accessibility → Spoken Content → Voices → Hebrew.',
+    'Na tym urządzeniu nie znaleziono hebrajskiego głosu – odtwarzanie może brzmieć obco. Android: Ustawienia → Język → Zamiana tekstu na mowę → zainstaluj hebrajski. iPhone: Ustawienia → Dostępność → Treść mówiona → Głosy → hebrajski.',
+    'Na ovom uređaju nije pronađen hebrejski glas – reprodukcija može zvučati strano. Android: Podešavanja → Jezik → Pretvaranje teksta u govor → instalirajte hebrejski. iPhone: Podešavanja → Pristupačnost → Izgovoreni sadržaj → Glasovi → hebrejski.',
+  ],
 
   // --- Welcome and profile ---
   ['Nice to meet you!', 'Miło cię poznać!', 'Drago mi je!'],
@@ -55,6 +61,14 @@ const ROWS: Row[] = [
     'Pol nam treba za prevode – na crnogorskom „umoran sam” i „umorna sam” su dva oblika.',
   ],
   ['Write the name in Latin letters so the English voice can say it.', 'Wpisz imię literami łacińskimi, żeby angielski głos mógł je przeczytać.', 'Napišite ime latinicom da bi ga engleski glas mogao izgovoriti.'],
+  ['I speak Hebrew as:', 'Mówię jako:', 'Govorim kao:'],
+  [
+    'In Hebrew, verbs and adjectives change with the speaker’s gender – phrases will match yours.',
+    'Po hebrajsku czasowniki i przymiotniki zmieniają się zależnie od płci mówiącego – zdania dopasujemy do ciebie.',
+    'Na hebrejskom se glagoli i pridjevi mijenjaju prema polu govornika – rečenice ćemo prilagoditi vama.',
+  ],
+  ['Write the name in Latin letters.', 'Wpisz imię literami łacińskimi.', 'Napišite ime latinicom.'],
+  ['Your name appears in the greeting on the course map.', 'Twoje imię pojawi się w powitaniu na mapie kursu.', 'Vaše ime će se pojaviti u pozdravu na mapi kursa.'],
   ['Your name appears in phrases like "{}…" and in the conversations.', 'Twoje imię pojawi się w zdaniach typu „{1}…” i w rozmowach.', 'Vaše ime će se pojaviti u rečenicama poput „{1}…” i u razgovorima.'],
 
   // --- Course map ---
@@ -256,6 +270,7 @@ const ROWS: Row[] = [
   ['Device voice', 'Głos urządzenia', 'Glas uređaja'],
   ['Automatic – best voice found', 'Automatycznie – najlepszy znaleziony głos', 'Automatski – najbolji pronađeni glas'],
   ['No English device voice found. Android: Settings → Text-to-speech → English; iPhone: Accessibility → Spoken Content → Voices → English.', 'Nie znaleziono angielskiego głosu urządzenia. Android: Ustawienia → Zamiana tekstu na mowę → angielski; iPhone: Dostępność → Treść mówiona → Głosy → angielski.', 'Nije pronađen engleski glas uređaja. Android: Podešavanja → Pretvaranje teksta u govor → engleski; iPhone: Pristupačnost → Izgovoreni sadržaj → Glasovi → engleski.'],
+  ['No Hebrew device voice found. Android: Settings → Text-to-speech → Hebrew; iPhone: Accessibility → Spoken Content → Voices → Hebrew.', 'Nie znaleziono hebrajskiego głosu urządzenia. Android: Ustawienia → Zamiana tekstu na mowę → hebrajski; iPhone: Dostępność → Treść mówiona → Głosy → hebrajski.', 'Nije pronađen hebrejski glas uređaja. Android: Podešavanja → Pretvaranje teksta u govor → hebrejski; iPhone: Pristupačnost → Izgovoreni sadržaj → Glasovi → hebrejski.'],
   ['Paste the key (KEY 1) from Azure.', 'Wklej klucz (KEY 1) z Azure.', 'Nalijepite ključ (KEY 1) iz Azure.'],
   ['Azure rejected the key. Check that you copied all of KEY 1 and that the region matches the resource.', 'Azure odrzucił klucz. Sprawdź, czy skopiowano cały KEY 1 i czy region pasuje do zasobu.', 'Azure je odbio ključ. Provjerite da ste kopirali cijeli KEY 1 i da region odgovara resursu.'],
   ['The region is not valid.', 'Nieprawidłowy region.', 'Region nije ispravan.'],
@@ -281,6 +296,11 @@ const ROWS: Row[] = [
     'The app already reads every phrase in a natural voice (Jenny and Guy, American English) for free – including what you type in "How do I say?". If you have your own Azure key you can use it instead (Microsoft\'s official service). The key stays on this device, is sent only to Microsoft and is not part of the backup file.',
     'Aplikacja już za darmo czyta każde zdanie naturalnym głosem (Jenny i Guy, amerykański angielski) – również to, co wpiszesz w „Jak powiedzieć?”. Jeśli masz własny klucz Azure, możesz go użyć zamiast tego (oficjalna usługa Microsoftu). Klucz zostaje na tym urządzeniu, trafia tylko do Microsoftu i nie jest częścią kopii zapasowej.',
     'Aplikacija već besplatno čita svaku rečenicu prirodnim glasom (Jenny i Guy, američki engleski) – i ono što upišete u „Kako se kaže?”. Ako imate svoj Azure ključ, možete ga koristiti umjesto toga (zvanična Microsoftova usluga). Ključ ostaje na ovom uređaju, šalje se samo Microsoftu i nije dio rezervne kopije.',
+  ],
+  [
+    'The app already reads every phrase in a natural voice (Hila and Avri, Hebrew) for free – including what you type in "How do I say?". If you have your own Azure key you can use it instead (Microsoft\'s official service). The key stays on this device, is sent only to Microsoft and is not part of the backup file.',
+    'Aplikacja już za darmo czyta każde zdanie naturalnym głosem (Hila i Avri, hebrajski) – również to, co wpiszesz w „Jak powiedzieć?”. Jeśli masz własny klucz Azure, możesz go użyć zamiast tego (oficjalna usługa Microsoftu). Klucz zostaje na tym urządzeniu, trafia tylko do Microsoftu i nie jest częścią kopii zapasowej.',
+    'Aplikacija već besplatno čita svaku rečenicu prirodnim glasom (Hila i Avri, hebrejski) – i ono što upišete u „Kako se kaže?”. Ako imate svoj Azure ključ, možete ga koristiti umjesto toga (zvanična Microsoftova usluga). Ključ ostaje na ovom uređaju, šalje se samo Microsoftu i nije dio rezervne kopije.',
   ],
 
   // --- Coach lines (hands-free, read aloud) ---
@@ -557,6 +577,13 @@ export function uiText(en: string, lang: Lang): string {
   for (const { re, row: r } of PATTERNS) {
     const m = en.match(re);
     if (m) return r[col].replace(/\{(\d)\}/g, (_, n: string) => m[Number(n)] ?? '');
+  }
+  // The Hebrew course builds the same strings with "Hebrew" where the English course has "English":
+  // use the English course's translation with the language name swapped (po angielsku → po hebrajsku).
+  if (en.includes('Hebrew')) {
+    const key = en.replace(/Hebrew/g, 'English');
+    const text = uiText(key, lang);
+    if (text !== key) return lang === 'pl' ? text.replace(/angielsk/g, 'hebrajsk').replace(/Angielsk/g, 'Hebrajsk') : text.replace(/englesk/g, 'hebrejsk').replace(/Englesk/g, 'Hebrejsk');
   }
   return en;
 }

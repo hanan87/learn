@@ -5,9 +5,15 @@ import { haptic } from '../lib/haptics';
 
 import { COURSE, COURSE_INFO as C } from '../lib/course';
 
-// English has no special letters: the helper keyboard is not shown.
-const LETTERS = { pl: ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'], cnr: ['č', 'ć', 'đ', 'š', 'ž'], en: [] as string[] }[COURSE];
-const DIGRAPHS = { pl: ['sz', 'cz', 'rz', 'dz', 'dź', 'dż', 'ch'], cnr: ['dž', 'lj', 'nj'], en: [] as string[] }[COURSE];
+// English has no special letters: the helper keyboard is not shown. Hebrew gets its whole alphabet
+// in alphabetical order, right to left, for learners without a Hebrew keyboard on their phone.
+const HEBREW = [...'אבגדהוזחטיכךלמםנןסעפףצץקרשת'];
+const LETTERS = { pl: ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'], cnr: ['č', 'ć', 'đ', 'š', 'ž'], en: [] as string[], he: HEBREW }[COURSE];
+const DIGRAPHS = { pl: ['sz', 'cz', 'rz', 'dz', 'dź', 'dż', 'ch'], cnr: ['dž', 'lj', 'nj'], en: [] as string[], he: [] as string[] }[COURSE];
+/** Keys per row: Hebrew has too many letters for one row. */
+const PER_ROW = COURSE === 'he' ? 9 : LETTERS.length;
+/** Hebrew has no capital letters. */
+const HAS_CASE = COURSE !== 'he';
 
 interface Props {
   inputRef: RefObject<HTMLInputElement | null>;
@@ -87,18 +93,20 @@ export function PolishKeyboard({ inputRef, value, onChange }: Props) {
 
   if (!LETTERS.length) return null;
   return (
-    <div className="space-y-2 rounded-2xl bg-slate-200/70 p-2" dir="ltr" aria-label={tr(`מקלדת עזר ${C.name.he}`, `${C.name.en} helper keyboard`)}>
-      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${LETTERS.length}, minmax(0, 1fr))` }}>
+    <div className="space-y-2 rounded-2xl bg-slate-200/70 p-2" dir={C.dir} aria-label={tr(`מקלדת עזר ${C.name.he}`, `${C.name.en} helper keyboard`)}>
+      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${PER_ROW}, minmax(0, 1fr))` }}>
         {LETTERS.map((l) => (
           <button key={l} type="button" className={keyCls} {...press(() => insert(l))}>
             {shift ? l.toLocaleUpperCase('pl-PL') : l}
           </button>
         ))}
       </div>
-      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${DIGRAPHS.length + 3}, minmax(0, 1fr))` }}>
-        <button type="button" aria-label={tr('אות גדולה', 'Shift')} className={`${keyCls} col-span-1 ${shift ? '!bg-brand-600 !text-white' : ''}`} {...press(() => setShift((s) => !s))}>
-          <ArrowBigUp className="size-5" />
-        </button>
+      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${DIGRAPHS.length + (HAS_CASE ? 3 : 2)}, minmax(0, 1fr))` }}>
+        {HAS_CASE && (
+          <button type="button" aria-label={tr('אות גדולה', 'Shift')} className={`${keyCls} col-span-1 ${shift ? '!bg-brand-600 !text-white' : ''}`} {...press(() => setShift((s) => !s))}>
+            <ArrowBigUp className="size-5" />
+          </button>
+        )}
         {DIGRAPHS.map((d) => (
           <button key={d} type="button" className={`${keyCls} text-base`} {...press(() => insert(d))}>
             {shift ? d.charAt(0).toUpperCase() + d.slice(1) : d}

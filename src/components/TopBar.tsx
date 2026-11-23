@@ -4,7 +4,7 @@ import { useLang } from '../i18n/LangContext';
 import { useTheme } from '../i18n/ThemeContext';
 import { StandaloneDownload } from './StandaloneDownload';
 
-/** Segmented switch for the interface + learning language (HE | EN, or HE | PL | CNR in the English course). */
+/** Segmented switch for the interface + learning language (HE | EN; HE | PL | CNR or EN | PL | CNR in the English and Hebrew courses). */
 export function LangSwitch() {
   const { lang, setLang, tr } = useLang();
   if (C.uiLangs.length < 2) return null;
@@ -52,8 +52,8 @@ export function TopBar({ title, onOpenSettings }: { title: string; onOpenSetting
           <p className="truncate text-[15px] font-bold text-slate-900">{loc(C.titles)}</p>
           <h1 className="truncate text-xs font-medium text-slate-500">{title}</h1>
         </div>
-        {/* The English course's three audiences switch in Settings; the bar keeps the HE | EN toggle only. */}
-        {C.uiLangs.includes('en') && <LangSwitch />}
+        {/* Courses with three audiences (English, Hebrew) switch in Settings; the bar keeps the HE | EN toggle only. */}
+        {C.uiLangs.length === 2 && <LangSwitch />}
         <button
           type="button"
           onClick={theme.toggle}

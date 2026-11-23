@@ -126,7 +126,7 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
           {tr(`${C.inLang.he} *`, `${C.name.en} *`)}
         </label>
         <div className="flex gap-2">
-          <input id="aw-polish" value={f.polish} onChange={(e) => set('polish', e.target.value)} dir="ltr" lang={C.htmlLang} autoCapitalize="off" autoCorrect="off" spellCheck={false} placeholder={{ pl: 'np. Dzień dobry', cnr: 'npr. Dobar dan', en: 'e.g. Good morning' }[C.id]} className={`${input} polish text-lg`} />
+          <input id="aw-polish" value={f.polish} onChange={(e) => set('polish', e.target.value)} dir={C.dir} lang={C.htmlLang} autoCapitalize="off" autoCorrect="off" spellCheck={false} placeholder={{ pl: 'np. Dzień dobry', cnr: 'npr. Dobar dan', en: 'e.g. Good morning', he: 'לְמָשָׁל: בּוֹקֶר טוֹב' }[C.id]} className={`${input} polish text-lg`} />
           <button type="button" disabled={!f.polish.trim()} onClick={() => speak(f.polish)} className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-200 disabled:opacity-40" aria-label={tr('השמע', 'Play')}>
             <Volume2 className="size-5" />
           </button>
@@ -192,7 +192,7 @@ export function AddWordForm({ onDone }: { onDone: () => void }) {
           <label className={label} htmlFor="aw-syl">
             {tr('חלוקה להברות (· בין הברות, [ ] סביב ההברה המוטעמת)', 'Syllables (· between syllables, [ ] around the stressed one)')}
           </label>
-          <input id="aw-syl" value={f.syllables} onChange={(e) => set('syllables', e.target.value)} dir="ltr" lang={C.htmlLang} className={`${input} polish`} />
+          <input id="aw-syl" value={f.syllables} onChange={(e) => set('syllables', e.target.value)} dir={C.dir} lang={C.htmlLang} className={`${input} polish`} />
           {!syllablesValid && <p className="mt-1 text-xs text-rose-600">{tr(`החלוקה לא תואמת לטקסט ה${C.adjHe}.`, `The syllables do not match the ${C.name.en} text.`)}</p>}
         </div>
         {/* Polish and Montenegrin speakers see the respelling derived from these in the preview. */}

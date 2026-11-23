@@ -1,13 +1,14 @@
 import type { Lang, Loc } from '../i18n/lang';
 
 /**
- * The language being learned. The app ships three courses – Polish, Montenegrin and English (for
- * Hebrew, Polish and Montenegrin speakers) – that share every screen and exercise type. The active course is read once at start-up, so every data module (units,
+ * The language being learned. The app ships four courses – Polish, Montenegrin, English (for
+ * Hebrew, Polish and Montenegrin speakers) and Hebrew (for English, Polish and Montenegrin
+ * speakers) – that share every screen and exercise type. The active course is read once at start-up, so every data module (units,
  * roleplays, sound groups, phonetics) is built for it; switching stores the choice and reloads.
  * Each course keeps its own progress; the interface language, theme and voice settings are shared.
  */
 
-export type CourseId = 'pl' | 'cnr' | 'en';
+export type CourseId = 'pl' | 'cnr' | 'en' | 'he';
 
 export interface CourseInfo {
   id: CourseId;
@@ -25,6 +26,8 @@ export interface CourseInfo {
   titles: Loc<string>;
   /** Value of the HTML lang attribute on target-language text. */
   htmlLang: string;
+  /** Writing direction of the language (Hebrew reads right to left). */
+  dir: 'ltr' | 'rtl';
   /** Speech recognition language (Chrome / Android). */
   sttLang: string;
   /** Speech synthesis language when no matching device voice is picked. */
@@ -62,6 +65,7 @@ export const COURSES: Record<CourseId, CourseInfo> = {
     titleEn: 'Polish from Zero',
     titles: { he: 'פולנית מאפס', en: 'Polish from Zero' },
     htmlLang: 'pl',
+    dir: 'ltr',
     sttLang: 'pl-PL',
     ttsLang: 'pl-PL',
     voicePrefixes: ['pl'],
@@ -85,6 +89,7 @@ export const COURSES: Record<CourseId, CourseInfo> = {
     titleEn: 'Montenegrin from Zero',
     titles: { he: 'מונטנגרית מאפס', en: 'Montenegrin from Zero' },
     htmlLang: 'cnr',
+    dir: 'ltr',
     // There is no Montenegrin recognizer or voice; Croatian recognition writes the same Latin
     // Ijekavian spelling (mlijeko, lijepo), and Bosnian / Croatian / Serbian voices read it naturally.
     sttLang: 'hr-HR',
@@ -110,6 +115,7 @@ export const COURSES: Record<CourseId, CourseInfo> = {
     titleEn: 'Everyday English',
     titles: { he: 'אנגלית מדוברת', en: 'Everyday English', pl: 'Angielski na co dzień', cnr: 'Engleski za svaki dan' },
     htmlLang: 'en',
+    dir: 'ltr',
     sttLang: 'en-US',
     ttsLang: 'en-US',
     voicePrefixes: ['en-us', 'en'],
@@ -123,15 +129,40 @@ export const COURSES: Record<CourseId, CourseInfo> = {
     niceToMeet: 'Nice to meet you!',
     writePrompt: 'Write in English…',
   },
+  he: {
+    id: 'he',
+    name: { he: 'עברית', en: 'Hebrew', pl: 'hebrajski', cnr: 'hebrejski', native: 'עברית' },
+    adjHe: 'ישראלי',
+    inLang: { he: 'בעברית', en: 'in Hebrew', pl: 'po hebrajsku', cnr: 'na hebrejskom' },
+    title: 'עִבְרִית מֵאֶפֶס',
+    titleHe: 'עברית מאפס',
+    titleEn: 'Hebrew from Zero',
+    titles: { he: 'עברית מאפס', en: 'Hebrew from Zero', pl: 'Hebrajski od zera', cnr: 'Hebrejski od nule' },
+    htmlLang: 'he',
+    dir: 'rtl',
+    sttLang: 'he-IL',
+    ttsLang: 'he-IL',
+    voicePrefixes: ['he', 'iw'],
+    clipPrefix: 'he',
+    uiLangs: ['en', 'pl', 'cnr'],
+    // White with two blue stripes.
+    flag: 'linear-gradient(180deg, #ffffff 0 14%, #0038b8 14% 28%, #ffffff 28% 72%, #0038b8 72% 86%, #ffffff 86%)',
+    voiceNames: { f: 'Hila', m: 'Avri', he: 'עברית', en: 'Hebrew', pl: 'hebrajski', cnr: 'hebrejski' },
+    voiceSample: 'שָׁלוֹם! נָעִים מְאוֹד.',
+    progressKey: 'polish-learn:progress:he:v1',
+    defaultNames: { m: 'Tom', f: 'Anna' },
+    niceToMeet: 'נָעִים מְאוֹד!',
+    writePrompt: 'כִּתְבוּ בְּעִבְרִית…',
+  },
 };
 
 /** Order of the courses in pickers. */
-export const COURSE_ORDER: CourseId[] = ['pl', 'cnr', 'en'];
+export const COURSE_ORDER: CourseId[] = ['pl', 'cnr', 'en', 'he'];
 
 export const COURSE_KEY = 'polish-learn:course';
 
 export function isCourseId(v: unknown): v is CourseId {
-  return v === 'pl' || v === 'cnr' || v === 'en';
+  return v === 'pl' || v === 'cnr' || v === 'en' || v === 'he';
 }
 
 function readCourse(): CourseId {

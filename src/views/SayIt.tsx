@@ -186,14 +186,14 @@ export function SayIt({ onOpenItem }: { onOpenItem: (id: string) => void }) {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            dir={mode === 'target' ? 'ltr' : 'auto'}
+            dir={mode === 'target' ? C.dir : 'auto'}
             lang={mode === 'target' ? C.htmlLang : lang}
             enterKeyHint="go"
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
             maxLength={300}
-            placeholder={mode === 'target' ? { pl: 'np. Gdzie jest dworzec?', cnr: 'npr. Gdje je autobuska stanica?', en: 'e.g. Where is the bus station?' }[C.id] : tr('למשל: איפה תחנת האוטובוס?', 'e.g. Where is the bus station?')}
+            placeholder={mode === 'target' ? { pl: 'np. Gdzie jest dworzec?', cnr: 'npr. Gdje je autobuska stanica?', en: 'e.g. Where is the bus station?', he: 'לְמָשָׁל: אֵיפֹה הַתַּחֲנָה?' }[C.id] : tr('למשל: איפה תחנת האוטובוס?', 'e.g. Where is the bus station?')}
             aria-label={mode === 'target' ? tr(`טקסט ${C.inLang.he}`, `Text ${C.inLang.en}`) : tr('מילה או משפט בעברית', 'Word or sentence in English')}
             data-testid="say-input"
             className={`min-w-0 flex-1 rounded-xl bg-white px-3 py-3 text-base ring-1 ring-slate-300 outline-none focus:ring-2 focus:ring-brand-500 ${mode === 'target' ? 'polish' : ''}`}
@@ -270,7 +270,7 @@ function SayResult({
   const meaning = item ? itemText(item, lang).meaning : result.meaning;
   const words = target
     .split(/\s+/)
-    .map((w) => w.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, ''))
+    .map((w) => w.replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu, ''))
     .filter(Boolean);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(target);
@@ -318,7 +318,7 @@ function SayResult({
                 ref={draftRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                dir="ltr"
+                dir={C.dir}
                 lang={C.htmlLang}
                 autoCapitalize="off"
                 autoCorrect="off"
@@ -354,7 +354,7 @@ function SayResult({
       {words.length > 1 && (
         <div className="space-y-1.5">
           <p className="text-sm font-bold text-slate-700">{tr('מילה אחר מילה', 'Word by word')}</p>
-          <ul className="flex flex-wrap gap-2" dir="ltr">
+          <ul className="flex flex-wrap gap-2" dir={C.dir}>
             {words.map((w, i) => (
               <li key={`${w}-${i}`}>
                 <button type="button" onClick={() => void speak(w)} className="flex flex-col items-center rounded-xl bg-slate-50 px-3 py-1.5 ring-1 ring-slate-200 hover:ring-slate-400" aria-label={`${tr('השמע', 'Play')} ${w}`}>
