@@ -107,6 +107,33 @@ test.describe('Montenegrin course', () => {
     expectNoErrors(errors);
   });
 
+  test('the new units open and the pharmacy conversation runs to the end', async ({ page }) => {
+    const errors = await openApp(page, { lang: 'en', course: 'cnr' });
+    await expect(page.getByRole('button', { name: /^Unit \d+:/ })).toHaveCount(8);
+    for (const [u, title] of [[5, 'At the Market & in Shops'], [6, 'On the Road: Bus, Boat & Beach'], [7, 'Health & Emergencies'], [8, 'Small Talk']] as const) {
+      await page.getByRole('button', { name: new RegExp(`^Unit ${u}:`) }).click();
+      const detail = page.getByTestId('unit-detail');
+      await expect(detail).toContainText(title);
+      await expect(detail.getByRole('button', { name: /^Lesson 1/ })).toBeEnabled();
+    }
+
+    await page.goto('/#/talk');
+    for (const title of ['A café in Kotor', 'At the market in Podgorica', 'A ticket to Budva', 'At the pharmacy in Budva']) {
+      await expect(page.getByText(title, { exact: true })).toBeVisible();
+    }
+    await page.getByRole('button', { name: /At the pharmacy in Budva/ }).click();
+    await page.getByRole('button', { name: /One coffee, please/ }).click();
+    await expect(page.getByText(/This is a pharmacy, not a café/)).toBeVisible();
+    for (const reply of [/I don’t feel well/, /I have a headache/, /all day on the beach/, /How much is it/, /Thank you very much! Goodbye/]) {
+      await page.getByRole('button', { name: reply }).click();
+      await page.getByRole('button', { name: 'Skip speaking for this turn' }).click();
+    }
+    await expect(page.getByText('Conversation complete!')).toBeVisible();
+    await expect(page.getByText('4 of 5 replies right on the first try')).toBeVisible();
+    expect((await progress(page, 'cnr')).dialogues['apoteka']).toBeTruthy();
+    expectNoErrors(errors);
+  });
+
   test('switching courses keeps each course’s progress', async ({ page }) => {
     const errors = await openApp(page, { lang: 'en', progress: { version: 2, xp: 77, items: {}, lessons: {}, dialogues: {} } });
     await expect(page.getByTestId('continue-lesson')).toContainText('Secrets of Polish Pronunciation');

@@ -1,6 +1,6 @@
 import { COURSE_INFO as C } from '../lib/course';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, BedDouble, Coffee, Handshake, Mic, RotateCcw, TrainFront, Trophy, User, Volume2, XCircle, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BedDouble, Bus, Coffee, Handshake, Mic, Pill, RotateCcw, ShoppingBasket, TrainFront, Trophy, User, Volume2, XCircle, type LucideIcon } from 'lucide-react';
 import { ROLEPLAYS, type Bilingual, type Roleplay as RoleplayT, type RoleplayOption } from '../data/dialogues';
 import { STORIES } from '../data/stories';
 import { StoryIcon } from '../components/StoryIcon';
@@ -23,6 +23,10 @@ const ICONS: Record<string, LucideIcon> = {
   'train-ticket': TrainFront,
   'taxi-hotel': BedDouble,
   meeting: Handshake,
+  'kotor-cafe': Coffee,
+  'green-market': ShoppingBasket,
+  'bus-to-budva': Bus,
+  apoteka: Pill,
 };
 
 export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void }) {

@@ -34,6 +34,21 @@ describe('Montenegrin phonetics', () => {
     expect(toEnglishPhonetic('lijepo')).toBe('[lyeh]·poh');
   });
 
+  it('splits clusters that cannot open a word, i + je in nije, and stresses "Je li"', () => {
+    expect(toSyllableNotation('taksi')).toBe('[tak]·si');
+    expect(toSyllableNotation('doktor')).toBe('[dok]·tor');
+    expect(toSyllableNotation('Boli me ovdje')).toBe('[Bo]·li me [ov]·dje');
+    expect(toSyllableNotation('Budva')).toBe('[Bu]·dva');
+    expect(toSyllableNotation('nešto')).toBe('[ne]·što');
+    expect(toSyllableNotation('Nije mi dobro')).toBe('[Ni]·je mi [do]·bro');
+    expect(toSyllableNotation('pijem')).toBe('[pi]·jem');
+    expect(toSyllableNotation('pijesak')).toBe('[pije]·sak');
+    expect(toSyllableNotation('Je li ovo mjesto slobodno?')).toBe('[Je] li [o]·vo [mje]·sto [slo]·bod·no?');
+    expect(toSyllableNotation('Ne razumijem')).toBe('Ne ra·[zu]·mijem');
+    expect(toSyllableNotation('apoteka')).toBe('a·[po]·te·ka');
+    expect(toSyllableNotation('crnogorski')).toBe('cr·no·[gor]·ski');
+  });
+
   it('marks soft ć, đ, lj, nj in Hebrew and keeps hard č, dž plain', () => {
     expect(he('kuća')).toBe(nfc('[קוּ]·צְ׳יָה'));
     expect(he('kuče')).toBe(nfc('[קוּ]·צֶ׳ה'));
@@ -92,9 +107,19 @@ describe('Montenegrin course data (LEARN_COURSE=cnr)', () => {
   it('loads the Montenegrin course', () => {
     expect(course.COURSE).toBe('cnr');
     expect(course.COURSE_INFO.sttLang).toBe('hr-HR');
-    expect(data.UNITS.map((u) => u.id)).toEqual(['m1', 'm2', 'm3', 'm4']);
-    expect(data.ALL_ITEMS).toHaveLength(52);
+    expect(data.UNITS.map((u) => u.id)).toEqual(['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8']);
+    expect(data.ALL_ITEMS).toHaveLength(100);
     expect(lessons.LESSONS[0].id).toBe('m1-L1');
+    for (const id of ['m5', 'm6', 'm7', 'm8'] as const) expect(lessons.lessonsOfUnit(id), id).toHaveLength(3);
+    expect(new Set(data.ALL_ITEMS.map((i) => i.polish.toLowerCase())).size).toBe(100);
+  });
+
+  it('shows the same syllables and stress in the units as the rules give in dialogues and stories', () => {
+    for (const g of ['m', 'f'] as const) {
+      data.applyProfile({ gender: g, name: '' });
+      for (const item of data.ALL_ITEMS) expect(toSyllableNotation(item.polish), item.id).toBe(item.syllablesPolish);
+    }
+    data.applyProfile({ gender: null, name: '' });
   });
 
   it('has complete bilingual items whose notation matches the text', () => {
@@ -118,11 +143,15 @@ describe('Montenegrin course data (LEARN_COURSE=cnr)', () => {
   });
 
   it('adapts gendered phrases to the learner', () => {
-    expect(data.GENDERED_ITEM_IDS.sort()).toEqual(['m4-11', 'm4-12']);
+    expect(data.GENDERED_ITEM_IDS.sort()).toEqual(['m4-11', 'm4-12', 'm7-08', 'm8-08']);
     data.applyProfile({ gender: 'f', name: 'maja' });
     expect(data.getItem('m4-11')!.polish).toBe('Gladna sam');
     expect(data.getItem('m4-12')!.polish).toBe('Htjela bih kafu');
     expect(data.getItem('m4-12')!.genderAlt?.polish).toBe('Htio bih kafu');
+    expect(data.getItem('m7-08')!.polish).toBe('Izgubila sam pasoš');
+    expect(data.getItem('m8-08')!.polish).toBe('Udata sam');
+    expect(data.getItem('m8-08')!.genderAlt?.polish).toBe('Oženjen sam');
+    expect(data.getItem('m8-08')!.hebrew).toBe('אני נשואה');
     expect(data.getItem('m2-14')!.polish).toBe('Zovem se Maja');
     data.applyProfile({ gender: 'm', name: '' });
     expect(data.getItem('m2-14')!.polish).toBe('Zovem se David');
@@ -130,7 +159,11 @@ describe('Montenegrin course data (LEARN_COURSE=cnr)', () => {
   });
 
   it('swaps roleplays, sound groups, stories and sounds', () => {
-    expect(roleplays.ROLEPLAYS.map((r) => r.id)).toEqual(['kotor-cafe']);
+    expect(roleplays.ROLEPLAYS.map((r) => r.id)).toEqual(['kotor-cafe', 'green-market', 'bus-to-budva', 'apoteka']);
+    for (const r of roleplays.ROLEPLAYS) {
+      expect(r.turns, r.id).toHaveLength(5);
+      for (const t of r.turns) expect(t.options.filter((o) => o.correct), t.line.polish).toHaveLength(1);
+    }
     expect(pairs.CONTRAST_GROUPS.map((g) => g.id)).toEqual(['cnr-ch', 'cnr-sh', 'cnr-zh', 'cnr-soft']);
     for (const g of pairs.CONTRAST_GROUPS) for (const p of g.pairs) {
       expect(notationToPlain(p.a.syllablesPolish)).toBe(p.a.polish);
@@ -167,6 +200,12 @@ describe('Montenegrin course data (LEARN_COURSE=cnr)', () => {
     const keys = new Set(catalog.buildClipCatalog().map((c) => c.key));
     expect(keys.has('cnr-f|s|Doviđenja')).toBe(true);
     expect(keys.has('cnr-m|n|Dobar dan! Izvolite?')).toBe(true);
+    // The new units and dialogues.
+    expect(keys.has('cnr-f|s|Mogu li platiti karticom?')).toBe(true);
+    expect(keys.has('cnr-m|s|Oženjen sam')).toBe(true);
+    expect(keys.has('cnr-f|n|Udata sam')).toBe(true);
+    expect(keys.has('cnr-f|n|Pet eura. Brzo ozdravite!')).toBe(true);
+    expect(keys.has('cnr-m|n|U osam. Peron tri.')).toBe(true);
     expect([...keys].some((k) => k.startsWith('pl-'))).toBe(false);
   });
 });

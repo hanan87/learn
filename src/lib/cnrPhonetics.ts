@@ -25,7 +25,15 @@ const CLITICS = new Set([
   'li', 'bih', 'bi', 'i', 'a', 'u', 'na', 'od', 'do', 'za', 's', 'sa', 'k', 'ka', 'o', 'po', 'iz', 'bez', 'kod', 'uz', 'ne', 'ni',
 ]);
 /** Words whose stress is not on the first syllable (index of the stressed syllable). */
-const STRESS: Record<string, number> = { doviđenja: 1, izvinite: 1, izvolite: 1, espreso: 1, restoran: 1, turista: 1, recepcija: 1, informacije: 2 };
+const STRESS: Record<string, number> = {
+  doviđenja: 1, izvinite: 1, izvolite: 1, espreso: 1, restoran: 1, turista: 1, recepcija: 1, informacije: 2,
+  apoteka: 1, razumijem: 1, ponoviti: 1, govorite: 1, govorim: 1, crnogorski: 2, izgubio: 1, izgubila: 1,
+  izrael: 1, izraela: 1, ozdravite: 1,
+};
+/** Words where i + je are two syllables, not the Ijekavian "ije" (ni·je = ne + je; pi·jem from piti). */
+const IJE_SPLIT = /^(?:nije(?:dan|dna|dno|dne|dnog)?|pij(?:e|em|eš|emo|ete))$/;
+/** Consonants that open a syllable together with a following plosive (st, šk, zd). */
+const SIBILANTS = new Set(['s', 'š', 'z', 'ž']);
 
 export interface Token {
   /** Lowercase grapheme: "dž", "a", "ije", "r"… */
@@ -48,7 +56,7 @@ function tokenizeCore(word: string): Token[] {
   while (i < lower.length) {
     const prev = toks[toks.length - 1];
     // Ijekavian ije after a consonant is one syllable ("lije·po" = lye·po).
-    if (lower.startsWith('ije', i) && prev && !prev.vowel) {
+    if (lower.startsWith('ije', i) && prev && !prev.vowel && !IJE_SPLIT.test(lower)) {
       toks.push({ g: 'ije', orig: word.slice(i, i + 3), vowel: true });
       i += 3;
       continue;
@@ -95,7 +103,9 @@ function syllabify(toks: Token[]): Token[][] {
     const consonants = nextV - v - 1;
     // The prefix iz- stays whole before a consonant: iz·vi·ni·te.
     const prefix = n === 0 && v === 0 && lower.startsWith('iz') && consonants >= 2;
-    const splitAfterFirst = consonants >= 2 && (prefix || SONORANTS.has(toks[v + 1].g) || SPLIT_BEFORE.has(toks[v + 2].g));
+    // A pair that cannot open a word splits too: tak·si, dok·tor, ov·dje (but bu·dva, ne·što).
+    const badOnset = consonants >= 2 && !SIBILANTS.has(toks[v + 1].g) && !SONORANTS.has(toks[v + 2].g) && toks[v + 2].g !== 'v';
+    const splitAfterFirst = consonants >= 2 && (prefix || badOnset || SONORANTS.has(toks[v + 1].g) || SPLIT_BEFORE.has(toks[v + 2].g));
     const cut = splitAfterFirst ? v + 2 : v + 1;
     sylls.push(toks.slice(start, cut));
     start = cut;
@@ -110,10 +120,13 @@ function stressIndex(sylls: Token[][], wordLower: string): number {
 }
 
 function analyze(text: string) {
-  return splitWords(text).map((word) => {
+  const words = splitWords(text);
+  const lowers = words.map((w) => w.tokens.map((t) => t.g).join(''));
+  return words.map((word, i) => {
     const sylls = syllabify(word.tokens);
-    const lower = word.tokens.map((t) => t.g).join('');
-    return { word, sylls, stress: stressIndex(sylls, lower) };
+    // The question "Je li …?" opens with a stressed je.
+    const opensQuestion = lowers[i] === 'je' && lowers[i + 1] === 'li';
+    return { word, sylls, stress: opensQuestion ? 0 : stressIndex(sylls, lowers[i]) };
   });
 }
 

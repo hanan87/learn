@@ -17,7 +17,7 @@ import type { Gender } from '../lib/personalize';
 
 export type Formality = 'formal' | 'casual' | 'neutral';
 
-export type CourseUnitId = 'u1' | 'u2' | 'u3' | 'u4' | 'u5' | 'u6' | 'u7' | 'u8' | 'm1' | 'm2' | 'm3' | 'm4' | 'e1' | 'e2' | 'e3' | 'e4' | 'e5' | 'e6' | 'h0' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+export type CourseUnitId = 'u1' | 'u2' | 'u3' | 'u4' | 'u5' | 'u6' | 'u7' | 'u8' | 'm1' | 'm2' | 'm3' | 'm4' | 'm5' | 'm6' | 'm7' | 'm8' | 'e1' | 'e2' | 'e3' | 'e4' | 'e5' | 'e6' | 'h0' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 export type UnitId = CourseUnitId | 'custom';
 
 /** Sound features used to group items in the Sound Lab. */
