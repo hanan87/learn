@@ -1,6 +1,7 @@
 import { ALL_ITEMS, getItem, getUnit, getUnitOfItem, UNITS } from '../data';
 import { COURSE } from '../lib/course';
-import type { LessonDef } from '../data/lessons';
+import { lessonsOfUnit, type LessonDef } from '../data/lessons';
+import { getLetter, HE_LETTERS, type HeLetter } from '../data/he/alphabet';
 import { CONTRAST_GROUPS, type ContrastGroup, type MinimalPair } from '../data/minimalPairs';
 import { SOUND_INFO, type SoundKey } from '../data/sounds';
 import type { LearningItem, SoundTag } from '../data/types';
@@ -8,6 +9,7 @@ import { detectSounds } from '../lib/phonetics';
 import { pick, sample, shuffle } from '../lib/random';
 import { mispronounce } from '../lib/simulate';
 import { normalize, stripDiacritics } from '../lib/text';
+import { respellHebrewLatin } from '../lib/latinRespell';
 import { itemWeakness, summarizeSounds, type ProgressState } from '../state/ProgressContext';
 
 /**
@@ -17,6 +19,10 @@ import { itemWeakness, summarizeSounds, type ProgressState } from '../state/Prog
  *   3. assemble/fill/choose – Reading & context (word bank, missing word, spelling recognition)
  *   4. write         – Writing with the Polish virtual keyboard
  *   5. recall        – Active-recall speaking from a situation
+ *
+ * Alef-Bet lessons (Hebrew course) teach letters first: a card per new letter or vowel sign, a sound
+ * quiz, then the lesson's words – learn, read (pick the transcription), hear (pick the written word)
+ * and write.
  */
 
 export type LessonStep =
@@ -27,7 +33,11 @@ export type LessonStep =
   | { kind: 'fill-blank'; key: string; itemId: string; blankIndex: number; options: string[] }
   | { kind: 'choose-spelling'; key: string; itemId: string; options: string[] }
   | { kind: 'write'; key: string; itemId: string }
-  | { kind: 'recall'; key: string; itemId: string };
+  | { kind: 'recall'; key: string; itemId: string }
+  | { kind: 'letter-learn'; key: string; letterId: string }
+  | { kind: 'letter-sound'; key: string; letterId: string; optionIds: string[] }
+  | { kind: 'read-word'; key: string; itemId: string; options: string[] }
+  | { kind: 'hear-word'; key: string; itemId: string; optionIds: string[] };
 
 export const STAGE_LABELS: Record<LessonStep['kind'], { he: string; en: string }> = {
   learn: { he: 'לימוד והאזנה', en: 'Learn & shadow' },
@@ -38,6 +48,10 @@ export const STAGE_LABELS: Record<LessonStep['kind'], { he: string; en: string }
   'choose-spelling': { he: 'קריאה וזיהוי', en: 'Reading' },
   write: { he: 'כתיבה', en: 'Writing' },
   recall: { he: 'דיבור מהזיכרון', en: 'Speak from memory' },
+  'letter-learn': { he: 'אות חדשה', en: 'New letter' },
+  'letter-sound': { he: 'צליל האות', en: 'Letter sounds' },
+  'read-word': { he: 'קריאת מילה', en: 'Read the word' },
+  'hear-word': { he: 'שמיעה וקריאה', en: 'Listen and find' },
 };
 
 const TAG_TO_GROUP: Partial<Record<SoundTag, string>> = {
@@ -129,7 +143,86 @@ function pairStep(group: ContrastGroup, keySuffix = ''): LessonStep {
   return { kind: 'listen-pair', key: `pair-${group.id}-${pair.id}${keySuffix}`, group, pair, side: Math.random() < 0.5 ? 'a' : 'b' };
 }
 
+
+/** A reading as each learner sees it: English, Polish and Montenegrin letters (Montenegrin writes kh and h alike). */
+function readingForms(notation: string): string[] {
+  const plain = notation.replace(/[·[\]\s]/g, '').toLowerCase();
+  return [plain, respellHebrewLatin(plain, 'pl'), respellHebrewLatin(plain, 'cnr')];
+}
+const sameReading = (a: string, b: string) => {
+  const fa = readingForms(a);
+  return readingForms(b).some((f, i) => f === fa[i]);
+};
+
+/**
+ * Letters and vowel signs share a sound with a look-alike (ט/ת, כּ/ק), and Montenegrin writes kh and h
+ * alike: offer each sound once, as every learner sees it.
+ */
+function soundOptions(target: HeLetter, known: Set<string>): string[] {
+  const sameKind = HE_LETTERS.filter((l) => l.kind === target.kind && l.quiz !== false && l.id !== target.id);
+  const chosen: HeLetter[] = [target];
+  // Letters the learner already knows come first; unknown ones only fill a short list (the first vowels).
+  for (const l of [...shuffle(sameKind.filter((x) => known.has(x.id))), ...shuffle(sameKind.filter((x) => !known.has(x.id)))]) {
+    if (chosen.length < 4 && !chosen.some((c) => sameReading(c.sound, l.sound))) chosen.push(l);
+  }
+  return shuffle(chosen.map((l) => l.id));
+}
+
+/** Readings that differ by one sound the learner could confuse (b/v, k/kh, p/f, sh/s, a/o, e/i…). */
+const SWAP: Record<string, string[]> = {
+  b: ['v'], v: ['b'], k: ['kh'], kh: ['k'], p: ['f'], f: ['p'], sh: ['s'], s: ['sh', 'ts'], ts: ['s'],
+  t: ['d'], d: ['t', 'r'], r: ['d'], m: ['n'], n: ['m'], g: ['k'], z: ['s'], l: ['r'],
+  a: ['o'], o: ['u', 'a'], u: ['o'], e: ['i'], i: ['e'],
+};
+
+export function misreadings(notation: string): string[] {
+  const out = new Set<string>();
+  for (const m of notation.matchAll(/kh|sh|ts|[a-z]/g)) {
+    for (const alt of SWAP[m[0]] ?? []) out.add(notation.slice(0, m.index) + alt + notation.slice(m.index! + m[0].length));
+  }
+  out.delete(notation);
+  return [...out];
+}
+
+/** An Alef-Bet lesson: new letters, their sounds, then reading, hearing and writing the lesson's words. */
+function buildLetterLesson(lesson: LessonDef, letters: string[]): LessonStep[] {
+  const earlier = lessonsOfUnit(lesson.unitId).filter((l) => l.number <= lesson.number);
+  const known = new Set(earlier.flatMap((l) => l.letters ?? []));
+  const knownWords = earlier.flatMap((l) => l.itemIds).map((id) => getItem(id)!).filter(Boolean);
+  const words = lesson.itemIds.map((id) => getItem(id)!).filter(Boolean);
+  const steps: LessonStep[] = [];
+
+  for (const id of letters) steps.push({ kind: 'letter-learn', key: `letter-${id}`, letterId: id });
+  for (const id of shuffle(letters)) {
+    const letter = getLetter(id);
+    if (letter && letter.quiz !== false) steps.push({ kind: 'letter-sound', key: `sound-${id}`, letterId: id, optionIds: soundOptions(letter, known) });
+  }
+
+  for (const item of words) steps.push({ kind: 'learn', key: `learn-${item.id}`, itemId: item.id });
+
+  for (const item of shuffle(words)) {
+    const right = item.phoneticHebrew;
+    const options = [right];
+    const add = (o: string) => {
+      if (options.length < 4 && !options.some((x) => sameReading(x, o))) options.push(o);
+    };
+    sample(misreadings(right), 2).forEach(add);
+    shuffle(knownWords.filter((w) => w.id !== item.id)).forEach((w) => add(w.phoneticHebrew));
+    misreadings(right).forEach(add);
+    steps.push({ kind: 'read-word', key: `read-${item.id}`, itemId: item.id, options: shuffle(options) });
+  }
+
+  const heard = pick(words);
+  const others = shuffle(knownWords.filter((w) => w.id !== heard.id && normalize(w.polish) !== normalize(heard.polish)));
+  steps.push({ kind: 'hear-word', key: `hear-${heard.id}`, itemId: heard.id, optionIds: shuffle([heard.id, ...others.slice(0, 3).map((w) => w.id)]) });
+
+  const writeItems = [...words].sort((a, b) => a.polish.length - b.polish.length).slice(0, 2);
+  for (const item of writeItems) steps.push({ kind: 'write', key: `write-${item.id}`, itemId: item.id });
+  return steps;
+}
+
 export function buildLesson(lesson: LessonDef): LessonStep[] {
+  if (lesson.letters) return buildLetterLesson(lesson, lesson.letters);
   const items = lesson.itemIds.map((id) => getItem(id)!).filter(Boolean);
   const steps: LessonStep[] = [];
 

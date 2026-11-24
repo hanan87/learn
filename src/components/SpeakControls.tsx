@@ -13,8 +13,10 @@ interface Props {
 }
 
 /** Three playback modes: normal (1.0), extra slow (0.6), and backchaining (end to start). */
-export function SpeakControls({ text, backchainingSteps, showSteps = true, compact = false }: Props) {
+export function SpeakControls({ text, backchainingSteps: steps, showSteps = true, compact = false }: Props) {
   const { mode, chainIndex, playNormal, playSlow, playChain, stop } = useTts();
+  // A one-syllable word has nothing to build up from the end: its "steps" are the word three times.
+  const backchainingSteps = steps && new Set(steps).size > 1 ? steps : undefined;
   const { tr } = useLang();
 
   if (!ttsSupported) {

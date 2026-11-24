@@ -148,11 +148,13 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
   let types: typeof import('../../src/data/types');
   let phonetics: typeof import('../../src/lib/phonetics');
   let respell: typeof import('../../src/lib/latinRespell');
+  let alefbet: typeof import('../../src/data/he/alphabet');
+  let builder: typeof import('../../src/lesson/buildLesson');
 
   beforeAll(async () => {
     vi.stubEnv('LEARN_COURSE', 'he');
     vi.resetModules();
-    [data, roleplays, pairs, stories, sounds, course, catalog, lessons, types, phonetics, respell] = await Promise.all([
+    [data, roleplays, pairs, stories, sounds, course, catalog, lessons, types, phonetics, respell, alefbet, builder] = await Promise.all([
       import('../../src/data'),
       import('../../src/data/dialogues'),
       import('../../src/data/minimalPairs'),
@@ -164,6 +166,8 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
       import('../../src/data/types'),
       import('../../src/lib/phonetics'),
       import('../../src/lib/latinRespell'),
+      import('../../src/data/he/alphabet'),
+      import('../../src/lesson/buildLesson'),
     ]);
   });
   afterAll(() => {
@@ -188,9 +192,10 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
     expect(course.COURSE_INFO.dir).toBe('rtl');
     expect(course.COURSE_INFO.uiLangs).toEqual(['en', 'pl', 'cnr']);
     expect(course.COURSE_ORDER).toContain('he');
-    expect(data.UNITS.map((u) => u.id)).toEqual(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+    expect(data.UNITS.map((u) => u.id)).toEqual(['h0', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+    expect(data.UNITS.map((u) => u.order)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(data.ALL_ITEMS.length).toBeGreaterThanOrEqual(75);
-    expect(lessons.LESSONS[0].id).toBe('h1-L1');
+    expect(lessons.LESSONS[0].id).toBe('h0-L1');
     expect(stories.STORIES).toEqual([]);
     expect(Object.keys(sounds.SOUND_INFO).sort()).toEqual(['h', 'kh', 'r', 'ts']);
     expect(phonetics.toEnglishPhonetic('שָׁלוֹם')).toBe('sha·[lom]');
@@ -230,7 +235,8 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
         expect(t.phonetic, `${item.id} ${l}`).not.toMatch(hebrew);
       }
       expect(types.itemText(item, 'pl').meaning).not.toBe(item.english);
-      expect(types.unitText(data.UNITS[0], 'cnr').title).toBe('Prve riječi');
+      expect(types.unitText(data.UNITS[1], 'cnr').title).toBe('Prve riječi');
+      expect(types.unitText(data.UNITS[0], 'pl').title).toBe('Alef-bet');
     }
     // Polish and Montenegrin transcriptions are in their own letters.
     const shalom = data.ALL_ITEMS.find((i) => i.id === 'h1-01')!;
@@ -288,5 +294,117 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
     // No Hebrew interface: nothing is read by the Hebrew meaning voice.
     expect(list.some((c) => c.voice === 'he')).toBe(false);
     expect(list.some((c) => c.voice === 'pl-m' || c.voice === 'cnr-m')).toBe(false);
+  });
+
+  describe('Alef-Bet', () => {
+    it('teaches every letter, final form and vowel sign once, each with a word that shows it', () => {
+      const ids = alefbet.HE_LETTERS.map((l) => l.id);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(alefbet.ALEFBET_PLAN.flat().sort()).toEqual([...ids].sort());
+      const glyphs = alefbet.HE_LETTERS.filter((l) => l.kind === 'letter').map((l) => l.glyph).join('');
+      for (const ch of 'אבגדהוזחטיכךלמםנןסעפףצץקרשת') expect(glyphs).toContain(ch);
+      const h0 = data.UNITS[0].items.map((i) => i.polish.replace(/[^\p{L}\p{M}]/gu, ''));
+      for (const l of alefbet.HE_LETTERS) {
+        expect(h0, l.id).toContain(l.example.normalize('NFC'));
+        expect(alefbet.clusters(l.example).some((c) => alefbet.clusterShows(l, c)), l.id).toBe(true);
+      }
+    });
+
+    it('tells dotted letters, vowel vavs and vowel signs apart', () => {
+      const show = (id: string, word: string) => alefbet.clusters(word).filter((c) => alefbet.clusterShows(alefbet.getLetter(id)!, c)).map((c) => c.base);
+      expect(show('bet', 'בְּסֵדֶר')).toEqual(['ב']);
+      expect(show('vet', 'טוֹב')).toEqual(['ב']);
+      expect(show('vet', 'אַבָּא')).toEqual([]);
+      expect(show('vowel-o', 'אוֹר')).toEqual(['ו']);
+      expect(show('vav', 'אוֹר')).toEqual([]);
+      expect(show('vav', 'וָרֹד')).toEqual(['ו']);
+      expect(show('vowel-u', 'כַּדּוּר')).toEqual(['ו']);
+      expect(show('khaf', 'מֶלֶךְ')).toEqual(['ך']);
+      expect(show('sin', 'שִׂמְחָה')).toEqual(['ש']);
+      expect(show('shin', 'שִׂמְחָה')).toEqual([]);
+      expect([...alefbet.cardsOfWord('פִּיתָה')].sort()).toEqual(['he', 'pe', 'tav', 'vowel-a', 'vowel-i']);
+      expect([...alefbet.cardsOfWord('מֶלֶךְ')].sort()).toEqual(['khaf', 'lamed', 'mem', 'vowel-e']);
+    });
+
+    it('has eight lessons of four words, each read with the letters taught so far', () => {
+      const ab = lessons.lessonsOfUnit('h0');
+      expect(ab.map((l) => l.letters)).toEqual(alefbet.ALEFBET_PLAN);
+      expect(ab.every((l) => l.itemIds.length === 4)).toBe(true);
+      const known = new Set<string>();
+      for (const l of ab) {
+        l.letters!.forEach((id) => known.add(id));
+        for (const id of l.itemIds) {
+          const word = data.getItem(id)!.polish;
+          const missing = [...alefbet.cardsOfWord(word)].filter((c) => !known.has(c));
+          expect(missing, `${l.id} ${word}`).toEqual([]);
+        }
+      }
+      // Only Alef-Bet lessons carry letters.
+      expect(lessons.LESSONS.filter((l) => l.letters).every((l) => l.unitId === 'h0')).toBe(true);
+    });
+
+    it('uses words of its own, not phrases of the other units', () => {
+      const plain = (t: string) => stripNiqqud(t).replace(/[^\p{L}]/gu, '');
+      const others = new Set(data.UNITS.slice(1).flatMap((u) => u.items.map((i) => plain(i.polish))));
+      for (const item of data.UNITS[0].items) expect(others.has(plain(item.polish)), item.polish).toBe(false);
+    });
+
+    it('builds lessons: letter cards, sound quiz, then reading, hearing and writing the words', () => {
+      for (const lesson of lessons.lessonsOfUnit('h0')) {
+        const steps = builder.buildLesson(lesson);
+        const kinds = steps.map((s) => s.kind);
+        expect(kinds.slice(0, lesson.letters!.length)).toEqual(lesson.letters!.map(() => 'letter-learn'));
+        expect(kinds).not.toContain('recall');
+        expect(kinds.filter((k) => k === 'read-word')).toHaveLength(4);
+        expect(kinds.filter((k) => k === 'write')).toHaveLength(2);
+        expect(steps.length).toBeLessThanOrEqual(21);
+        for (const s of steps) {
+          if (s.kind === 'letter-sound') {
+            const target = alefbet.getLetter(s.letterId)!;
+            const sounds = s.optionIds.map((id) => alefbet.getLetter(id)!.sound);
+            expect(s.optionIds).toHaveLength(4);
+            expect(new Set(sounds).size).toBe(4);
+            for (const l of ['pl', 'cnr'] as const) expect(new Set(sounds.map((x) => respellHebrewLatin(x, l))).size).toBe(4);
+            expect(sounds.filter((x) => x === target.sound)).toHaveLength(1);
+            expect(s.optionIds.every((id) => alefbet.getLetter(id)!.kind === target.kind)).toBe(true);
+          }
+          if (s.kind === 'read-word') {
+            const right = data.getItem(s.itemId)!.phoneticHebrew;
+            expect(s.options).toHaveLength(4);
+            expect(s.options.filter((o) => o === right)).toHaveLength(1);
+            for (const l of ['pl', 'cnr'] as const) expect(new Set(s.options.map((o) => respellHebrewLatin(o.replace(/[·[\]]/g, ''), l))).size).toBe(4);
+          }
+          if (s.kind === 'hear-word') {
+            expect(s.optionIds).toContain(s.itemId);
+            expect(new Set(s.optionIds).size).toBe(4);
+          }
+        }
+      }
+      expect(builder.misreadings('[dag]')).toEqual(expect.arrayContaining(['[tag]', '[dog]', '[dak]']));
+      expect(builder.misreadings('[tov]')).toContain('[tob]');
+    });
+
+    it('names letters and their sounds in the learner\u2019s letters', () => {
+      const name = (id: string) => toEnglishPhonetic(alefbet.getLetter(id)!.nameHe!).replace(/[·[\]]/g, '');
+      expect(name('alef')).toBe('alef');
+      expect(name('bet')).toBe('bet');
+      expect(name('shin')).toBe('shin');
+      expect(respellHebrewLatin(name('shin'), 'pl')).toBe('szin');
+      expect(respellHebrewLatin(name('tsadi'), 'cnr')).toBe('cadi');
+      expect(respellHebrewLatin(name('vav'), 'pl')).toBe('waw');
+      const label = (id: string, lang: 'en' | 'pl' | 'cnr') =>
+        alefbet.soundLabel(alefbet.getLetter(id)!.sound, lang, (t, l) => (l === 'pl' || l === 'cnr' ? respellHebrewLatin(t, l) : t));
+      expect(label('alef', 'en')).toBe('silent');
+      expect(label('khaf', 'pl')).toBe('ch');
+      expect(label('khaf', 'cnr')).toBe('h');
+      expect(label('yud', 'pl')).toBe('j');
+      for (const l of alefbet.HE_LETTERS) for (const lang of ['en', 'pl', 'cnr'] as const) expect(l.tip[lang].length, l.id).toBeGreaterThan(1);
+    });
+
+    it('records the letter names', () => {
+      const keys = new Set(catalog.buildClipCatalog().map((c) => c.key));
+      for (const l of alefbet.HE_LETTERS) if (l.nameHe) expect(keys.has(nfc(`he-f|n|${l.nameHe}`)), l.id).toBe(true);
+      expect(keys.has(nfc('he-f|s|אַבָּא'))).toBe(true);
+    });
   });
 });

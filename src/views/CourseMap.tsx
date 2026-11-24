@@ -3,6 +3,7 @@ import { COURSE_INFO as C } from '../lib/course';
 import { Fragment, useState, type ReactNode } from 'react';
 import {
   AudioLines,
+  BookA,
   BookOpen,
   Bus,
   Plane,
@@ -35,6 +36,8 @@ import { UNITS, getItem } from '../data';
 import { LESSONS, lessonsOfUnit } from '../data/lessons';
 import { itemText, unitText, type UnitColor } from '../data/types';
 import { PolishSyllables } from '../components/PolishSyllables';
+import { AlefBetChart } from '../components/AlefBet';
+import { ALEFBET_UNIT, getLetter } from '../data/he/alphabet';
 import { LOCALES, useLang } from '../i18n/LangContext';
 import { useProgress } from '../state/ProgressContext';
 
@@ -71,6 +74,7 @@ const UNIT_ICON: Record<string, LucideIcon> = {
   e4: Compass,
   e5: ShoppingBag,
   e6: Plane,
+  h0: BookA,
   h1: AudioLines,
   h2: Smile,
   h3: Coffee,
@@ -393,11 +397,14 @@ function UnitDetail({
           const done = !!state.lessons[lesson.id];
           const unlocked = idx === 0 || !!state.lessons[lessons[idx - 1].id];
           const isNext = nextLesson?.id === lesson.id;
-          const preview = lesson.itemIds
-            .slice(0, 3)
-            .map((id) => getItem(id)?.polish)
-            .filter(Boolean)
-            .join(' · ');
+          // Alef-Bet lessons preview their new letters; the others their first phrases.
+          const preview = lesson.letters
+            ? lesson.letters.map((id) => getLetter(id)?.glyph).join(' · ')
+            : lesson.itemIds
+                .slice(0, 3)
+                .map((id) => getItem(id)?.polish)
+                .filter(Boolean)
+                .join(' · ');
           return (
             <li key={lesson.id} className={`flex items-center gap-3 rounded-2xl p-2.5 ring-1 ${isNext ? 'bg-brand-50 ring-brand-200' : 'bg-slate-50 ring-slate-200/70'}`}>
               <button
@@ -416,7 +423,7 @@ function UnitDetail({
                   {tr('שיעור', 'Lesson')} {lesson.number}
                   {done && <span className="font-medium text-emerald-700"> · {state.lessons[lesson.id].bestAccuracy}%</span>}
                 </span>
-                <span className="polish block truncate text-xs text-slate-500" dir="ltr">
+                <span className={`polish block truncate text-slate-500 ${lesson.letters ? 'text-base' : 'text-xs'}`} dir="ltr">
                   {preview}
                 </span>
               </span>
@@ -429,6 +436,8 @@ function UnitDetail({
           );
         })}
       </ol>
+
+      {unit.id === ALEFBET_UNIT && <AlefBetChart />}
 
       <div>
         <h4 className="mb-2 text-sm font-bold text-slate-700">{tr('כל הפריטים ביחידה', 'All items in this unit')}</h4>

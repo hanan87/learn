@@ -5,6 +5,7 @@ import { COURSE_INFO } from './course';
 import { COACH } from '../data/coach';
 import { ROLEPLAYS } from '../data/dialogues';
 import { CONTRAST_GROUPS } from '../data/minimalPairs';
+import { HE_LETTERS } from '../data/he/alphabet';
 import { speakerVoice, STORIES, wordKey } from '../data/stories';
 import { personalize, type LearnerProfile } from './personalize';
 import { clipKey, clipText, type ClipSpeed, type ClipVoice } from './voiceClips';
@@ -90,6 +91,14 @@ export function buildClipCatalog(): ClipRequest[] {
     }
   } finally {
     applyProfile(saved);
+  }
+
+  // Alef-Bet: the teacher says each letter's name and its example word.
+  if (COURSE_INFO.id === 'he') {
+    for (const l of HE_LETTERS) {
+      if (l.nameHe) addPolish(l.nameHe);
+      addPolish(l.example);
+    }
   }
 
   for (const g of CONTRAST_GROUPS) {

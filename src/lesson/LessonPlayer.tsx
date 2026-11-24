@@ -9,6 +9,7 @@ import { useMic } from '../state/MicContext';
 import { XP, useProgress } from '../state/ProgressContext';
 import { STAGE_LABELS, buildLesson, buildReinforcementLesson, type LessonStep } from './buildLesson';
 import { LearnStep } from './steps/LearnStep';
+import { HearWordStep, LetterLearnStep, LetterSoundStep, ReadWordStep } from './steps/LetterSteps';
 import { ListenMeaningStep, ListenPairStep } from './steps/ListenSteps';
 import { AssembleStep, ChooseSpellingStep, FillBlankStep } from './steps/ReadingSteps';
 import { RecallStep } from './steps/RecallStep';
@@ -85,7 +86,7 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
     (r: StepResult) => {
       if (!step) return;
       // Learn cards are ungraded: their own button already means "continue".
-      if (step.kind === 'learn') {
+      if (step.kind === 'learn' || step.kind === 'letter-learn') {
         advanceRef.current();
         return;
       }
@@ -259,5 +260,13 @@ function renderStep(step: LessonStep, answered: boolean, onAnswered: (r: StepRes
       return <WritingStep step={step} answered={answered} onAnswered={onAnswered} />;
     case 'recall':
       return <RecallStep step={step} answered={answered} onAnswered={onAnswered} />;
+    case 'letter-learn':
+      return <LetterLearnStep step={step} answered={answered} onAnswered={onAnswered} />;
+    case 'letter-sound':
+      return <LetterSoundStep step={step} answered={answered} onAnswered={onAnswered} />;
+    case 'read-word':
+      return <ReadWordStep step={step} answered={answered} onAnswered={onAnswered} />;
+    case 'hear-word':
+      return <HearWordStep step={step} answered={answered} onAnswered={onAnswered} />;
   }
 }

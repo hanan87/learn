@@ -60,7 +60,7 @@ test.describe('Hebrew course', () => {
     await page.getByRole('radio', { name: /^Male/ }).click();
     await page.getByRole('button', { name: "Let's start" }).click();
 
-    await expect(page.getByTestId('continue-lesson')).toContainText('First Words');
+    await expect(page.getByTestId('continue-lesson')).toContainText('Alef-Bet');
     await expect(page).toHaveTitle('Hebrew from Zero');
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
     await expect(page.locator('html')).toHaveAttribute('data-course', 'he');
@@ -109,6 +109,70 @@ test.describe('Hebrew course', () => {
 
     await page.goto('/#/lesson/h1-L1');
     await expect(page.locator('[lang="he"]').first()).toBeVisible();
+    expectNoErrors(errors);
+  });
+
+  test('Alef-Bet: letters first, then reading, hearing and writing real words', async ({ page }) => {
+    const errors = await openApp(page, { lang: 'en', course: 'he', hash: '#/map' });
+    await expect(page.getByTestId('continue-lesson')).toContainText('Alef-Bet');
+    await page.getByTestId('continue-lesson').click();
+    await expect(page).toHaveURL(/#\/lesson\/h0-L1$/);
+
+    // The first card: alef, silent, shown in a word with the letter highlighted.
+    const card = page.getByTestId('letter-card');
+    await expect(card.locator('p[lang="he"]')).toHaveText('א');
+    await expect(card).toContainText('Alef');
+    await expect(page.getByTestId('letter-sound')).toHaveText('silent');
+    await expect(page.getByTestId('letter-example')).toContainText('Dad');
+
+    const words: Record<string, string> = { Fish: 'דג', Roof: 'גג', '(he) comes': 'בא', Dad: 'אבא' };
+    const seen = new Set<string>();
+    let wrongOnce = false;
+    for (let i = 0; i < 40; i++) {
+      if (await page.getByText('Lesson complete!').isVisible()) break;
+      const stage = (await page.locator('header p').first().textContent()) ?? '';
+      seen.add(stage.replace(' · retry', ''));
+      if (/New letter|Learn & shadow/.test(stage)) {
+        await page.getByRole('button', { name: 'Got it, continue' }).click();
+        continue;
+      }
+      if (/Writing/.test(stage)) {
+        const meaning = (await page.locator('p.text-xl').first().textContent()) ?? '';
+        // Typed on the on-screen Hebrew keyboard, without vowel signs.
+        for (const ch of words[meaning]) await page.getByRole('button', { name: ch, exact: true }).click();
+        await page.getByRole('button', { name: 'Check' }).click();
+        await expect(page.getByText('Perfect spelling!')).toBeVisible();
+      } else if (!wrongOnce && /Letter sounds/.test(stage)) {
+        // One wrong answer: it is explained and comes back at the end.
+        wrongOnce = true;
+        await page.locator('button:not([data-correct]):not([aria-label])').filter({ hasNotText: /Continue/ }).first().click();
+        await expect(page.getByText('Not quite')).toBeVisible();
+      } else {
+        await page.locator('[data-correct]').first().click();
+      }
+      await page.getByRole('button', { name: /^(Continue|Finish \(\+)/ }).click();
+    }
+    await expect(page.getByText('Lesson complete!')).toBeVisible();
+    expect([...seen]).toEqual(expect.arrayContaining(['New letter', 'Letter sounds', 'Learn & shadow', 'Read the word', 'Listen and find', 'Writing']));
+    const p = await progress(page, 'he');
+    expect(p.lessons['h0-L1']).toBeTruthy();
+    expect(p.items['h0-02'].learned).toBe(true);
+
+    // The map: lesson 2 is open, its letters previewed; the chart lists every letter in Polish letters too.
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: /Unit 1:/ }).click();
+    const detail = page.getByTestId('unit-detail');
+    await expect(detail.getByRole('button', { name: 'Lesson 2' })).toBeEnabled();
+    await expect(detail).toContainText('ה · ל · מ ם');
+    await expect(page.getByTestId('alefbet-chart').locator('button')).toHaveCount(32);
+    await expect(page.getByRole('button', { name: 'שׁ – sh' })).toBeVisible();
+    await page.goto('/#/map/settings');
+    await page.getByTestId('lang-pl').click();
+    await page.goto('/#/lesson/h0-L3');
+    await page.getByRole('button', { name: 'Jasne, dalej' }).click();
+    await page.getByRole('button', { name: 'Jasne, dalej' }).click();
+    await expect(page.getByTestId('letter-card')).toContainText('Szin');
+    await expect(page.getByTestId('letter-sound')).toHaveText('sz');
     expectNoErrors(errors);
   });
 

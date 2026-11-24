@@ -13,7 +13,7 @@ import { useProgress } from '../../state/ProgressContext';
 import type { LessonStep } from '../buildLesson';
 import type { StepProps } from '../types';
 
-function ListenButtons({ text }: { text: string }) {
+export function ListenButtons({ text }: { text: string }) {
   const { tr } = useLang();
   useEffect(() => {
     const t = setTimeout(() => speak(text), 400);
