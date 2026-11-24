@@ -14,6 +14,7 @@ import { courseItemByText, translateFromCourse, translateToCourse, TranslateErro
 import { speak, stopSpeaking } from '../lib/tts';
 import { useProgress } from '../state/ProgressContext';
 import { respell } from '../lib/latinRespell';
+import { addNiqqud } from '../lib/nakdan';
 
 /**
  * "How do I say…?": the learner types a word or sentence in their own language (or in the course
@@ -27,6 +28,8 @@ interface Result {
   meaning: string;
   source: TranslateSource | 'typed' | 'edited';
   itemId?: string;
+  /** Hebrew course: vowel signs were added by Dicta's Nakdan. */
+  vowels?: 'dicta';
 }
 
 type Mode = 'native' | 'target';
@@ -94,6 +97,13 @@ export function SayIt({ onOpenItem }: { onOpenItem: (id: string) => void }) {
     remember(r);
   };
 
+  /** Hebrew course: put vowel signs on words the course does not know, so they are read exactly. */
+  const withNiqqud = async (r: Result): Promise<Result> => {
+    if (r.itemId) return r;
+    const vowelled = await addNiqqud(r.target);
+    return vowelled ? { ...r, target: vowelled, vowels: 'dicta' } : r;
+  };
+
   const submit = async () => {
     const text = input.trim();
     if (!text || busy) return;
@@ -103,7 +113,7 @@ export function SayIt({ onOpenItem }: { onOpenItem: (id: string) => void }) {
     try {
       if (mode === 'native') {
         const t = await translateToCourse(text, lang);
-        show({ target: t.text, meaning: text, source: t.source, itemId: t.itemId });
+        show(await withNiqqud({ target: t.text, meaning: text, source: t.source, itemId: t.itemId }));
       } else {
         // The learner typed the phrase itself: no translation needed to teach it; the meaning is a bonus.
         const known = courseItemByText(text);
@@ -113,7 +123,7 @@ export function SayIt({ onOpenItem }: { onOpenItem: (id: string) => void }) {
         } catch {
           meaning = '';
         }
-        show({ target: known?.polish ?? text, meaning, source: known ? 'course' : 'typed', itemId: known?.id });
+        show(await withNiqqud({ target: known?.polish ?? text, meaning, source: known ? 'course' : 'typed', itemId: known?.id }));
       }
     } catch (e) {
       setError(e instanceof TranslateError ? e.reason : 'failed');
@@ -218,7 +228,14 @@ export function SayIt({ onOpenItem }: { onOpenItem: (id: string) => void }) {
           result={result}
           autoPlay={autoPlay}
           onOpenItem={onOpenItem}
-          onEdit={(target) => show({ ...result, target, source: 'edited', itemId: undefined })}
+          onEdit={async (target) => {
+            setBusy(true);
+            try {
+              show(await withNiqqud({ ...result, target, source: 'edited', itemId: undefined, vowels: undefined }));
+            } finally {
+              setBusy(false);
+            }
+          }}
         />
       )}
 
@@ -304,6 +321,16 @@ function SayResult({
         <p className={`text-xs font-semibold ${result.source === 'course' ? 'text-emerald-700' : 'text-slate-500'}`} data-testid="say-source">
           {sourceNote[result.source]}
         </p>
+        {result.vowels === 'dicta' && (
+          <p className="text-xs text-slate-500" data-testid="say-vowels">
+            {tr('הניקוד נוסף אוטומטית (הנקדן של דיקטה) – ייתכנו טעויות', 'Vowel signs added automatically (Dicta’s Nakdan) – they can be wrong')}
+          </p>
+        )}
+        {COURSE === 'he' && phoneticEn.includes('~') && (
+          <p className="text-xs text-amber-700" data-testid="say-approx">
+            {tr('מילים שאינן ברשימת המילים של הקורס מסומנות ב־~: ההגייה שלהן משוערת.', 'Words marked ~ are not in the course word list: their pronunciation is approximate.')}
+          </p>
+        )}
         {editing ? (
           <form
             className="space-y-2"

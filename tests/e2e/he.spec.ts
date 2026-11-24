@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { expectNoErrors, openApp, progress } from './helpers';
+import { expectNoErrors, NAKDAN, openApp, progress } from './helpers';
 
 /**
  * The Hebrew course for English, Polish and Montenegrin speakers: chosen on the welcome screen,
@@ -173,6 +173,57 @@ test.describe('Hebrew course', () => {
     await page.getByRole('button', { name: 'Jasne, dalej' }).click();
     await expect(page.getByTestId('letter-card')).toContainText('Szin');
     await expect(page.getByTestId('letter-sound')).toHaveText('sz');
+    expectNoErrors(errors);
+  });
+
+  test('How do I say…?: words the course does not know get Dicta’s niqqud', async ({ page }) => {
+    await page.route('https://api.mymemory.translated.net/**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'access-control-allow-origin': '*' },
+        body: JSON.stringify({
+          responseStatus: 200,
+          responseData: { translatedText: 'הכלב אוכל גלידה', match: 0.85 },
+          matches: [{ segment: 'The dog eats ice cream', translation: 'הכלב אוכל גלידה', match: 0.85, 'created-by': 'MT!' }],
+        }),
+      }),
+    );
+    const asked: string[] = [];
+    await page.route(NAKDAN, async (route) => {
+      asked.push(JSON.parse(route.request().postData() ?? '{}').data);
+      const word = (w: string, v: string) => ({ word: w, sep: false, options: [[v, []]] });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'access-control-allow-origin': '*' },
+        body: JSON.stringify([word('הכלב', 'הַ|כֶּלֶב'), { word: ' ', sep: true, options: [] }, word('אוכל', 'אוֹכֵל'), { word: ' ', sep: true, options: [] }, word('גלידה', 'גְּלִידָה')]),
+      });
+    });
+    const errors = await openApp(page, { lang: 'en', course: 'he', hash: '#/say', nakdan: true });
+    await page.getByTestId('say-input').fill('The dog eats ice cream');
+    await page.getByTestId('say-submit').click();
+    const result = page.getByTestId('say-result');
+    await expect(page.getByTestId('say-target')).toContainText('כֶּ');
+    await expect(page.getByTestId('say-vowels')).toContainText('Dicta');
+    await expect(page.getByTestId('say-approx')).toHaveCount(0);
+    await expect(result.locator('p[lang="en"]').first()).toHaveText(/ha-KE-lev\s+o-KHEL\s+gli-DA/);
+    expect(asked).toEqual(['הכלב אוכל גלידה']);
+
+    // Saved with its vowel signs.
+    await page.getByTestId('say-save').click();
+    expect((await progress(page, 'he')).customItems[0].polish).toBe('הַכֶּלֶב אוֹכֵל גְּלִידָה'.normalize('NFC'));
+    expectNoErrors(errors);
+  });
+
+  test('How do I say…?: without Dicta, unknown words are marked approximate', async ({ page }) => {
+    const errors = await openApp(page, { lang: 'pl', course: 'he', hash: '#/say' });
+    await page.getByTestId('say-mode-target').click();
+    await page.getByTestId('say-input').fill('מזלג');
+    await page.getByTestId('say-submit').click();
+    await expect(page.getByTestId('say-approx')).toContainText('przybliżona');
+    await expect(page.getByTestId('say-vowels')).toHaveCount(0);
+    await expect(page.getByTestId('say-result').locator('p[lang="pl"]').first()).toContainText('~');
     expectNoErrors(errors);
   });
 

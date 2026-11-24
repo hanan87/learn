@@ -122,6 +122,9 @@ const ROWS: Row[] = [
   ['How do you read this word?', 'Jak się czyta to słowo?', 'Kako se čita ova riječ?'],
   ['The letters', 'Litery', 'Slova'],
   ['Tap a letter to hear it in a word.', 'Dotknij litery, żeby usłyszeć ją w słowie.', 'Dodirnite slovo da ga čujete u riječi.'],
+  // --- Automatic niqqud (Hebrew course, "How do I say…?") ---
+  ['Vowel signs added automatically (Dicta’s Nakdan) – they can be wrong', 'Znaki samogłosek dodane automatycznie (Nakdan, Dicta) – mogą zawierać błędy', 'Znakovi za samoglasnike dodati su automatski (Nakdan, Dicta) – mogu biti pogrešni'],
+  ['Words marked ~ are not in the course word list: their pronunciation is approximate.', 'Słowa oznaczone ~ nie należą do słownika kursu: ich wymowa jest przybliżona.', 'Riječi označene sa ~ nisu u rječniku kursa: njihov izgovor je približan.'],
   ['Not enough history yet for a reinforcement session.', 'Za mało historii, żeby ułożyć sesję utrwalającą.', 'Još nema dovoljno istorije za sesiju utvrđivanja.'],
   ['Lesson not found.', 'Nie znaleziono lekcji.', 'Lekcija nije pronađena.'],
   ['Back', 'Wstecz', 'Nazad'],

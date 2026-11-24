@@ -209,6 +209,8 @@ const plain = (notation: string) => notation.replace(/[·[\]]/g, '');
 const LEXICON = new Map<string, Entry>();
 /** The same words without niqqud (the first entry wins: רוצה → רוֹצֶה). */
 const BARE = new Map<string, Entry>();
+/** Words that read differently with different vowels (אוכל: o·KHEL "eats", O·khel "food"). */
+const AMBIGUOUS = new Set<string>();
 for (const line of HE_LEXICON.trim().split('\n')) {
   const [heb, override] = line.split('=').map((s) => s.trim());
   if (!heb) continue;
@@ -217,12 +219,26 @@ for (const line of HE_LEXICON.trim().split('\n')) {
   const key = plain(syl);
   LEXICON.set(key, entry);
   const bare = stripNiqqud(key);
-  if (!BARE.has(bare)) BARE.set(bare, entry);
+  const first = BARE.get(bare);
+  if (!first) BARE.set(bare, entry);
+  else if (first.lat !== entry.lat) AMBIGUOUS.add(bare);
 }
 
 /** True when the vocalized word has a hand-written entry (used by the data tests). */
 export function inLexicon(word: string): boolean {
   return LEXICON.has(word.normalize('NFC'));
+}
+
+/**
+ * True when a word's reading is certain: listed in the lexicon (also without niqqud, unless it reads
+ * two ways) or written with vowel signs. Other words are guessed – split into prefixes and a lexicon
+ * word (which can be wrong: כלב is "dog", not כְּ + לֵב) or given a "~" reading – and are worth
+ * vocalizing in context.
+ */
+export function isKnownWord(core: string): boolean {
+  if (!core || !HEB.test(core)) return true;
+  const key = core.normalize('NFC');
+  return LEXICON.has(key) || hasNiqqud(key) || (BARE.has(key) && !AMBIGUOUS.has(key));
 }
 
 /** Every lexicon entry (for the data tests). */
@@ -250,9 +266,30 @@ function ruleVocalized(word: string): Entry {
     const firstNucleus = nucleus.findIndex(Boolean);
     if (firstNucleus > 0) starts.splice(1, 0, 1);
   }
-  const sylls = starts.map((s, k) => us.slice(s, starts[k + 1] ?? us.length).map((u) => u.raw).join(''));
-  const marked = sylls.map((s, k) => (k === sylls.length - 1 ? `[${s}]` : s)).join('·');
+  const groups = starts.map((s, k) => us.slice(s, starts[k + 1] ?? us.length));
+  const stress = stressIndex(groups);
+  const marked = groups.map((g, k) => (k === stress ? `[${g.map((u) => u.raw).join('')}]` : g.map((u) => u.raw).join(''))).join('·');
   return { syl: marked.normalize('NFC'), lat: latinOf(marked.normalize('NFC')) };
+}
+
+/**
+ * Hebrew stresses the last syllable, except segolates – a closed last syllable with segol (יֶ·לֶד,
+ * מֶ·לֶךְ, מַחְ·בֶּ·רֶת) – and -ayim / -ayit endings (בַּ·יִת): those stress the one before.
+ */
+function stressIndex(groups: U[][]): number {
+  const n = groups.length;
+  if (n < 2) return n - 1;
+  const last = groups[n - 1];
+  const prev = groups[n - 2];
+  if (!prev.some((u) => fullVowel(u) || isVowelVav(u))) return n - 1;
+  const vi = last.findIndex((u) => fullVowel(u));
+  if (vi >= 0 && last[vi].v === SEGOL) {
+    // A silent ה or א at the end does not close the syllable (יָ·פֶה stays final).
+    const after = last.slice(vi + 1).filter((u, k, a) => !(k === a.length - 1 && !u.v && (u.l === 'ה' || u.l === 'א')));
+    if (after.length) return n - 2;
+  }
+  if (last[0]?.l === 'י' && last[0].v === HIRIQ && prev.some((u) => u.v === PATAH || u.v === QAMATS)) return n - 2;
+  return n - 1;
 }
 
 /** Rough transcription of an unvocalized word that is not in the lexicon, marked with "~". */

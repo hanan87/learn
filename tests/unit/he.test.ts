@@ -57,6 +57,14 @@ describe('Hebrew phonetics', () => {
   it('splits vocalized words outside the lexicon by rule', () => {
     expect(inLexicon('מִסְעָדָה')).toBe(false);
     expect(lat('מִסְעָדָה')).toBe('mis·a·[da]');
+    // Segolates and -ayim / -ayit stress the syllable before the last.
+    expect(lat('כֶּלֶב')).toBe('[ke]·lev');
+    expect(lat('וְהַכֶּלֶב')).toBe('ve·ha·[ke]·lev');
+    expect(lat('מַחְבֶּרֶת')).toBe('makh·[be]·ret');
+    expect(lat('שֶׁמֶשׁ')).toBe('[she]·mesh');
+    expect(lat('צָהֳרַיִם')).toMatch(/\[ra\]·yim$/);
+    // A final silent ה leaves the syllable open: stress stays at the end.
+    expect(lat('מוֹרֶה')).toBe('mo·[re]');
   });
 
   it('finds the hard sounds and builds tips in the learner’s letters', () => {
@@ -150,11 +158,12 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
   let respell: typeof import('../../src/lib/latinRespell');
   let alefbet: typeof import('../../src/data/he/alphabet');
   let builder: typeof import('../../src/lesson/buildLesson');
+  let nakdan: typeof import('../../src/lib/nakdan');
 
   beforeAll(async () => {
     vi.stubEnv('LEARN_COURSE', 'he');
     vi.resetModules();
-    [data, roleplays, pairs, stories, sounds, course, catalog, lessons, types, phonetics, respell, alefbet, builder] = await Promise.all([
+    [data, roleplays, pairs, stories, sounds, course, catalog, lessons, types, phonetics, respell, alefbet, builder, nakdan] = await Promise.all([
       import('../../src/data'),
       import('../../src/data/dialogues'),
       import('../../src/data/minimalPairs'),
@@ -168,6 +177,7 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
       import('../../src/lib/latinRespell'),
       import('../../src/data/he/alphabet'),
       import('../../src/lesson/buildLesson'),
+      import('../../src/lib/nakdan'),
     ]);
   });
   afterAll(() => {
@@ -294,6 +304,61 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
     // No Hebrew interface: nothing is read by the Hebrew meaning voice.
     expect(list.some((c) => c.voice === 'he')).toBe(false);
     expect(list.some((c) => c.voice === 'pl-m' || c.voice === 'cnr-m')).toBe(false);
+  });
+
+  describe('Automatic niqqud (Dicta Nakdan)', () => {
+    /** Dicta's answer for a phrase: words with their best option first, separators in between. */
+    const answer = (...parts: (string | [string, string])[]): import('../../src/lib/nakdan').NakdanToken[] =>
+      parts.map((p) => (typeof p === 'string' ? { word: p, sep: true, options: [] } : { word: p[0], sep: false, options: [[p[1], []], ['x', []]] }));
+
+    it('asks only when a word would be guessed', () => {
+      expect(nakdan.needsNiqqud('שלום')).toBe(false);
+      expect(nakdan.needsNiqqud('איפה תחנה?')).toBe(false);
+      // A split into prefixes is a guess too: כלב is "dog", not כְּ + לֵב.
+      expect(nakdan.needsNiqqud('כלב')).toBe(true);
+      expect(nakdan.needsNiqqud('איפה הכלב?')).toBe(true);
+      // So is a word that reads two ways: אוכל is "eats" (o·KHEL) or "food" (O·khel).
+      expect(nakdan.needsNiqqud('אוכל')).toBe(true);
+      expect(nakdan.needsNiqqud('שָׁלוֹם כֶּלֶב')).toBe(false);
+      expect(nakdan.needsNiqqud('הכלב שלי')).toBe(true);
+      expect(nakdan.needsNiqqud('Hello')).toBe(false);
+    });
+
+    it('puts vowel signs on unknown words only, keeping letters, punctuation and known words', () => {
+      const tokens = answer(['הכלב', 'הַ|כֶּלֶב'], ' ', ['שלום', 'שָׁלוֹם'], ', ', ['אוכל', 'אוֹכֵל'], ' ', ['גלידה', 'גְּלִידָה'], '!');
+      const out = nakdan.applyNakdan('הכלב שלום, אוכל גלידה!', tokens);
+      // אוכל reads two ways (eats / food): Dicta's reading in context wins; שלום is certain and stays.
+      expect(out).toBe(nfc('הַכֶּלֶב שלום, אוֹכֵל גְּלִידָה!'));
+      expect(lat(out!)).toBe('ha·[ke]·lev sha·[lom] o·[khel] gli·[da]');
+      // A "vocalization" that changes letters is ignored.
+      expect(nakdan.applyNakdan('מסעדה', answer(['מסעדה', 'מִסְעָדוֹת']))).toBeNull();
+      expect(nakdan.applyNakdan('שלום', answer(['שלום', 'שָׁלוֹם']))).toBeNull();
+      // Quotation marks around a word stay outside it.
+      expect(nakdan.applyNakdan('"גלידה"', answer('"', ['גלידה', 'גְּלִידָה'], '"'))).toBe(nfc('"גְּלִידָה"'));
+    });
+
+    it('calls Dicta once per phrase, caches the answer and pauses after a failure', async () => {
+      nakdan.resetNakdan();
+      const ok = vi.fn(async (_url: unknown, init?: RequestInit) => {
+        const body = JSON.parse(String(init?.body));
+        expect(body.task).toBe('nakdan');
+        expect(body.data).toBe('הכלב רץ');
+        return new Response(JSON.stringify(answer(['הכלב', 'הַ|כֶּלֶב'], ' ', ['רץ', 'רָץ'])), { status: 200 });
+      });
+      expect(await nakdan.addNiqqud('הכלב רץ', ok as unknown as typeof fetch)).toBe(nfc('הַכֶּלֶב רָץ'));
+      expect(await nakdan.addNiqqud('הכלב רץ', ok as unknown as typeof fetch)).toBe(nfc('הַכֶּלֶב רָץ'));
+      expect(ok).toHaveBeenCalledTimes(1);
+      expect(await nakdan.addNiqqud('שלום', ok as unknown as typeof fetch)).toBeNull();
+      expect(ok).toHaveBeenCalledTimes(1);
+
+      const down = vi.fn(async () => {
+        throw new TypeError('Failed to fetch');
+      });
+      expect(await nakdan.addNiqqud('החתול ישן', down as unknown as typeof fetch)).toBeNull();
+      expect(await nakdan.addNiqqud('הציפור שרה', down as unknown as typeof fetch)).toBeNull();
+      expect(down).toHaveBeenCalledTimes(1);
+      nakdan.resetNakdan();
+    });
   });
 
   describe('Alef-Bet', () => {

@@ -6,13 +6,17 @@ const progressKey = (course?: Course) => (course && course !== 'pl' ? `polish-le
 
 /** The app's free voice server (src/lib/cloudVoice FREE_VOICE_URL). */
 export const FREE_VOICE = 'https://learn-voice-ten.vercel.app/**';
+/** Dicta's Nakdan, which adds niqqud to unknown Hebrew (src/lib/nakdan NAKDAN_URL). */
+export const NAKDAN = 'https://nakdan-2-0.loadbalancer.dicta.org.il/**';
 
 export async function openApp(
   page: Page,
-  opts: { lang?: 'he' | 'en' | 'pl' | 'cnr'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown; course?: Course; freeVoice?: boolean } = {},
+  opts: { lang?: 'he' | 'en' | 'pl' | 'cnr'; theme?: 'light' | 'dark'; hash?: string; progress?: unknown; course?: Course; freeVoice?: boolean; nakdan?: boolean } = {},
 ) {
   // Tests never reach the real voice server: unrecorded phrases use the device voice unless a test mocks it.
   if (!opts.freeVoice) await page.route(FREE_VOICE, (r) => r.abort());
+  // Nor Dicta's Nakdan, unless a test mocks it.
+  if (!opts.nakdan) await page.route(NAKDAN, (r) => r.abort());
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => {
