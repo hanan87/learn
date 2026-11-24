@@ -31,15 +31,19 @@ export function letterTip(letter: HeLetter, lang: Lang): string {
   return letter.tip[lang === 'pl' || lang === 'cnr' ? lang : 'en'];
 }
 
-/** A tip with its Hebrew letters set larger, so small vowel dots stay readable. */
-export function TipText({ text }: { text: string }) {
+/**
+ * A tip with its Hebrew letters set larger, so small vowel dots stay readable. Each Hebrew phrase is
+ * its own right-to-left island, so punctuation between two Hebrew words keeps the sentence's order
+ * ("בַּ: בַּבּוֹקֶר" does not turn into "בַּבּוֹקֶר :בַּ").
+ */
+export function TipText({ text, hebrewClassName = 'text-slate-900' }: { text: string; hebrewClassName?: string }) {
   return (
     <>
-      {text.split(/([֐-׿]+)/).map((part, i) =>
+      {text.split(/([\u0590-\u05FF]+(?:\s+[\u0590-\u05FF]+)*)/).map((part, i) =>
         i % 2 ? (
-          <span key={i} lang="he" className="polish px-0.5 text-[1.35em] leading-none font-semibold text-slate-900">
+          <bdi key={i} dir="rtl" lang="he" className={`polish px-0.5 text-[1.35em] leading-none font-semibold ${hebrewClassName}`}>
             {part}
-          </span>
+          </bdi>
         ) : (
           part
         ),

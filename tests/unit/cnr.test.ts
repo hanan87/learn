@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { checkStories } from './storyChecks';
 import {
   detectSounds,
   renderNotation,
@@ -135,10 +136,22 @@ describe('Montenegrin course data (LEARN_COURSE=cnr)', () => {
       expect(notationToPlain(p.a.syllablesPolish)).toBe(p.a.polish);
       expect(notationToPlain(p.b.syllablesPolish)).toBe(p.b.polish);
     }
-    expect(stories.STORIES).toEqual([]);
+    expect(stories.STORIES.map((s) => s.id)).toEqual(['polako', 'hladno-more', 'rakija-za-dorucak', 'macke-u-kotoru']);
     expect(Object.keys(sounds.SOUND_INFO)).toContain('č');
     expect(Object.keys(sounds.SOUND_INFO)).not.toContain('ł');
     expect(data.PHONETIC_LEGEND[0].pl).toBe('č');
+  });
+
+  it('has 4 Montenegrin stories, explained in Hebrew and English, read in both voices', () => {
+    checkStories(stories, ['he', 'en']);
+    const keys = new Set(catalog.buildClipCatalog().map((c) => c.key));
+    expect(keys.has('cnr-m|n|Polako, polako. Prvo kafa.')).toBe(true);
+    expect(keys.has('cnr-f|n|Ovo je Kotor. Ovdje ima mnogo mačaka.')).toBe(true);
+    expect(keys.has('cnr-f|n|mačaka')).toBe(true);
+    // The word decoder: kafa → kafu, mačka → mač(a)ka.
+    const sea = stories.getStory('hladno-more')!;
+    expect(stories.lookupWord(sea, 'kafu.')).toMatchObject({ base: 'kafa' });
+    expect(stories.wordParts('kafa', 'kafu')).toEqual({ base: ['kaf', 'a', ''], form: ['kaf', 'u', ''] });
   });
 
   it('explains Montenegrin diacritic mistakes in writing', () => {

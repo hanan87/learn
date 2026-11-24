@@ -19,7 +19,7 @@ Live: https://hanan87.github.io/learn/
 - Stressed-syllable highlighting, articulation tips, backchaining (units 5–8 hand-checked syllables and transcriptions)
 - Speaker gender + first name: gendered phrases (Zgubiłem / Zgubiłam, gotowy / gotowa, Chciałbym / Chciałabym) and roleplays adapt, with a note showing the other form
 - Hands-free audio mode (driving / walking): meaning → slow → normal → you repeat, auto-scored, Wake Lock keeps the screen on
-- 4 mini stories with tap-to-inspect words, an ending decoder (kawa → kawę) and comprehension questions
+- 4 mini stories in every course with tap-to-inspect words, a word decoder (Polish kawa → kawę, English lose → lost, Hebrew prefixes בּוֹקֶר → בַּבּוֹקֶר) and comprehension questions
 - 60-second Speed Blitz with combos and a saved personal record; optional haptic feedback
 - Speech engine: Polish TTS (normal / 0.6× / backchaining), recording + speech recognition, voice comparison, Levenshtein scoring
 - Natural neural voices (Azure AI Speech): pre-recorded clips for all course content (`npm run voice`), plus an optional live cloud voice for everything else, including free-typed "How do I say…?" phrases – the learner stores their own free Azure key on the device (Settings → Teacher voice); it never enters the site, the repository or a backup

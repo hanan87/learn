@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { checkStories } from './storyChecks';
 import { autoBackchain, autoTip, detectSounds, inLexicon, lexiconEntries, stripNiqqud, toEnglishPhonetic, toSyllableNotation } from '../../src/lib/hePhonetics';
 import { respellHebrewLatin } from '../../src/lib/latinRespell';
 import { notationToPlain } from '../../src/lib/syllables';
@@ -193,6 +194,10 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
     const texts = data.ALL_ITEMS.flatMap((i) => [i.polish, i.genderAlt?.polish ?? '']);
     for (const r of roleplays.ROLEPLAYS) for (const t of r.turns) texts.push(t.line.polish, ...t.options.map((o) => o.polish));
     for (const g of pairs.CONTRAST_GROUPS) for (const p of g.pairs) texts.push(p.a.polish, p.b.polish);
+    for (const s of stories.STORIES) {
+      texts.push(s.titlePl, ...s.lines.map((l) => l.polish));
+      for (const q of s.questions) texts.push(q.q, ...q.options.map((o) => o.polish));
+    }
     return texts.flatMap(forms).filter(Boolean);
   }
 
@@ -206,9 +211,26 @@ describe('Hebrew course data (LEARN_COURSE=he)', () => {
     expect(data.UNITS.map((u) => u.order)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(data.ALL_ITEMS.length).toBeGreaterThanOrEqual(75);
     expect(lessons.LESSONS[0].id).toBe('h0-L1');
-    expect(stories.STORIES).toEqual([]);
+    expect(stories.STORIES.map((s) => s.id)).toEqual(['more-hummus', 'shabbat-bus', 'mom-calling', 'tel-aviv-taxi']);
     expect(Object.keys(sounds.SOUND_INFO).sort()).toEqual(['h', 'kh', 'r', 'ts']);
     expect(phonetics.toEnglishPhonetic('שָׁלוֹם')).toBe('sha·[lom]');
+  });
+
+  it('has 4 Hebrew stories, explained in English, Polish and Montenegrin, read by Hila and Avri', () => {
+    checkStories(stories, ['en', 'pl', 'cnr']);
+    const keys = new Set(catalog.buildClipCatalog().map((c) => c.key));
+    expect(keys.has('he-m|n|שָׁלוֹם! מָה תִּרְצִי?')).toBe(true);
+    expect(keys.has('he-f|n|חוּמוּס, בְּבַקָּשָׁה.')).toBe(true);
+    // Words keep their vowel signs, also at the end (לְךָ).
+    expect(keys.has('he-f|n|לְךָ')).toBe(true);
+    // Glossary keys are the letters without vowel signs; punctuation is dropped.
+    expect(stories.wordKey('בַּבּוֹקֶר.')).toBe('בבוקר');
+    expect(stories.cleanWord('לְךָ?')).toBe('לְךָ');
+    const bus = stories.getStory('shabbat-bus')!;
+    expect(stories.lookupWord(bus, 'בַּבּוֹקֶר.')).toMatchObject({ base: 'בּוֹקֶר' });
+    expect(stories.wordParts('בּוֹקֶר', 'בַּבּוֹקֶר')).toEqual({ base: ['', '', 'בּוֹקֶר'], form: ['', 'בַּ', 'בּוֹקֶר'] });
+    // Every story word has an exact transcription (no "~" guesses).
+    for (const s of stories.STORIES) for (const l of s.lines) expect(phonetics.toEnglishPhonetic(l.polish), l.polish).not.toMatch(/~/);
   });
 
   it('has a hand-checked entry for every word of the course', () => {

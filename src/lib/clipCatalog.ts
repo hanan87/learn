@@ -6,7 +6,7 @@ import { COACH } from '../data/coach';
 import { ROLEPLAYS } from '../data/dialogues';
 import { CONTRAST_GROUPS } from '../data/minimalPairs';
 import { HE_LETTERS } from '../data/he/alphabet';
-import { speakerVoice, STORIES, wordKey } from '../data/stories';
+import { cleanWord, speakerVoice, STORIES, wordKey } from '../data/stories';
 import { personalize, type LearnerProfile } from './personalize';
 import { clipKey, clipText, type ClipSpeed, type ClipVoice } from './voiceClips';
 
@@ -111,7 +111,8 @@ export function buildClipCatalog(): ClipRequest[] {
   for (const s of STORIES) {
     for (const line of s.lines) {
       addPolish(line.polish, speakerVoice(line.speaker) === 'm' ? M : F);
-      for (const w of line.polish.split(/\s+/)) if (wordKey(w)) addPolish(w.replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu, ''));
+      // Every word is tappable in the story, and the word bubble says it.
+      for (const w of line.polish.split(/\s+/)) if (wordKey(w)) addPolish(cleanWord(w));
     }
     for (const q of s.questions) {
       addPolish(q.q);

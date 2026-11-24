@@ -39,7 +39,9 @@ export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void })
       <section className="space-y-3" data-testid="stories">
         <h2 className="text-lg font-black">{tr('סיפורים קצרים', 'Mini stories')}</h2>
         <p className="text-sm text-slate-600">
-          {tr('דיאלוגים קצרים ומצחיקים. הקישו על כל מילה לתרגום ולפענוח הסיומת, וענו על 2 שאלות הבנה.', 'Short, funny dialogues. Tap any word for its meaning and ending decoder, then answer 2 questions.')}
+          {C.id === 'he'
+            ? tr('דיאלוגים קצרים ומצחיקים. הקישו על כל מילה לתרגום ולפענוח התחיליות והסיומות, וענו על 2 שאלות הבנה.', 'Short, funny dialogues. Tap any word for its meaning and word decoder, then answer 2 questions.')
+            : tr('דיאלוגים קצרים ומצחיקים. הקישו על כל מילה לתרגום ולפענוח הסיומת, וענו על 2 שאלות הבנה.', 'Short, funny dialogues. Tap any word for its meaning and ending decoder, then answer 2 questions.')}
         </p>
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {STORIES.map((s) => {
@@ -55,7 +57,7 @@ export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void })
                     <StoryIcon id={s.id} className="size-[18px]" />
                   </span>
                   <span className="text-sm leading-tight font-bold text-slate-900">{loc(s.title)}</span>
-                  <span className="polish text-xs text-slate-500" dir="ltr">
+                  <span className="polish text-xs text-slate-500" dir={C.dir}>
                     {s.titlePl}
                   </span>
                   {done && (

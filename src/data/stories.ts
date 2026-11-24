@@ -1,22 +1,27 @@
 import { COURSE } from '../lib/course';
+import type { Loc } from '../i18n/lang';
+import { CNR_COMMON, CNR_STORIES, CNR_VOICES } from './cnr/stories';
+import { EN_COMMON, EN_STORIES, EN_VOICES } from './en/stories';
+import { HE_COMMON, HE_STORIES, HE_VOICES } from './he/stories';
 
 /**
- * Mini stories: short, funny beginner dialogues (6–8 lines). Every word is tappable; the glossary
- * gives its meaning and, when the ending changed because of Polish grammar (kawa → kawę,
- * mleko → mlekiem), the dictionary form plus a short explanation of why.
- * Each story ends with two comprehension questions that award XP.
+ * Mini stories: short, funny beginner dialogues (6–8 lines), four in every course. Every word is
+ * tappable; the glossary gives its meaning and, when the word changed because of grammar (Polish
+ * kawa → kawę, English lose → lost, Hebrew יוֹם → הַיּוֹם), the dictionary form plus a short
+ * explanation of why. Each story ends with two comprehension questions that award XP.
+ *
+ * The Polish stories are below; the other courses keep theirs in data/<course>/stories. Field names
+ * follow the rest of the data (`polish`, `titlePl`): they hold the text in the course's language.
  */
 
-export interface Bi {
-  he: string;
-  en: string;
-}
+/** Text in the interface languages (Polish / Montenegrin only in the English and Hebrew courses). */
+export type Bi = Loc<string>;
 
 export interface GlossEntry {
   t: Bi;
-  /** Dictionary form, when the word in the text is inflected. */
+  /** Dictionary form, when the word in the text is inflected or carries a prefix. */
   base?: string;
-  /** Why the ending changed (or another short grammar hint). */
+  /** Why the word changed (or another short grammar hint). */
   note?: Bi;
 }
 
@@ -51,7 +56,7 @@ const L = (speaker: string, polish: string, he: string, en: string): StoryLine =
 const o = (polish: string, he: string, en: string, correct = false) => ({ polish, t: { he, en }, correct });
 
 /** Words shared by several stories. */
-const COMMON: Record<string, GlossEntry> = {
+const PL_COMMON: Record<string, GlossEntry> = {
   dzień: g('יום', 'day', undefined, 'Dzień dobry = יום טוב / שלום.', 'Dzień dobry = good day / hello.'),
   dobry: g('טוב', 'good'),
   nie: g('לא', 'no, not'),
@@ -240,7 +245,7 @@ const PL_STORIES: Story[] = [
 ];
 
 /** Voice for each story character: Marek reads the men, Zofia the women. */
-export const SPEAKER_VOICE: Record<string, 'f' | 'm'> = {
+const PL_VOICES: Record<string, 'f' | 'm'> = {
   Kelnerka: 'f',
   Tomek: 'm',
   Babcia: 'f',
@@ -251,16 +256,36 @@ export const SPEAKER_VOICE: Record<string, 'f' | 'm'> = {
   Ania: 'f',
 };
 
-/** Mini stories of the active course (the Montenegrin starter course has none yet). */
-export const STORIES: Story[] = COURSE === 'pl' ? PL_STORIES : [];
+const BY_COURSE = {
+  pl: { stories: PL_STORIES, common: PL_COMMON, voices: PL_VOICES },
+  cnr: { stories: CNR_STORIES, common: CNR_COMMON, voices: CNR_VOICES },
+  en: { stories: EN_STORIES, common: EN_COMMON, voices: EN_VOICES },
+  he: { stories: HE_STORIES, common: HE_COMMON, voices: HE_VOICES },
+}[COURSE];
+
+/** Mini stories of the active course. */
+export const STORIES: Story[] = BY_COURSE.stories;
+
+/** Voice of each character of the active course's stories (female when not listed). */
+export const SPEAKER_VOICE: Record<string, 'f' | 'm'> = BY_COURSE.voices;
+
+/** Words shared by several stories of the active course. */
+const COMMON: Record<string, GlossEntry> = BY_COURSE.common;
 
 export const speakerVoice = (speaker: string): 'f' | 'm' => SPEAKER_VOICE[speaker] ?? 'f';
 
-/** Lower-case word without surrounding punctuation – the glossary key. */
+/** Hebrew vowel signs and cantillation marks (U+0591–U+05C7). */
+const HEBREW_MARKS = /[\u0591-\u05C7]/g;
+
+/** Word without surrounding punctuation (Hebrew vowel signs stay) – what the word bubble shows and says. */
+export function cleanWord(token: string): string {
+  return token.normalize('NFC').replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu, '');
+}
+
+/** Lower-case word without surrounding punctuation – the glossary key. Hebrew keys are written without vowel signs. */
 export function wordKey(token: string): string {
-  return token
-    .toLocaleLowerCase('pl-PL')
-    .replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
+  const core = cleanWord(token).replace(/’/g, "'");
+  return (COURSE === 'he' ? core.replace(HEBREW_MARKS, '') : core).toLocaleLowerCase('pl-PL');
 }
 
 export function lookupWord(story: Story, token: string): GlossEntry | undefined {
@@ -268,13 +293,46 @@ export function lookupWord(story: Story, token: string): GlossEntry | undefined 
   return story.glossary[key] ?? COMMON[key];
 }
 
-/** Splits "kawa" vs "kawę" into the shared stem and the two different endings. */
-export function splitEnding(base: string, form: string): { stem: string; baseEnd: string; formEnd: string } {
-  const b = base.toLocaleLowerCase('pl-PL');
-  const f = form.toLocaleLowerCase('pl-PL');
-  let i = 0;
-  while (i < b.length && i < f.length && b[i] === f[i]) i++;
-  return { stem: form.slice(0, i), baseEnd: base.slice(i), formEnd: form.slice(i) };
+/** Letters with the marks that follow them (a Hebrew letter keeps its vowel signs). */
+const clusters = (word: string): string[] => word.normalize('NFC').match(/\P{M}\p{M}*/gu) ?? [];
+const FINAL_FORMS: Record<string, string> = { ך: 'כ', ם: 'מ', ן: 'נ', ף: 'פ', ץ: 'צ' };
+/** The bare letter of a cluster, for comparing two forms of a word (no vowel signs, no case, no final forms). */
+const letterOf = (cluster: string): string => {
+  const l = cluster.replace(/\p{M}/gu, '').toLocaleLowerCase('pl-PL');
+  return FINAL_FORMS[l] ?? l;
+};
+
+/**
+ * Splits the dictionary form and the form in the text into [same start, changed part, same end], for
+ * the word decoder: kawa → kawę is ["kaw", "a", ""] → ["kaw", "ę", ""], and Hebrew בּוֹקֶר → בַּבּוֹקֶר is
+ * ["", "", "בּוֹקֶר"] → ["", "בַּ", "בּוֹקֶר"]. Letters are compared without vowel signs; each side keeps its
+ * own spelling. Hebrew adds words in front (prefixes), so its shared end is matched first.
+ */
+export function wordParts(base: string, form: string, prefixes = COURSE === 'he'): { base: [string, string, string]; form: [string, string, string] } {
+  const b = clusters(base);
+  const f = clusters(form);
+  const max = Math.min(b.length, f.length);
+  const sameStart = (limit: number) => {
+    let n = 0;
+    while (n < limit && letterOf(b[n]) === letterOf(f[n])) n++;
+    return n;
+  };
+  const sameEnd = (limit: number) => {
+    let n = 0;
+    while (n < limit && letterOf(b[b.length - 1 - n]) === letterOf(f[f.length - 1 - n])) n++;
+    return n;
+  };
+  let start: number;
+  let end: number;
+  if (prefixes) {
+    end = sameEnd(max);
+    start = sameStart(max - end);
+  } else {
+    start = sameStart(max);
+    end = sameEnd(max - start);
+  }
+  const cut = (c: string[]): [string, string, string] => [c.slice(0, start).join(''), c.slice(start, c.length - end).join(''), c.slice(c.length - end).join('')];
+  return { base: cut(b), form: cut(f) };
 }
 
 export function getStory(id: string): Story | undefined {

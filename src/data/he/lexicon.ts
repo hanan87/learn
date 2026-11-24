@@ -10,8 +10,9 @@
  * Spelling follows modern Israeli usage with full vowel letters (מְאוֹד, בּוֹקֶר, שְׁתַּיִם), which is
  * also how speech recognition writes the words back. tests/unit/he.test.ts checks that every word of
  * the course is listed here. A later block adds common everyday words, so free-typed "How do I say…?"
- * phrases get an exact transcription more often. The last block holds the Alef-Bet words and the
- * letter names (data/he/alphabet), written the way Israelis say them (bet, khet, resh).
+ * phrases get an exact transcription more often. Then come the Alef-Bet words and the letter names
+ * (data/he/alphabet), written the way Israelis say them (bet, khet, resh), and the words of the mini
+ * stories (data/he/stories).
  */
 export const HE_LEXICON = `
 שָׁ·[לוֹם]
@@ -341,4 +342,40 @@ export const HE_LEXICON = `
 [שִׁין]
 [שִׂין]
 [תָּו]
+חוּ·[מוּס]
+וְ·סָ·[לָט]
+[אָז]
+[סַבְ]·תָּא
+[נוֹ]·עָה
+וְ·[דָג]
+בַּ·[בּוֹ]·קֶר
+וּ·[מָה]
+עוֹ·[שֶׂה]
+הוֹלְ·[כִים]
+לַ·[יָּם]
+בָּ·[רֶ]·גֶל
+בָּ·[עֶ]·רֶב
+לַ·[שּׁוּק]
+בַּ·[טֶּ]·לֶ·פוֹן
+הַ·[לּוֹ]
+וְ·אַ·[תָּה]
+יָ·[שֵׁן]
+[בֶּן]
+שְׁלוֹ·[שִׁים]
+[קַר]
+[סְוֶו]·דֶר = [sve]·der
+בְּ·אֵי·[לַת]
+בַּ·[בַּ]·יִת
+אַרְ·בָּ·[עִים]
+[יַאלְ]·לָה = [yal]·la
+הִ·[גַּעְ]·נוּ
+[כְּבָר]
+דַּ·[קָּה]
+נָ·[כוֹן]
+חֲ·מִ·[שִּׁים]
+לֵ·[אָה]
+נוֹ·[סַ]·עַת
+לַ·מָּ·[לוֹן]
+עוֹ·[לָה]
+הַ·נְּ·סִי·[עָה]
 `;

@@ -1,10 +1,11 @@
 import { ALL_ITEMS, applyProfile, getProfile } from '..';
 import { ROLEPLAYS } from '../dialogues';
 import { CONTRAST_GROUPS } from '../minimalPairs';
+import { STORIES } from '../stories';
 import { personalize, type LearnerProfile } from '../../lib/personalize';
 
 /**
- * Every distinct word the English course says (items, back-chaining steps, roleplays, Sound Lab),
+ * Every distinct word the English course says (items, back-chaining steps, roleplays, Sound Lab, stories),
  * lowercase, with both default names. Used to check that the lexicon covers the whole course.
  */
 export function enCourseWords(): string[] {
@@ -38,6 +39,14 @@ export function enCourseWords(): string[] {
   for (const g of CONTRAST_GROUPS) for (const p of g.pairs) {
     add(p.a.polish);
     add(p.b.polish);
+  }
+  for (const s of STORIES) {
+    add(s.titlePl);
+    s.lines.forEach((l) => add(l.polish));
+    for (const q of s.questions) {
+      add(q.q);
+      q.options.forEach((o) => add(o.polish));
+    }
   }
   return [...words].sort();
 }

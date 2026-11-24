@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ALL_ITEMS, applyProfile, GENDERED_ITEM_IDS, getItem, getSituation, UNITS } from '../../src/data';
 import { ROLEPLAYS } from '../../src/data/dialogues';
 import { LESSONS } from '../../src/data/lessons';
-import { lookupWord, splitEnding, STORIES, wordKey } from '../../src/data/stories';
+import * as storiesModule from '../../src/data/stories';
+import { lookupWord, STORIES, wordKey, wordParts } from '../../src/data/stories';
+import { checkStories } from './storyChecks';
 import { BLITZ_SECONDS, blitzPool, comboMultiplier } from '../../src/lib/blitz';
 import { handsFreeQueue } from '../../src/lib/handsFreeQueue';
 import { haptic, setHapticsEnabled } from '../../src/lib/haptics';
@@ -149,14 +151,8 @@ describe('hand-checked transcription quality in units 5–8', () => {
 });
 
 describe('mini stories', () => {
-  it('has 4 stories of 6–8 lines with 2 questions each (exactly one correct answer)', () => {
-    expect(STORIES).toHaveLength(4);
-    for (const s of STORIES) {
-      expect(s.lines.length, s.id).toBeGreaterThanOrEqual(6);
-      expect(s.lines.length, s.id).toBeLessThanOrEqual(8);
-      expect(s.questions).toHaveLength(2);
-      for (const q of s.questions) expect(q.options.filter((o) => o.correct)).toHaveLength(1);
-    }
+  it('has 4 complete stories, explained and translated, with a voice for every character', () => {
+    checkStories(storiesModule, ['he', 'en']);
   });
 
   it('can explain every single word of every story', () => {
@@ -174,8 +170,13 @@ describe('mini stories', () => {
     const kawa = STORIES[0];
     expect(lookupWord(kawa, 'kawę')).toMatchObject({ base: 'kawa' });
     expect(lookupWord(kawa, 'mlekiem.')!.note!.en).toMatch(/instrumental/);
-    expect(splitEnding('kawa', 'kawę')).toEqual({ stem: 'kaw', baseEnd: 'a', formEnd: 'ę' });
-    expect(splitEnding('mleko', 'mlekiem')).toEqual({ stem: 'mlek', baseEnd: 'o', formEnd: 'iem' });
+    expect(wordParts('kawa', 'kawę')).toEqual({ base: ['kaw', 'a', ''], form: ['kaw', 'ę', ''] });
+    expect(wordParts('mleko', 'mlekiem')).toEqual({ base: ['mlek', 'o', ''], form: ['mlek', 'iem', ''] });
+    // The fleeting a of the genitive plural (Montenegrin mačka → mačaka) shows inside the word.
+    expect(wordParts('mačka', 'mačaka')).toEqual({ base: ['mač', '', 'ka'], form: ['mač', 'a', 'ka'] });
+    // Hebrew prefixes: the shared end is matched first, vowel signs are ignored and final letters match.
+    expect(wordParts('בּוֹקֶר', 'בַּבּוֹקֶר', true)).toEqual({ base: ['', '', 'בּוֹקֶר'], form: ['', 'בַּ', 'בּוֹקֶר'] });
+    expect(wordParts('הוֹלֵךְ', 'הוֹלְכִים', true)).toEqual({ base: ['הוֹלֵךְ', '', ''], form: ['הוֹלְכִ', 'ים', ''] });
     expect(wordKey('„nie')).toBe('nie');
     expect(wordKey('Kraków.')).toBe('kraków');
   });

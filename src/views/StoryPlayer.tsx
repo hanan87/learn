@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, ChevronDown, Eye, EyeOff, Play, Square, Trophy, Volume2, X, XCircle } from 'lucide-react';
-import { lookupWord, speakerVoice, splitEnding, wordKey, type Story } from '../data/stories';
+import { cleanWord, lookupWord, speakerVoice, wordKey, wordParts, type Story } from '../data/stories';
+import { COURSE, COURSE_INFO as C } from '../lib/course';
+import { TipText } from '../components/AlefBet';
 import { Phonetic } from '../components/Phonetic';
 import { StoryIcon } from '../components/StoryIcon';
 import { PolishSyllables } from '../components/PolishSyllables';
@@ -17,12 +19,15 @@ interface Inspect {
   token: string;
 }
 
-/** Tap-to-inspect bubble: meaning, syllables, audio and the ending decoder. */
+/** Hebrew changes words mostly at the front (וְ, הַ, בְּ, לְ), the other course languages at the end. */
+const PREFIX_LANGUAGE = COURSE === 'he';
+
+/** Tap-to-inspect bubble: meaning, syllables, audio and the word decoder. */
 function WordBubble({ story, token, onClose }: { story: Story; token: string; onClose: () => void }) {
   const { tr, loc } = useLang();
-  const clean = token.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
+  const clean = cleanWord(token);
   const entry = lookupWord(story, token);
-  const ending = entry?.base && wordKey(entry.base) !== wordKey(clean) ? splitEnding(entry.base, clean) : null;
+  const parts = entry?.base && wordKey(entry.base) !== wordKey(clean) ? wordParts(entry.base, clean) : null;
 
   useEffect(() => {
     speak(clean, 0.8);
@@ -33,7 +38,7 @@ function WordBubble({ story, token, onClose }: { story: Story; token: string; on
       <button type="button" onClick={onClose} className="absolute right-2 top-2 grid size-8 place-items-center rounded-full text-[#cbd5e1] hover:bg-white/10" aria-label={tr('סגור', 'Close')}>
         <X className="size-4" />
       </button>
-      <div className="flex items-center gap-2 pr-9" dir="ltr">
+      <div className="flex items-center gap-2 pr-9" dir={C.dir}>
         <button type="button" onClick={() => speak(clean, 0.8)} className="grid size-9 place-items-center rounded-full bg-white/15" aria-label={tr('השמע מילה', 'Play word')}>
           <Volume2 className="size-4" />
         </button>
@@ -41,23 +46,30 @@ function WordBubble({ story, token, onClose }: { story: Story; token: string; on
       </div>
       <Phonetic he={toHebrewPhonetic(clean)} en={toEnglishPhonetic(clean)} size="sm" className="!text-[#e2e8f0]" />
       <p className="text-lg font-bold text-[#fcd34d]">{entry ? loc(entry.t) : '—'}</p>
-      {ending && (
+      {parts && (
         <div className="rounded-xl bg-white/10 p-2.5 text-sm" data-testid="ending-decoder">
-          <p className="mb-1 text-xs font-bold text-[#cbd5e1]">{tr('מפענח סיומות', 'Ending decoder')}</p>
-          <p dir="ltr" className="polish flex flex-wrap items-center gap-2 text-base">
+          <p className="mb-1 text-xs font-bold text-[#cbd5e1]">{PREFIX_LANGUAGE ? tr('מפענח המילה', 'Word decoder') : tr('מפענח סיומות', 'Ending decoder')}</p>
+          <p dir={C.dir} className="polish flex flex-wrap items-center gap-2 text-base">
             <span>
-              {ending.stem}
-              <span className="rounded bg-[#64748b] px-0.5 line-through decoration-[#fb7185]">{ending.baseEnd || '∅'}</span>
+              {parts.base[0]}
+              <span className="rounded bg-[#64748b] px-0.5 line-through decoration-[#fb7185]">{parts.base[1] || '∅'}</span>
+              {parts.base[2]}
             </span>
-            <span className="text-[#94a3b8]">→</span>
+            <span className="text-[#94a3b8]">{C.dir === 'rtl' ? '←' : '→'}</span>
             <span className="font-bold">
-              {ending.stem}
-              <span className="rounded bg-[#10b981] px-0.5 text-white">{ending.formEnd || '∅'}</span>
+              {parts.form[0]}
+              <span className="rounded bg-[#10b981] px-0.5 text-white">{parts.form[1] || '∅'}</span>
+              {parts.form[2]}
             </span>
           </p>
         </div>
       )}
-      {entry?.note && <p className="text-sm leading-relaxed text-[#e2e8f0]">{loc(entry.note)}</p>}
+      {entry?.note && (
+        <p className="text-sm leading-relaxed text-[#e2e8f0]">
+          {/* Hebrew-course notes are written in the learner's language with Hebrew words inside. */}
+          {PREFIX_LANGUAGE ? <TipText text={loc(entry.note)} hebrewClassName="text-white" /> : loc(entry.note)}
+        </p>
+      )}
     </div>
   );
 }
@@ -142,8 +154,8 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
           <p className="flex items-center gap-2 truncate font-serif text-xl font-semibold">
             <StoryIcon id={story.id} className="size-5 shrink-0 text-brand-600" /> {loc(story.title)}
           </p>
-          <p className="polish truncate text-xs text-slate-500" dir="ltr">
-            {story.titlePl}
+          <p className="polish truncate text-xs text-slate-500">
+            <span dir={C.dir}>{story.titlePl}</span>
           </p>
         </div>
         <button
@@ -167,15 +179,18 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
 
       <p className="mb-3 flex items-center gap-1.5 rounded-2xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
         <BookOpen className="size-4 shrink-0" />
-        {tr('הקישו על כל מילה כדי לראות תרגום, הברות, השמעה – ולמה הסיומת שלה השתנתה.', 'Tap any word for its meaning, syllables and audio – and why its ending changed.')}
+        {PREFIX_LANGUAGE
+          ? tr('הקישו על כל מילה כדי לראות תרגום, הברות, השמעה – ומה מוסיפות לה התחיליות והסיומות.', 'Tap any word for its meaning, syllables and audio – and what its prefixes and endings add.')
+          : tr('הקישו על כל מילה כדי לראות תרגום, הברות, השמעה – ולמה הסיומת שלה השתנתה.', 'Tap any word for its meaning, syllables and audio – and why its ending changed.')}
       </p>
 
       <ol className="space-y-3">
         {story.lines.slice(0, shown).map((line, li) => {
           const tokens = line.polish.split(/\s+/);
-          const left = li % 2 === 0;
+          // The first speaker's lines sit on one side, the other's on the other (even two lines in a row).
+          const left = line.speaker === story.lines[0].speaker;
           return (
-            <li key={li} className={`animate-pop-in flex flex-col ${left ? 'items-start' : 'items-end'}`} dir="ltr">
+            <li key={li} className={`animate-pop-in flex flex-col ${left ? 'items-start' : 'items-end'}`} dir={C.dir}>
               <span className="mb-0.5 px-2 text-[11px] font-bold text-slate-500">{line.speaker}</span>
               <div
                 className={`max-w-[92%] rounded-2xl px-4 py-2.5 shadow-sm ring-1 ${left ? 'rounded-ss-sm bg-white ring-slate-200' : 'rounded-se-sm bg-brand-50 ring-brand-200'} ${
@@ -241,7 +256,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
           <p className="text-xs font-bold text-slate-500">
             {tr('שאלה', 'Question')} {qIndex + 1}/{story.questions.length}
           </p>
-          <button type="button" onClick={() => speak(question.q)} className="polish flex items-center gap-2 text-xl font-black" dir="ltr">
+          <button type="button" onClick={() => speak(question.q)} className="polish flex items-center gap-2 text-xl font-black" dir={C.dir}>
             {question.q} <Volume2 className="size-4 text-slate-400" />
           </button>
           <p className="text-sm text-slate-500">{loc(question.t)}</p>
@@ -259,7 +274,7 @@ export function StoryPlayer({ story, onExit }: { story: Story; onExit: () => voi
               return (
                 <button key={opt.polish} type="button" disabled={reveal} onClick={() => answer(opt)} className={`flex items-center gap-2 rounded-2xl px-4 py-3 text-start ring-2 transition ${cls}`}>
                   <span className="min-w-0 flex-1">
-                    <span className="polish block font-bold" dir="ltr">
+                    <span className="polish block font-bold" dir={C.dir}>
                       {opt.polish}
                     </span>
                     <span className="block text-xs text-slate-500">{loc(opt.t)}</span>

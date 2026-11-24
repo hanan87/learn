@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { checkStories } from './storyChecks';
 import { autoBackchain, detectSounds, inLexicon, toHebrewPhonetic, toSyllableNotation } from '../../src/lib/enPhonetics';
 import { notationToPlain } from '../../src/lib/syllables';
 import { scorePronunciation } from '../../src/lib/pronScore';
@@ -215,9 +216,22 @@ describe('English course data (LEARN_COURSE=en)', () => {
       expect(notationToPlain(p.b.syllablesPolish)).toBe(p.b.polish);
       expect(p.a.phoneticHebrew).not.toBe(p.b.phoneticHebrew);
     }
-    expect(stories.STORIES).toEqual([]);
+    expect(stories.STORIES.map((s) => s.id)).toEqual(['coffee-for-tim', 'right-behind-you', 'a-little-spicy', 'how-are-you']);
     expect(Object.keys(sounds.SOUND_INFO)).toEqual(['th', 'w', 'v', 'r', 'ih', 'ee', 'ae']);
     expect(data.PHONETIC_LEGEND[0].he).toBe('ת׳');
+  });
+
+  it('has 4 English stories, explained in Hebrew, Polish and Montenegrin, read by Jenny and Guy', () => {
+    checkStories(stories, ['he', 'pl', 'cnr']);
+    const keys = new Set(catalog.buildClipCatalog().map((c) => c.key));
+    expect(keys.has('en-m|n|Sorry, my name is Tom, not Tim.')).toBe(true);
+    expect(keys.has('en-f|n|Hi! What can I get you?')).toBe(true);
+    expect(keys.has("en-f|n|What's")).toBe(true);
+    const tim = stories.getStory('coffee-for-tim')!;
+    expect(stories.lookupWord(tim, "What's")!.note!.pl).toMatch(/What is/);
+    expect(stories.wordKey('Tim!')).toBe('tim');
+    expect(stories.wordKey('It’s')).toBe("it's");
+    expect(stories.wordParts('lose', 'lost')).toEqual({ base: ['los', 'e', ''], form: ['los', 't', ''] });
   });
 
   it('records the course with Jenny and Guy, meanings in Hebrew, Polish and Montenegrin', () => {

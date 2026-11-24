@@ -96,7 +96,7 @@ test.describe('Montenegrin course', () => {
 
     await page.goto('/#/talk');
     await expect(page.getByText('A café in Kotor', { exact: true })).toBeVisible();
-    await expect(page.getByTestId('stories')).toHaveCount(0);
+    await expect(page.getByTestId('stories').getByRole('button')).toHaveCount(4);
 
     // Recognition runs in Croatian (same Latin Ijekavian spelling) and a correct "čaj" passes.
     await page.goto('/#/map/item/m1-01');
