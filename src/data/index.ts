@@ -36,7 +36,7 @@ function localizeUnit(u: UnitSource): Unit {
   };
 }
 
-const PL_UNITS: Unit[] = [...[unit1, unit2, unit3, unit4].map(localizeUnit), ...EXTRA_UNITS];
+export const PL_UNITS: Unit[] = [...[unit1, unit2, unit3, unit4].map(localizeUnit), ...EXTRA_UNITS];
 
 /** Units of the active course (lib/course). */
 export const UNITS: Unit[] = { pl: PL_UNITS, cnr: CNR_UNITS, en: EN_UNITS, he: HE_UNITS }[COURSE];

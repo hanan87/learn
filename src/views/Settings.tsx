@@ -1,6 +1,8 @@
 import { COURSE_INFO as C } from '../lib/course';
 import { useRef, useState } from 'react';
-import { Download, FileJson, Languages, Mic, Moon, RotateCcw, Smartphone, Target, Upload, UserRound, Vibrate, Volume2 } from 'lucide-react';
+import { Download, FileJson, Languages, Mic, Moon, RotateCcw, Smartphone, SpellCheck, Target, Upload, UserRound, Vibrate, Volume2 } from 'lucide-react';
+import { REVIEW_LANGS } from '../lib/review';
+import { ReviewLink } from './Review';
 import { CourseSwitch } from '../components/CourseSwitch';
 import { ProfileFields } from '../components/ProfileFields';
 import { VoiceSettings } from '../components/VoiceSettings';
@@ -205,6 +207,21 @@ export function Settings() {
           <StandaloneDownload variant="inline" />
         </section>
       )}
+
+      <section className={card} data-testid="review-settings">
+        <p className="flex items-center gap-1.5 font-bold">
+          <SpellCheck className="size-4 text-brand-600" /> {tr('בדיקה על ידי דובר ילידי', 'Native-speaker review')}
+        </p>
+        <p className="text-sm text-slate-600">
+          {tr(
+            'שלחו את הקישור למי שפולנית או מונטנגרית היא שפת האם שלו. הוא מסמן כל טקסט כנכון או מציע תיקון, ושולח לכם את ההערות בהודעה.',
+            'Send the link to a native Polish or Montenegrin speaker. They mark each text as correct or suggest a fix, and send you their notes in a message.',
+          )}
+        </p>
+        {REVIEW_LANGS.map((l) => (
+          <ReviewLink key={l} lang={l} t={tr} />
+        ))}
+      </section>
 
       <section className={card}>
         <p className="flex items-center gap-1.5 font-bold">

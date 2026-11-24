@@ -27,6 +27,7 @@ import { SpeedBlitz } from './views/SpeedBlitz';
 import { SayIt } from './views/SayIt';
 import { StoryPlayer } from './views/StoryPlayer';
 import { getStory } from './data/stories';
+import { Review } from './views/Review';
 
 const TAB_IDS = TABS.map((t) => t.id);
 
@@ -41,6 +42,7 @@ const TAB_IDS = TABS.map((t) => t.id);
  *   #/handsfree/<map|vocab>                    – audio-only trainer
  *   #/story/<storyId>                          – mini story
  *   #/blitz                                    – 60-second Speed Blitz
+ *   #/review[/<pl|cnr>[/<sectionId>]]          – native-speaker review of the Polish / Montenegrin texts
  */
 export function App() {
   const { segments, navigate } = useHashRoute('map');
@@ -56,6 +58,8 @@ export function App() {
     loadVoices(2500).then(() => setVoiceMissing(!hasPolishVoice()));
   }, []);
 
+  // The native-speaker review is opened from a shared link, before (or without) choosing a course.
+  if (segments[0] === 'review') return <Review lang={segments[1]} section={segments[2]} navigate={navigate} />;
   if (unset) return <Welcome />;
 
   const isLesson = segments[0] === 'lesson' && segments[1];

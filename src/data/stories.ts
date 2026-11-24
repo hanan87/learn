@@ -79,7 +79,7 @@ const PL_COMMON: Record<string, GlossEntry> = {
   ma: g('יש לו/לה', 'has', 'mieć', 'mieć (להיות בעל) ← ma: יש לו/לה. nie ma = אין.', 'mieć (to have) → ma: he / she has. nie ma = there is no.'),
 };
 
-const PL_STORIES: Story[] = [
+export const PL_STORIES: Story[] = [
   {
     id: 'kawa-dla-kota',
     title: { he: 'קפה בשביל החתול', en: 'Coffee for the cat' },

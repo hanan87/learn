@@ -56,7 +56,7 @@ const no = (polish: string, he: string, en: string, fbHe: string, fbEn: string):
 });
 const line = (polish: string, he: string, en: string) => ({ polish, t: { he, en } });
 
-const PL_ROLEPLAYS: Roleplay[] = [
+export const PL_ROLEPLAYS: Roleplay[] = [
   {
     id: 'warsaw-cafe',
     title: { he: 'בית קפה בוורשה', en: 'A café in Warsaw' },

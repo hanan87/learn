@@ -51,7 +51,7 @@ export function groupDescription(g: ContrastGroup, side: 'a' | 'b', lang: Lang):
   return own?.descriptionB ?? (lang === 'he' ? g.descriptionB : g.descriptionBEn);
 }
 
-const PL_CONTRAST_GROUPS: ContrastGroup[] = [
+export const PL_CONTRAST_GROUPS: ContrastGroup[] = [
   {
     id: 'sz-s',
     title: 'sz מול ś',
