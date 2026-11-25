@@ -1,4 +1,5 @@
 import { PL_UNITS, type LegendRow } from '../data';
+import { CAN_DO } from '../data/canDo';
 import { CNR_ROLEPLAYS } from '../data/cnr/dialogues';
 import { CNR_CONTRAST_GROUPS } from '../data/cnr/pairs';
 import { CNR_STORIES } from '../data/cnr/stories';
@@ -114,6 +115,7 @@ const TITLES = {
   letters: { he: 'אלף-בית', en: 'Alef-Bet' },
   interface: { he: 'ממשק', en: 'Interface' },
   names: { he: 'שמות הקורסים', en: 'Course names' },
+  canDo: { he: 'מה כבר אפשר לעשות', en: 'What you can already do' },
 };
 
 // ---------- Phrases of the reviewed language's own course ----------
@@ -288,6 +290,7 @@ export function reviewSections(lang: ReviewLang): ReviewSection[] {
     ...walked('he-dialogues', 'hebrew', TITLES.dialogues, HE_ROLEPLAYS, 'he:dialogue', lang, seen, he),
     ...walked('he-stories', 'hebrew', TITLES.stories, { stories: HE_STORIES, common: HE_COMMON }, 'he:story', lang, seen, he),
     ...translatedSounds('he', HE_CONTRAST_GROUPS, HE_LEGEND, lang, seen),
+    ...walked('ui-can-do', 'interface', TITLES.canDo, CAN_DO, 'ui:can-do', lang, seen, en),
     ...walked('ui-courses', 'interface', TITLES.names, COURSES, 'ui:course', lang, seen, en),
     ...split({ id: 'ui', group: 'interface', title: TITLES.interface, entries: ui.entries }),
   ];

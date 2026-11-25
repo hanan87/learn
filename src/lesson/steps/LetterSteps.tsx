@@ -85,7 +85,7 @@ export function LetterSoundStep({ step, answered, onAnswered }: StepProps<SoundQ
     if (answered) return;
     setPicked(id);
     const ok = getLetter(id)?.sound === letter.sound;
-    recordExercise(undefined, letter.example, ok);
+    recordExercise(undefined, letter.example, ok, 'read');
     speak(letter.example);
     onAnswered({
       correct: ok,
@@ -148,7 +148,7 @@ export function ReadWordStep({ step, answered, onAnswered }: StepProps<ReadQuiz>
     if (answered) return;
     setPicked(opt);
     const ok = opt === item.phoneticHebrew;
-    recordExercise(item.id, item.polish, ok);
+    recordExercise(item.id, item.polish, ok, 'read');
     speak(item.polish);
     onAnswered({
       correct: ok,
@@ -201,7 +201,7 @@ export function HearWordStep({ step, answered, onAnswered }: StepProps<HearQuiz>
     if (answered) return;
     setPicked(id);
     const ok = id === item.id;
-    recordExercise(item.id, item.polish, ok);
+    recordExercise(item.id, item.polish, ok, 'listen');
     onAnswered({
       correct: ok,
       tone: ok ? 'success' : 'error',

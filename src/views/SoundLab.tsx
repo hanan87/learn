@@ -192,7 +192,7 @@ function EarTraining({ group }: { group: ContrastGroup }) {
     setAnswer(side);
     const ok = side === question.side;
     setStats((s) => ({ correct: s.correct + (ok ? 1 : 0), total: s.total + 1, streak: ok ? s.streak + 1 : 0 }));
-    recordExercise(undefined, target.polish, ok, GROUP_SOUNDS[group.id]);
+    recordExercise(undefined, target.polish, ok, 'listen', GROUP_SOUNDS[group.id]);
     if (ok) award(XP.earTraining);
     else speak(target.polish, RATE_SLOW);
   };

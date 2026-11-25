@@ -62,7 +62,7 @@ export function AssembleStep({ step, answered, onAnswered }: StepProps<AssembleS
   const check = () => {
     const built = chosen.map((i) => step.bank[i]).join(' ');
     const ok = normalize(built) === normalize(tokens(item.polish).join(' '));
-    recordExercise(item.id, item.polish, ok);
+    recordExercise(item.id, item.polish, ok, 'read');
     onAnswered({
       correct: ok,
       tone: ok ? 'success' : 'error',
@@ -130,7 +130,7 @@ export function FillBlankStep({ step, answered, onAnswered }: StepProps<FillStep
   const check = () => {
     if (!picked) return;
     const ok = normalize(picked) === normalize(answer);
-    recordExercise(item.id, item.polish, ok);
+    recordExercise(item.id, item.polish, ok, 'read');
     const isRegister = ['Pan', 'Pani', 'Panu', 'ty', 'masz', 'ma'].includes(answer);
     const registerHint = !isRegister
       ? ''
@@ -201,7 +201,7 @@ export function ChooseSpellingStep({ step, answered, onAnswered }: StepProps<Spe
   const check = () => {
     if (!picked) return;
     const ok = normalize(picked) === normalize(item.polish);
-    recordExercise(item.id, item.polish, ok);
+    recordExercise(item.id, item.polish, ok, 'read');
     onAnswered({
       correct: ok,
       tone: ok ? 'success' : 'error',

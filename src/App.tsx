@@ -28,6 +28,7 @@ import { SayIt } from './views/SayIt';
 import { StoryPlayer } from './views/StoryPlayer';
 import { getStory } from './data/stories';
 import { Review } from './views/Review';
+import { ProgressPage } from './views/Progress';
 
 const TAB_IDS = TABS.map((t) => t.id);
 
@@ -36,6 +37,7 @@ const TAB_IDS = TABS.map((t) => t.id);
  *   #/map | #/lab | #/say | #/vocab | #/talk  – tabs (say: "How do I say…?" translate, listen, repeat)
  *   #/<tab>/item/<itemId>                      – item sheet on top of a tab
  *   #/<tab>/settings                           – settings sheet
+ *   #/<tab>/progress                           – my progress (streak, calendar, skills, can-do, reminder)
  *   #/lab/group/<groupId>                      – Sound Lab opened on a contrast group
  *   #/lesson/<lessonId>                        – full-screen lesson
  *   #/lesson/practice                          – personalized reinforcement lesson
@@ -67,6 +69,7 @@ export function App() {
   const itemId = segments[1] === 'item' ? segments[2] : undefined;
   const item = itemId ? getItem(itemId) : undefined;
   const settingsOpen = segments[1] === 'settings';
+  const progressOpen = segments[1] === 'progress';
 
   const openItem = (id: string) => navigate(`${tab}/item/${id}`);
   const closeSheet = () => navigate(tab, true);
@@ -107,7 +110,7 @@ export function App() {
         </div>
       )}
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-28">
-        {tab === 'map' && <CourseMap onOpenLesson={(id) => navigate(`lesson/${id}`)} onOpenItem={openItem} onOpenHandsFree={() => navigate('handsfree/map')} />}
+        {tab === 'map' && <CourseMap onOpenLesson={(id) => navigate(`lesson/${id}`)} onOpenItem={openItem} onOpenHandsFree={() => navigate('handsfree/map')} onOpenProgress={() => navigate('map/progress')} />}
         {tab === 'lab' && <SoundLab key={segments[2] ?? 'lab'} onOpenItem={openItem} initialGroup={segments[1] === 'group' ? segments[2] : undefined} />}
         {tab === 'vocab' && <VocabReview
             onOpenItem={openItem}
@@ -125,6 +128,9 @@ export function App() {
       </Sheet>
       <Sheet open={settingsOpen} onClose={closeSheet} title={tr('הגדרות', 'Settings')}>
         <Settings />
+      </Sheet>
+      <Sheet open={progressOpen} onClose={closeSheet} title={tr('ההתקדמות שלי', 'My progress')}>
+        <ProgressPage />
       </Sheet>
     </div>
   );

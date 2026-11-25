@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { Download, FileJson, Languages, Mic, Moon, RotateCcw, Smartphone, SpellCheck, Target, Upload, UserRound, Vibrate, Volume2 } from 'lucide-react';
 import { REVIEW_LANGS } from '../lib/review';
 import { ReviewLink } from './Review';
+import { ReminderCard } from './Progress';
 import { CourseSwitch } from '../components/CourseSwitch';
 import { ProfileFields } from '../components/ProfileFields';
 import { VoiceSettings } from '../components/VoiceSettings';
@@ -192,6 +193,8 @@ export function Settings() {
           ))}
         </div>
       </section>
+
+      <ReminderCard />
 
       {!isStandaloneBuild && (
         <section className={card}>

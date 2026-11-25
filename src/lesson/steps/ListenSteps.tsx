@@ -44,7 +44,7 @@ export function ListenMeaningStep({ step, answered, onAnswered }: StepProps<Mean
     if (answered) return;
     setPicked(id);
     const ok = id === item.id;
-    recordExercise(item.id, item.polish, ok);
+    recordExercise(item.id, item.polish, ok, 'listen');
     onAnswered({
       correct: ok,
       tone: ok ? 'success' : 'error',
@@ -102,7 +102,7 @@ export function ListenPairStep({ step, answered, onAnswered }: StepProps<PairSte
     if (answered) return;
     setPicked(s);
     const ok = s === side;
-    recordExercise(undefined, target.polish, ok, GROUP_SOUNDS[group.id]);
+    recordExercise(undefined, target.polish, ok, 'listen', GROUP_SOUNDS[group.id]);
     onAnswered({
       correct: ok,
       tone: ok ? 'success' : 'error',

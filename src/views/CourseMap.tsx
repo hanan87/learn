@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChartColumn,
   Coffee,
   Compass,
   Flame,
@@ -23,6 +24,7 @@ import {
   RotateCcw,
   ShoppingBag,
   Smile,
+  Snowflake,
   Star,
   Target,
   Trophy,
@@ -92,6 +94,7 @@ interface Props {
   onOpenLesson: (lessonId: string) => void;
   onOpenItem: (itemId: string) => void;
   onOpenHandsFree: () => void;
+  onOpenProgress: () => void;
 }
 
 /** Big entry button for the audio-only (driving / walking) trainer – shared by the map and the review tab. */
@@ -116,23 +119,28 @@ export function HandsFreeButton({ onClick, subtitle }: { onClick: () => void; su
   );
 }
 
-function Stat({ icon, value, label, bar }: { icon: ReactNode; value: ReactNode; label: string; bar?: number }) {
+function Stat({ icon, value, label, bar, corner, onClick }: { icon: ReactNode; value: ReactNode; label: string; bar?: number; corner?: ReactNode; onClick: () => void }) {
   return (
-    <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200/80">
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative rounded-2xl bg-white p-3 text-start shadow-sm ring-1 ring-slate-200/80 transition hover:ring-slate-300 active:scale-[0.98]"
+    >
+      {corner && <span className="absolute end-2.5 top-2.5">{corner}</span>}
       {icon}
-      <div className="mt-1 text-xl leading-tight font-bold text-slate-900 tabular-nums">{value}</div>
-      <div className="text-xs text-slate-500">{label}</div>
+      <span className="mt-1 block text-xl leading-tight font-bold text-slate-900 tabular-nums">{value}</span>
+      <span className="block text-xs text-slate-500">{label}</span>
       {bar !== undefined && (
-        <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-200/70" aria-hidden>
-          <div className="h-full rounded-full bg-brand-600 transition-all" style={{ width: `${bar}%` }} />
-        </div>
+        <span className="mt-2 block h-1 overflow-hidden rounded-full bg-slate-200/70" aria-hidden>
+          <span className="block h-full rounded-full bg-brand-600 transition-all" style={{ width: `${bar}%` }} />
+        </span>
       )}
-    </div>
+    </button>
   );
 }
 
-export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree }: Props) {
-  const { state, isLearned, todayXp, activeStreak, level, levelProgress, setProfile } = useProgress();
+export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenProgress }: Props) {
+  const { state, isLearned, todayXp, activeStreak, level, levelProgress, setProfile, freezesLeft } = useProgress();
   const { tr, lang } = useLang();
   // Shown once to learners who have not picked a gender yet; stays open while they type their name.
   const [profileOpen, setProfileOpen] = useState(() => state.profile.gender === null);
@@ -170,28 +178,52 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree }: Props) 
         </div>
       </section>
 
-      <section className="grid grid-cols-3 gap-2.5" aria-label={tr('ההתקדמות שלי', 'My progress')}>
-        <Stat
-          icon={<Flame className={`size-[18px] ${activeStreak > 0 ? 'fill-orange-500/25 text-orange-600' : 'text-slate-400'}`} aria-hidden />}
-          value={activeStreak}
-          label={`${tr('ימי רצף', 'day streak')} · ${tr('שיא', 'best')} ${state.streak.best}`}
-        />
-        <Stat
-          icon={<Target className="size-[18px] text-brand-600" aria-hidden />}
-          value={
-            <span dir="ltr">
-              {todayXp}/{state.dailyGoal}
-            </span>
-          }
-          label={tr('XP היום', 'XP today')}
-          bar={goalPct}
-        />
-        <Stat
-          icon={<Star className="size-[18px] fill-amber-400/30 text-amber-600" aria-hidden />}
-          value={level}
-          label={`${tr('רמה', 'level')} · ${state.xp} XP`}
-          bar={levelProgress * 100}
-        />
+      <section className="space-y-2" aria-label={tr('ההתקדמות שלי', 'My progress')} data-testid="map-stats">
+        <div className="grid grid-cols-3 gap-2.5">
+          <Stat
+            onClick={onOpenProgress}
+            icon={<Flame className={`size-[18px] ${activeStreak > 0 ? 'fill-orange-500/25 text-orange-600' : 'text-slate-400'}`} aria-hidden />}
+            value={activeStreak}
+            label={`${tr('ימי רצף', 'day streak')} · ${tr('שיא', 'best')} ${state.streak.best}`}
+            corner={
+              freezesLeft > 0 && (
+                <span className="flex items-center gap-0.5 text-xs font-bold text-sky-700" title={tr(`הקפאות רצף: ${freezesLeft}`, `Streak freezes: ${freezesLeft}`)}>
+                  <Snowflake className="size-3.5" aria-hidden />
+                  <span className="sr-only">{tr(`הקפאות רצף: ${freezesLeft}`, `Streak freezes: ${freezesLeft}`)}</span>
+                  <span aria-hidden>{freezesLeft}</span>
+                </span>
+              )
+            }
+          />
+          <Stat
+            onClick={onOpenProgress}
+            icon={<Target className="size-[18px] text-brand-600" aria-hidden />}
+            value={
+              <span dir="ltr">
+                {todayXp}/{state.dailyGoal}
+              </span>
+            }
+            label={tr('XP היום', 'XP today')}
+            bar={goalPct}
+          />
+          <Stat
+            onClick={onOpenProgress}
+            icon={<Star className="size-[18px] fill-amber-400/30 text-amber-600" aria-hidden />}
+            value={level}
+            label={`${tr('רמה', 'level')} · ${state.xp} XP`}
+            bar={levelProgress * 100}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={onOpenProgress}
+          className="flex w-full items-center gap-2 rounded-xl px-1 py-1.5 text-start text-sm font-semibold text-brand-700 hover:text-brand-800"
+          data-testid="open-progress"
+        >
+          <ChartColumn className="size-4 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1">{tr('ההתקדמות שלי: לוח שנה, מיומנויות ועוד', 'My progress: calendar, skills and more')}</span>
+          {lang === 'he' ? <ChevronLeft className="size-4 shrink-0" aria-hidden /> : <ChevronRight className="size-4 shrink-0" aria-hidden />}
+        </button>
       </section>
 
       {next && nextUnit && (

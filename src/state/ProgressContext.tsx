@@ -3,14 +3,25 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import { applyProfile, getItem, registerCustomItems } from '../data';
 import { SOUND_INFO, WEAK_SOUND_ERROR_RATE, WEAK_SOUND_MIN_ATTEMPTS, WEAK_SOUND_MIN_AVG, type SoundKey } from '../data/sounds';
 import type { LearningItem } from '../data/types';
-import { addDays, daysBetween, todayKey } from '../lib/date';
+import { addDays, todayKey } from '../lib/date';
 import { setHapticsEnabled } from '../lib/haptics';
 import { DEFAULT_PROFILE, type LearnerProfile } from '../lib/personalize';
 import { detectSounds, letterSound } from '../lib/phonetics';
+import {
+  activeStreak as streakToday,
+  endVacation,
+  HISTORY_DAYS,
+  registerActivity,
+  startVacation,
+  streakCover,
+  type Cover,
+  type Vacation,
+} from '../lib/streak';
 
 /**
  * Learner progress persisted in LocalStorage (schema v2):
- *  - XP, daily goal, streak
+ *  - XP, daily goal, streak with freezes and vacation mode (lib/streak), XP per day (the calendar)
+ *  - answers per skill (listening, reading, writing, speaking, recall)
  *  - per-item performance history: pronunciation scores + average, writing errors,
  *    mastery level 1–5 (Leitner box) and next review date
  *  - per-sound statistics to detect "challenging sounds" (e.g. sz, ą)
@@ -62,6 +73,16 @@ export interface SoundStat {
   scoreCount: number;
 }
 
+/** Skills shown on the progress page; recall = the spaced-repetition reviews. */
+export type Skill = 'listen' | 'read' | 'write' | 'speak' | 'recall';
+export const SKILLS: Skill[] = ['listen', 'read', 'write', 'speak', 'recall'];
+export interface SkillStat {
+  tries: number;
+  ok: number;
+}
+/** A pronunciation score from this value counts as a good answer. */
+export const SPEAK_OK = 70;
+
 export interface ProgressState {
   version: 2;
   xp: number;
@@ -79,6 +100,15 @@ export interface ProgressState {
   /** Speed Blitz personal record. */
   blitz: { best: number; plays: number };
   stories: Record<string, { completedAt: string; bestCorrect: number }>;
+  /** XP earned per day (YYYY-MM-DD); 0 = a day rebuilt from older data, active but amount unknown. */
+  days: Record<string, number>;
+  /** Streak freezes in stock, the days they covered and the vacations (lib/streak). */
+  freezes: number;
+  frozen: string[];
+  vacations: Vacation[];
+  /** Day a freeze was last earned (the progress page says so on that day). */
+  freezeEarnedOn: string | null;
+  skills: Partial<Record<Skill, SkillStat>>;
 }
 
 export const initialState = (): ProgressState => ({
@@ -96,7 +126,51 @@ export const initialState = (): ProgressState => ({
   prefs: { haptics: true },
   blitz: { best: 0, plays: 0 },
   stories: {},
+  days: {},
+  // One freeze to start with, so the first missed day does not break a new streak.
+  freezes: 1,
+  frozen: [],
+  vacations: [],
+  freezeEarnedOn: null,
+  skills: {},
 });
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Study days of data saved before the day history existed: completions, practice dates and the streak's run. */
+export function seedDays(data: Omit<Partial<ProgressState>, 'version'>): Record<string, number> {
+  const days: Record<string, number> = {};
+  const mark = (d: unknown) => {
+    if (typeof d === 'string' && DAY.test(d)) days[d] = days[d] ?? 0;
+  };
+  for (const group of [data.lessons, data.dialogues, data.stories]) for (const e of Object.values(group ?? {})) mark(e?.completedAt);
+  for (const p of Object.values(data.items ?? {})) mark(p?.lastPracticed);
+  const s = data.streak;
+  if (s?.lastActiveDate && DAY.test(s.lastActiveDate)) for (let i = 0; i < Math.min(s.current, HISTORY_DAYS); i++) mark(addDays(s.lastActiveDate, -i));
+  if (data.daily && DAY.test(data.daily.date) && data.daily.xp > 0) days[data.daily.date] = data.daily.xp;
+  return days;
+}
+
+/** Answers per skill of data saved before they were counted, from the per-item history. */
+export function seedSkills(items: Record<string, ItemProgress>): Partial<Record<Skill, SkillStat>> {
+  const out: Partial<Record<Skill, SkillStat>> = {};
+  const add = (k: Skill, tries: number, ok: number) => {
+    if (tries <= 0) return;
+    const prev = out[k] ?? { tries: 0, ok: 0 };
+    out[k] = { tries: prev.tries + tries, ok: prev.ok + Math.max(0, ok) };
+  };
+  for (const p of Object.values(items)) {
+    add('write', p.writingAttempts, p.writingAttempts - p.writingErrors);
+    add('recall', p.reviews, p.correct);
+    add('speak', p.pronScores.length, p.pronScores.filter((s) => s >= SPEAK_OK).length);
+  }
+  return out;
+}
+
+function countSkill(state: ProgressState, skill: Skill, ok: boolean): ProgressState {
+  const prev = state.skills[skill] ?? { tries: 0, ok: 0 };
+  return { ...state, skills: { ...state.skills, [skill]: { tries: prev.tries + 1, ok: prev.ok + (ok ? 1 : 0) } } };
+}
 
 const emptyItem = (): ItemProgress => ({
   learned: false,
@@ -142,6 +216,12 @@ export function migrate(raw: unknown): ProgressState | null {
     prefs: { ...base.prefs, ...(data.prefs ?? {}) },
     blitz: { ...base.blitz, ...(data.blitz ?? {}) },
     stories: data.stories ?? {},
+    days: data.days && typeof data.days === 'object' ? data.days : seedDays(data),
+    freezes: typeof data.freezes === 'number' ? data.freezes : base.freezes,
+    frozen: Array.isArray(data.frozen) ? data.frozen : [],
+    vacations: Array.isArray(data.vacations) ? data.vacations : [],
+    freezeEarnedOn: data.freezeEarnedOn ?? null,
+    skills: data.skills && typeof data.skills === 'object' ? data.skills : seedSkills(items),
   } as ProgressState;
 }
 
@@ -169,7 +249,9 @@ export type Action =
   | { type: 'review'; id: string; correct: boolean }
   | { type: 'pronunciation'; id?: string; text: string; score: number; failedWords: string[] }
   | { type: 'writing'; id: string; text: string; verdict: 'correct' | 'diacritics' | 'wrong'; letters: string[] }
-  | { type: 'exercise'; id?: string; text: string; correct: boolean; sounds?: SoundKey[] }
+  | { type: 'exercise'; id?: string; text: string; correct: boolean; skill: Skill; sounds?: SoundKey[] }
+  | { type: 'vacation'; days: number }
+  | { type: 'endVacation' }
   | { type: 'lesson'; id: string; accuracy: number }
   | { type: 'dialogue'; id: string; score: number }
   | { type: 'goal'; goal: number }
@@ -182,19 +264,18 @@ export type Action =
   | { type: 'replace'; state: ProgressState }
   | { type: 'reset' };
 
-/** Adds XP and updates the daily counter and streak. */
+/** Adds XP and updates the daily counter, the day history and the streak (freezes, vacations). */
 function withXp(state: ProgressState, amount: number): ProgressState {
   if (amount <= 0) return state;
   const today = todayKey();
   const daily = state.daily.date === today ? { date: today, xp: state.daily.xp + amount } : { date: today, xp: amount };
-  let { current, best, lastActiveDate } = state.streak;
-  if (lastActiveDate !== today) {
-    const gap = lastActiveDate ? daysBetween(lastActiveDate, today) : Infinity;
-    current = gap === 1 ? current + 1 : 1;
-    best = Math.max(best, current);
-    lastActiveDate = today;
+  let days = { ...state.days, [today]: (state.days[today] ?? 0) + amount };
+  if (!(today in state.days)) {
+    const oldest = addDays(today, -HISTORY_DAYS);
+    days = Object.fromEntries(Object.entries(days).filter(([d]) => d >= oldest));
   }
-  return { ...state, xp: state.xp + amount, daily, streak: { current, best, lastActiveDate } };
+  const { freezeEarned, ...next } = registerActivity(state, today);
+  return { ...next, xp: state.xp + amount, daily, days, freezeEarnedOn: freezeEarned ? today : state.freezeEarnedOn };
 }
 
 function updateItem(state: ProgressState, id: string, fn: (p: ItemProgress) => ItemProgress): ProgressState {
@@ -248,7 +329,7 @@ export function reducer(state: ProgressState, action: Action): ProgressState {
           wrong: p.wrong + (action.correct ? 0 : 1),
         };
       });
-      return withXp(s, action.correct ? XP.reviewCorrect : XP.reviewWrong);
+      return withXp(countSkill(s, 'recall', action.correct), action.correct ? XP.reviewCorrect : XP.reviewWrong);
     }
 
     case 'pronunciation': {
@@ -274,7 +355,7 @@ export function reducer(state: ProgressState, action: Action): ProgressState {
             ? sounds
             : [],
       );
-      s = updateSounds(s, sounds, errorSounds, action.score);
+      s = countSkill(updateSounds(s, sounds, errorSounds, action.score), 'speak', action.score >= SPEAK_OK);
       return action.score >= 85 ? withXp(s, XP.pronunciationGood) : s;
     }
 
@@ -292,7 +373,7 @@ export function reducer(state: ProgressState, action: Action): ProgressState {
         action.verdict === 'wrong' ? sounds : (action.letters.map(letterSound).filter(Boolean) as SoundKey[]),
       );
       const all = [...new Set([...sounds, ...errorSounds])];
-      return updateSounds(s, all, errorSounds, null);
+      return countSkill(updateSounds(s, all, errorSounds, null), 'write', action.verdict === 'correct');
     }
 
     case 'exercise': {
@@ -303,8 +384,14 @@ export function reducer(state: ProgressState, action: Action): ProgressState {
         );
       }
       const sounds = action.sounds ?? detectSounds(action.text);
-      return updateSounds(s, sounds, new Set(action.correct ? [] : sounds), null);
+      return countSkill(updateSounds(s, sounds, new Set(action.correct ? [] : sounds), null), action.skill, action.correct);
     }
+
+    case 'vacation':
+      return { ...state, vacations: startVacation(state.vacations, todayKey(), action.days) };
+
+    case 'endVacation':
+      return { ...state, vacations: endVacation(state.vacations, todayKey()) };
 
     case 'lesson': {
       const prev = state.lessons[action.id];
@@ -415,12 +502,19 @@ interface ProgressApi {
   levelProgress: number;
   todayXp: number;
   activeStreak: number;
+  /** How the days missed since the last activity are covered (freezes, vacation). */
+  cover: Cover;
+  /** Freezes left once the pending missed days are covered. */
+  freezesLeft: number;
+  studiedToday: boolean;
+  startVacation: (days: number) => void;
+  endVacation: () => void;
   award: (amount: number) => void;
   markLearned: (id: string) => void;
   recordReview: (id: string, correct: boolean) => void;
   recordPronunciation: (id: string | undefined, text: string, score: number, failedWords?: string[]) => void;
   recordWriting: (id: string, text: string, verdict: 'correct' | 'diacritics' | 'wrong', letters?: string[]) => void;
-  recordExercise: (id: string | undefined, text: string, correct: boolean, sounds?: SoundKey[]) => void;
+  recordExercise: (id: string | undefined, text: string, correct: boolean, skill: Skill, sounds?: SoundKey[]) => void;
   completeLesson: (id: string, accuracy: number) => void;
   completeDialogue: (id: string, score: number) => void;
   setDailyGoal: (goal: number) => void;
@@ -472,9 +566,12 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     [],
   );
   const recordExercise = useCallback(
-    (id: string | undefined, text: string, correct: boolean, sounds?: SoundKey[]) => dispatch({ type: 'exercise', id, text, correct, sounds }),
+    (id: string | undefined, text: string, correct: boolean, skill: Skill, sounds?: SoundKey[]) =>
+      dispatch({ type: 'exercise', id, text, correct, skill, sounds }),
     [],
   );
+  const beginVacation = useCallback((days: number) => dispatch({ type: 'vacation', days }), []);
+  const stopVacation = useCallback(() => dispatch({ type: 'endVacation' }), []);
   const completeLesson = useCallback((id: string, accuracy: number) => dispatch({ type: 'lesson', id, accuracy }), []);
   const completeDialogue = useCallback((id: string, score: number) => dispatch({ type: 'dialogue', id, score }), []);
   const setDailyGoal = useCallback((goal: number) => dispatch({ type: 'goal', goal }), []);
@@ -500,14 +597,18 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   const api = useMemo<ProgressApi>(() => {
     const today = todayKey();
-    const last = state.streak.lastActiveDate;
-    const activeStreak = last && daysBetween(last, today) <= 1 ? state.streak.current : 0;
+    const cover = streakCover(state, today);
     return {
       state,
       level: Math.floor(state.xp / XP_PER_LEVEL) + 1,
       levelProgress: (state.xp % XP_PER_LEVEL) / XP_PER_LEVEL,
       todayXp: state.daily.date === today ? state.daily.xp : 0,
-      activeStreak,
+      activeStreak: streakToday(state, today),
+      cover,
+      freezesLeft: Math.max(0, state.freezes - cover.frozen.length),
+      studiedToday: state.streak.lastActiveDate === today,
+      startVacation: beginVacation,
+      endVacation: stopVacation,
       award,
       markLearned,
       recordReview,
@@ -552,6 +653,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     removeCustomItem,
     importJson,
     resetAll,
+    beginVacation,
+    stopVacation,
   ]);
 
   return <ProgressContext.Provider value={api}>{children}</ProgressContext.Provider>;
