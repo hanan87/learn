@@ -1,6 +1,6 @@
 import { COURSE_INFO as C } from '../lib/course';
 import { useRef, useState } from 'react';
-import { Download, FileJson, Languages, Mic, Moon, RotateCcw, Smartphone, SpellCheck, Target, Upload, UserRound, Vibrate, Volume2 } from 'lucide-react';
+import { Download, FileJson, Languages, Mic, Moon, RotateCcw, Signal, Smartphone, SpellCheck, Target, Upload, UserRound, Vibrate, Volume2 } from 'lucide-react';
 import { REVIEW_LANGS } from '../lib/review';
 import { ReviewLink } from './Review';
 import { ReminderCard } from './Progress';
@@ -77,6 +77,20 @@ export function Settings() {
           {tr('לכל שפה התקדמות משלה – אפשר לעבור ביניהן בכל רגע בלי לאבד כלום.', 'Each language keeps its own progress – switch any time without losing anything.')}
         </p>
       </section>
+
+      {C.id === 'en' && (
+        <section className={card} data-testid="placement-settings">
+          <h3 className="flex items-center gap-2 font-bold">
+            <Signal className="size-5 text-brand-600" /> {tr('מבחן רמה', 'Placement test')}
+          </h3>
+          <p className="text-sm text-slate-600">
+            {tr('מוצא מאיפה להתחיל בקורס. יחידות שכבר יודעים מסומנות כגמורות.', 'Finds where to start in the course. Units you already know are marked as done.')}
+          </p>
+          <a href="#/placement" className={`${btn} bg-brand-50 text-brand-700 ring-1 ring-brand-200`}>
+            {tr('למבחן הרמה', 'Take the placement test')}
+          </a>
+        </section>
+      )}
 
       {C.uiLangs.length > 1 && (
       <section className={card}>

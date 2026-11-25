@@ -2,7 +2,8 @@ import { COURSE_INFO, COURSES } from '../lib/course';
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react';
 import { applyProfile, getItem, registerCustomItems } from '../data';
 import { SOUND_INFO, WEAK_SOUND_ERROR_RATE, WEAK_SOUND_MIN_ATTEMPTS, WEAK_SOUND_MIN_AVG, type SoundKey } from '../data/sounds';
-import type { LearningItem } from '../data/types';
+import type { CourseUnitId, LearningItem } from '../data/types';
+import { lessonsOfUnit } from '../data/lessons';
 import { addDays, todayKey } from '../lib/date';
 import { setHapticsEnabled } from '../lib/haptics';
 import { DEFAULT_PROFILE, type LearnerProfile } from '../lib/personalize';
@@ -50,6 +51,8 @@ export const XP = {
   /** A unit test passed for the first time, and any other attempt. */
   testPass: 50,
   testAttempt: 10,
+  /** Finishing the placement test. */
+  placement: 20,
 } as const;
 
 /** The score that passes a unit test (lesson/buildLesson builds its questions). */
@@ -106,7 +109,8 @@ export interface ProgressState {
   streak: { current: number; best: number; lastActiveDate: string | null };
   items: Record<string, ItemProgress>;
   sounds: Partial<Record<SoundKey, SoundStat>>;
-  lessons: Record<string, { completedAt: string; bestAccuracy: number }>;
+  /** placed: completed by the placement test (the learner already knew the unit). */
+  lessons: Record<string, { completedAt: string; bestAccuracy: number; placed?: boolean }>;
   dialogues: Record<string, { completedAt: string; bestScore: number }>;
   customItems: LearningItem[];
   /** Learner's grammatical gender and first name (personalizes gendered phrases). */
@@ -126,6 +130,8 @@ export interface ProgressState {
   skills: Partial<Record<Skill, SkillStat>>;
   /** Unit tests by unit id. */
   tests: Record<string, UnitTestRecord>;
+  /** The placement test: when it was taken (or its offer dismissed) and the units it found the learner knew. */
+  placement: { at: string; known: string[] } | null;
 }
 
 export const initialState = (): ProgressState => ({
@@ -151,6 +157,7 @@ export const initialState = (): ProgressState => ({
   freezeEarnedOn: null,
   skills: {},
   tests: {},
+  placement: null,
 });
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -241,6 +248,7 @@ export function migrate(raw: unknown): ProgressState | null {
     freezeEarnedOn: data.freezeEarnedOn ?? null,
     skills: data.skills && typeof data.skills === 'object' ? data.skills : seedSkills(items),
     tests: data.tests && typeof data.tests === 'object' ? data.tests : {},
+    placement: data.placement && typeof data.placement === 'object' ? data.placement : null,
   } as ProgressState;
 }
 
@@ -273,6 +281,7 @@ export type Action =
   | { type: 'endVacation' }
   | { type: 'lesson'; id: string; accuracy: number }
   | { type: 'test'; unitId: string; score: number }
+  | { type: 'placement'; known: { unitId: string; score: number }[]; finished: boolean }
   | { type: 'dialogue'; id: string; score: number }
   | { type: 'goal'; goal: number }
   | { type: 'addCustom'; item: LearningItem }
@@ -431,6 +440,25 @@ export function reducer(state: ProgressState, action: Action): ProgressState {
       return withXp({ ...state, tests: { ...state.tests, [action.unitId]: entry } }, firstPass ? XP.testPass : XP.testAttempt);
     }
 
+    case 'placement': {
+      // Units the learner already knew: their lessons count as done, and their phrases join the review
+      // deck at level 2, spread over the coming week so they come back for a check without a pile-up.
+      const today = todayKey();
+      let s: ProgressState = { ...state, placement: { at: today, known: action.known.map((k) => k.unitId) } };
+      const lessons = { ...s.lessons };
+      let n = 0;
+      for (const { unitId, score } of action.known) {
+        for (const lesson of lessonsOfUnit(unitId as CourseUnitId)) {
+          lessons[lesson.id] ??= { completedAt: today, bestAccuracy: score, placed: true };
+          for (const id of lesson.itemIds) {
+            s = updateItem(s, id, (p) => (p.learned ? p : { ...p, learned: true, srsBox: Math.max(p.srsBox, 2), dueDate: addDays(today, 1 + (n++ % 7)) }));
+          }
+        }
+      }
+      s = { ...s, lessons };
+      return action.finished ? withXp(s, XP.placement) : s;
+    }
+
     case 'dialogue': {
       const prev = state.dialogues[action.id];
       const entry = { completedAt: todayKey(), bestScore: Math.max(prev?.bestScore ?? 0, action.score) };
@@ -549,6 +577,8 @@ interface ProgressApi {
   recordExercise: (id: string | undefined, text: string, correct: boolean, skill: Skill, sounds?: SoundKey[]) => void;
   completeLesson: (id: string, accuracy: number) => void;
   completeTest: (unitId: string, score: number) => void;
+  /** Records the placement test (finished) or a dismissed offer (known empty, not finished). */
+  completePlacement: (known: { unitId: string; score: number }[], finished: boolean) => void;
   completeDialogue: (id: string, score: number) => void;
   setDailyGoal: (goal: number) => void;
   setProfile: (profile: Partial<LearnerProfile>) => void;
@@ -607,6 +637,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const stopVacation = useCallback(() => dispatch({ type: 'endVacation' }), []);
   const completeLesson = useCallback((id: string, accuracy: number) => dispatch({ type: 'lesson', id, accuracy }), []);
   const completeTest = useCallback((unitId: string, score: number) => dispatch({ type: 'test', unitId, score }), []);
+  const completePlacement = useCallback((known: { unitId: string; score: number }[], finished: boolean) => dispatch({ type: 'placement', known, finished }), []);
   const completeDialogue = useCallback((id: string, score: number) => dispatch({ type: 'dialogue', id, score }), []);
   const setDailyGoal = useCallback((goal: number) => dispatch({ type: 'goal', goal }), []);
   const setProfile = useCallback((profile: Partial<LearnerProfile>) => dispatch({ type: 'profile', profile }), []);
@@ -651,6 +682,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       recordExercise,
       completeLesson,
       completeTest,
+      completePlacement,
       completeDialogue,
       setDailyGoal,
       setProfile,
@@ -679,6 +711,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     recordExercise,
     completeLesson,
     completeTest,
+    completePlacement,
     completeDialogue,
     setDailyGoal,
     setProfile,

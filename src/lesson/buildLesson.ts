@@ -354,6 +354,30 @@ export function buildUnitTest(unitId: CourseUnitId): LessonStep[] {
   ];
 }
 
+/** Questions per unit in the placement test, and how many must be right for the unit to count as known. */
+export const PLACEMENT_QUESTIONS = 4;
+export const PLACEMENT_PASS = 3;
+
+/**
+ * A placement unit is decided as soon as it is passed (enough right answers) or can no longer be (too many
+ * wrong); until then, null: ask the next question.
+ */
+export function placementVerdict(answers: boolean[], questions = PLACEMENT_QUESTIONS): 'known' | 'start' | null {
+  const right = answers.filter(Boolean).length;
+  if (right >= PLACEMENT_PASS) return 'known';
+  if (answers.length - right > questions - PLACEMENT_PASS || answers.length >= questions) return 'start';
+  return null;
+}
+
+/**
+ * Placement test questions for one unit: two listening (one with pictures when it can) and two reading,
+ * on different phrases. No speaking or typing, so it needs no microphone and goes quickly.
+ */
+export function buildPlacementUnit(unitId: CourseUnitId): LessonStep[] {
+  const items = shuffle(lessonsOfUnit(unitId).flatMap((l) => l.itemIds).map((id) => getItem(id)!).filter(Boolean));
+  return [...listeningSteps(items.slice(0, 2)), ...items.slice(2, 4).map((item, i) => readingStep(item, i === 1))].slice(0, PLACEMENT_QUESTIONS);
+}
+
 /** Which skill a question checks, for the test intro and its summary. */
 export type TestSkill = 'listen' | 'read' | 'write' | 'speak';
 export const STEP_SKILL: Record<LessonStep['kind'], TestSkill | null> = {

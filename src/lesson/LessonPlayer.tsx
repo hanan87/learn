@@ -286,7 +286,7 @@ export function LessonPlayer({ lessonId, onClose, onOpenTest }: Props) {
   );
 }
 
-function renderStep(step: LessonStep, answered: boolean, onAnswered: (r: StepResult) => void) {
+export function renderStep(step: LessonStep, answered: boolean, onAnswered: (r: StepResult) => void) {
   switch (step.kind) {
     case 'learn':
       return <LearnStep step={step} answered={answered} onAnswered={onAnswered} />;

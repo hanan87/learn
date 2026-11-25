@@ -13,6 +13,7 @@ import { TopBar } from './components/TopBar';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useLang } from './i18n/LangContext';
 import { LessonPlayer } from './lesson/LessonPlayer';
+import { PlacementTest } from './lesson/PlacementTest';
 import { ttsSupported } from './lib/env';
 import { hasPolishVoice, loadVoices } from './lib/tts';
 import { useMic } from './state/MicContext';
@@ -47,6 +48,7 @@ const TAB_IDS = TABS.map((t) => t.id);
  *   #/handsfree/<map|vocab>                    – audio-only trainer
  *   #/story/<storyId>                          – mini story
  *   #/blitz                                    – 60-second Speed Blitz
+ *   #/placement                                – placement test (English course): where to start
  *   #/review[/<pl|cnr>[/<sectionId>]]          – native-speaker review of the Polish / Montenegrin texts
  */
 export function App() {
@@ -88,6 +90,7 @@ export function App() {
     return <HandsFree key={source} source={source} onExit={() => navigate(source, true)} />;
   }
   if (segments[0] === 'blitz') return <SpeedBlitz onExit={() => navigate('vocab', true)} />;
+  if (segments[0] === 'placement') return <PlacementTest onClose={() => navigate('map', true)} onOpenLesson={(id) => navigate(`lesson/${id}`, true)} />;
   const story = segments[0] === 'story' ? getStory(segments[1] ?? '') : undefined;
   if (story) return <StoryPlayer key={story.id} story={story} onExit={() => navigate('talk', true)} />;
 
@@ -125,7 +128,7 @@ export function App() {
         </div>
       )}
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-28">
-        {tab === 'map' && <CourseMap onOpenLesson={(id) => navigate(`lesson/${id}`)} onOpenItem={openItem} onOpenHandsFree={() => navigate('handsfree/map')} onOpenProgress={() => navigate('map/progress')} onOpenCertificate={(id) => navigate(`map/certificate/${id}`)} />}
+        {tab === 'map' && <CourseMap onOpenLesson={(id) => navigate(`lesson/${id}`)} onOpenItem={openItem} onOpenHandsFree={() => navigate('handsfree/map')} onOpenProgress={() => navigate('map/progress')} onOpenCertificate={(id) => navigate(`map/certificate/${id}`)} onOpenPlacement={() => navigate('placement')} />}
         {tab === 'lab' && <SoundLab key={segments[2] ?? 'lab'} onOpenItem={openItem} initialGroup={segments[1] === 'group' ? segments[2] : undefined} />}
         {tab === 'vocab' && <VocabReview
             onOpenItem={openItem}

@@ -6,6 +6,7 @@ import {
   Check,
   CheckCircle2,
   ClipboardCheck,
+  Signal,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -44,6 +45,7 @@ interface Props {
   onOpenHandsFree: () => void;
   onOpenProgress: () => void;
   onOpenCertificate: (unitId: string) => void;
+  onOpenPlacement: () => void;
 }
 
 /** Big entry button for the audio-only (driving / walking) trainer – shared by the map and the review tab. */
@@ -108,8 +110,8 @@ function UnitRing({ done, total, color, Icon }: { done: number; total: number; c
   );
 }
 
-export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenProgress, onOpenCertificate }: Props) {
-  const { state, todayXp, activeStreak, level, levelProgress, setProfile, freezesLeft } = useProgress();
+export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenProgress, onOpenCertificate, onOpenPlacement }: Props) {
+  const { state, todayXp, activeStreak, level, levelProgress, setProfile, freezesLeft, completePlacement } = useProgress();
   const { tr, lang } = useLang();
   // Shown once to learners who have not picked a gender yet; stays open while they type their name.
   const [profileOpen, setProfileOpen] = useState(() => state.profile.gender === null);
@@ -194,6 +196,11 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenPro
           {lang === 'he' ? <ChevronLeft className="size-4 shrink-0" aria-hidden /> : <ChevronRight className="size-4 shrink-0" aria-hidden />}
         </button>
       </section>
+
+      {/* The English course offers a placement test until the learner has taken it, declined it or moved on. */}
+      {C.id === 'en' && !state.placement && Object.keys(state.lessons).length < 2 && (
+        <PlacementOffer onOpen={onOpenPlacement} onDismiss={() => completePlacement([], false)} />
+      )}
 
       {next && nextUnit && (
         <ContinueCard
@@ -448,7 +455,12 @@ function UnitDetail({
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-slate-900">
                   {tr('שיעור', 'Lesson')} {lesson.number}
-                  {done && <span className="font-medium text-emerald-700"> · {state.lessons[lesson.id].bestAccuracy}%</span>}
+                  {done && (
+                    <span className="font-medium text-emerald-700">
+                      {' '}
+                      · {state.lessons[lesson.id].placed ? tr('ידעתם', 'Known') : `${state.lessons[lesson.id].bestAccuracy}%`}
+                    </span>
+                  )}
                 </span>
                 <span className={`polish block truncate text-slate-500 ${lesson.letters ? 'text-base' : 'text-xs'}`} dir="ltr">
                   {preview}
@@ -560,3 +572,30 @@ function TestRow({ unit, onStart, onOpenCertificate }: { unit: Unit; onStart: ()
   );
 }
 
+/** "Already know some English?" – the placement test offer on the English map. */
+function PlacementOffer({ onOpen, onDismiss }: { onOpen: () => void; onDismiss: () => void }) {
+  const { tr } = useLang();
+  return (
+    <section className="space-y-3 rounded-3xl bg-white p-4 shadow-sm ring-[1.5px] ring-brand-200" data-testid="placement-offer">
+      <div className="flex items-center gap-3">
+        <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-600 text-white">
+          <Signal className="size-6" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h3 className="font-bold text-slate-900">{tr('יודעים כבר קצת אנגלית?', 'Already know some English?')}</h3>
+          <p className="text-sm leading-snug text-slate-600">
+            {tr('מבחן רמה של 3 דקות ימצא מאיפה להתחיל, בלי לחזור על מה שאתם כבר יודעים.', "A 3-minute placement test finds where to start, so you don't repeat what you already know.")}
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={onOpen} className="min-h-12 rounded-xl bg-brand-600 px-2 text-sm font-bold text-white">
+          {tr('למבחן הרמה', 'Take the placement test')}
+        </button>
+        <button type="button" onClick={onDismiss} className="min-h-12 rounded-xl bg-slate-50 px-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300">
+          {tr('להתחיל מההתחלה', 'Start from the beginning')}
+        </button>
+      </div>
+    </section>
+  );
+}
