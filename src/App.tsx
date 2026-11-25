@@ -3,7 +3,8 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Info } from 'lucide-react';
 import { clipCount, subscribeManifest } from './lib/voiceClips';
 import { cloudConfigured, subscribeCloudVoice } from './lib/cloudVoice';
-import { getItem } from './data';
+import { getItem, UNITS } from './data';
+import { Certificate } from './components/Certificate';
 import { BottomNav, TABS, type TabId } from './components/BottomNav';
 import { ItemDetail } from './components/ItemDetail';
 import { Sheet } from './components/Sheet';
@@ -37,10 +38,12 @@ const TAB_IDS = TABS.map((t) => t.id);
  *   #/map | #/lab | #/say | #/vocab | #/talk  – tabs (say: "How do I say…?" translate, listen, repeat)
  *   #/<tab>/item/<itemId>                      – item sheet on top of a tab
  *   #/<tab>/settings                           – settings sheet
- *   #/<tab>/progress                           – my progress (streak, calendar, skills, can-do, reminder)
+ *   #/<tab>/progress                           – my progress (streak, calendar, skills, can-do, certificates, reminder)
+ *   #/<tab>/certificate/<unitId>               – the certificate of a passed unit test
  *   #/lab/group/<groupId>                      – Sound Lab opened on a contrast group
  *   #/lesson/<lessonId>                        – full-screen lesson
  *   #/lesson/practice                          – personalized reinforcement lesson
+ *   #/lesson/test-<unitId>                     – end-of-unit test (intro, questions, result and certificate)
  *   #/handsfree/<map|vocab>                    – audio-only trainer
  *   #/story/<storyId>                          – mini story
  *   #/blitz                                    – 60-second Speed Blitz
@@ -48,7 +51,10 @@ const TAB_IDS = TABS.map((t) => t.id);
  */
 export function App() {
   const { segments, navigate } = useHashRoute('map');
-  const { dueItemIds } = useProgress();
+  const {
+    dueItemIds,
+    state: { tests },
+  } = useProgress();
   const { unset, tr, loc } = useLang();
   const mic = useMic();
   const [voiceMissing, setVoiceMissing] = useState(false);
@@ -70,6 +76,8 @@ export function App() {
   const item = itemId ? getItem(itemId) : undefined;
   const settingsOpen = segments[1] === 'settings';
   const progressOpen = segments[1] === 'progress';
+  const certUnit = segments[1] === 'certificate' ? UNITS.find((u) => u.id === segments[2]) : undefined;
+  const certRecord = certUnit ? tests[certUnit.id] : undefined;
 
   const openItem = (id: string) => navigate(`${tab}/item/${id}`);
   const closeSheet = () => navigate(tab, true);
@@ -84,7 +92,14 @@ export function App() {
   if (story) return <StoryPlayer key={story.id} story={story} onExit={() => navigate('talk', true)} />;
 
   if (isLesson) {
-    return <LessonPlayer key={segments[1]} lessonId={segments[1]} onClose={() => navigate(segments[1] === 'practice' ? 'vocab' : 'map', true)} />;
+    return (
+      <LessonPlayer
+        key={segments[1]}
+        lessonId={segments[1]}
+        onClose={() => navigate(segments[1] === 'practice' ? 'vocab' : 'map', true)}
+        onOpenTest={(unitId) => navigate(`lesson/test-${unitId}`, true)}
+      />
+    );
   }
 
   return (
@@ -110,7 +125,7 @@ export function App() {
         </div>
       )}
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-28">
-        {tab === 'map' && <CourseMap onOpenLesson={(id) => navigate(`lesson/${id}`)} onOpenItem={openItem} onOpenHandsFree={() => navigate('handsfree/map')} onOpenProgress={() => navigate('map/progress')} />}
+        {tab === 'map' && <CourseMap onOpenLesson={(id) => navigate(`lesson/${id}`)} onOpenItem={openItem} onOpenHandsFree={() => navigate('handsfree/map')} onOpenProgress={() => navigate('map/progress')} onOpenCertificate={(id) => navigate(`map/certificate/${id}`)} />}
         {tab === 'lab' && <SoundLab key={segments[2] ?? 'lab'} onOpenItem={openItem} initialGroup={segments[1] === 'group' ? segments[2] : undefined} />}
         {tab === 'vocab' && <VocabReview
             onOpenItem={openItem}
@@ -130,7 +145,14 @@ export function App() {
         <Settings />
       </Sheet>
       <Sheet open={progressOpen} onClose={closeSheet} title={tr('ההתקדמות שלי', 'My progress')}>
-        <ProgressPage />
+        <ProgressPage onOpenCertificate={(id) => navigate(`${tab}/certificate/${id}`)} />
+      </Sheet>
+      <Sheet open={!!certRecord?.passedAt} onClose={closeSheet} title={tr('תעודה', 'Certificate')}>
+        {certUnit && certRecord?.passedAt && (
+          <div className="mx-auto max-w-md pt-2">
+            <Certificate unit={certUnit} score={certRecord.passScore ?? certRecord.bestScore} date={certRecord.passedAt} />
+          </div>
+        )}
       </Sheet>
     </div>
   );

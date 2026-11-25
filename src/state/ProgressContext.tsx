@@ -47,7 +47,22 @@ export const XP = {
   customWord: 5,
   storyQuestion: 10,
   storyComplete: 15,
+  /** A unit test passed for the first time, and any other attempt. */
+  testPass: 50,
+  testAttempt: 10,
 } as const;
+
+/** The score that passes a unit test (lesson/buildLesson builds its questions). */
+export const TEST_PASS_SCORE = 80;
+
+/** A unit's test: the best score, how many times it was taken, and the day it was first passed (its certificate). */
+export interface UnitTestRecord {
+  bestScore: number;
+  attempts: number;
+  passedAt: string | null;
+  /** Score of the attempt that first passed, printed on the certificate. */
+  passScore: number | null;
+}
 
 export interface ItemProgress {
   learned: boolean;
@@ -109,6 +124,8 @@ export interface ProgressState {
   /** Day a freeze was last earned (the progress page says so on that day). */
   freezeEarnedOn: string | null;
   skills: Partial<Record<Skill, SkillStat>>;
+  /** Unit tests by unit id. */
+  tests: Record<string, UnitTestRecord>;
 }
 
 export const initialState = (): ProgressState => ({
@@ -133,6 +150,7 @@ export const initialState = (): ProgressState => ({
   vacations: [],
   freezeEarnedOn: null,
   skills: {},
+  tests: {},
 });
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -222,6 +240,7 @@ export function migrate(raw: unknown): ProgressState | null {
     vacations: Array.isArray(data.vacations) ? data.vacations : [],
     freezeEarnedOn: data.freezeEarnedOn ?? null,
     skills: data.skills && typeof data.skills === 'object' ? data.skills : seedSkills(items),
+    tests: data.tests && typeof data.tests === 'object' ? data.tests : {},
   } as ProgressState;
 }
 
@@ -253,6 +272,7 @@ export type Action =
   | { type: 'vacation'; days: number }
   | { type: 'endVacation' }
   | { type: 'lesson'; id: string; accuracy: number }
+  | { type: 'test'; unitId: string; score: number }
   | { type: 'dialogue'; id: string; score: number }
   | { type: 'goal'; goal: number }
   | { type: 'addCustom'; item: LearningItem }
@@ -399,6 +419,18 @@ export function reducer(state: ProgressState, action: Action): ProgressState {
       return withXp({ ...state, lessons: { ...state.lessons, [action.id]: entry } }, XP.lessonComplete);
     }
 
+    case 'test': {
+      const prev = state.tests[action.unitId];
+      const firstPass = action.score >= TEST_PASS_SCORE && !prev?.passedAt;
+      const entry: UnitTestRecord = {
+        bestScore: Math.max(prev?.bestScore ?? 0, action.score),
+        attempts: (prev?.attempts ?? 0) + 1,
+        passedAt: firstPass ? todayKey() : (prev?.passedAt ?? null),
+        passScore: firstPass ? action.score : (prev?.passScore ?? null),
+      };
+      return withXp({ ...state, tests: { ...state.tests, [action.unitId]: entry } }, firstPass ? XP.testPass : XP.testAttempt);
+    }
+
     case 'dialogue': {
       const prev = state.dialogues[action.id];
       const entry = { completedAt: todayKey(), bestScore: Math.max(prev?.bestScore ?? 0, action.score) };
@@ -516,6 +548,7 @@ interface ProgressApi {
   recordWriting: (id: string, text: string, verdict: 'correct' | 'diacritics' | 'wrong', letters?: string[]) => void;
   recordExercise: (id: string | undefined, text: string, correct: boolean, skill: Skill, sounds?: SoundKey[]) => void;
   completeLesson: (id: string, accuracy: number) => void;
+  completeTest: (unitId: string, score: number) => void;
   completeDialogue: (id: string, score: number) => void;
   setDailyGoal: (goal: number) => void;
   setProfile: (profile: Partial<LearnerProfile>) => void;
@@ -573,6 +606,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const beginVacation = useCallback((days: number) => dispatch({ type: 'vacation', days }), []);
   const stopVacation = useCallback(() => dispatch({ type: 'endVacation' }), []);
   const completeLesson = useCallback((id: string, accuracy: number) => dispatch({ type: 'lesson', id, accuracy }), []);
+  const completeTest = useCallback((unitId: string, score: number) => dispatch({ type: 'test', unitId, score }), []);
   const completeDialogue = useCallback((id: string, score: number) => dispatch({ type: 'dialogue', id, score }), []);
   const setDailyGoal = useCallback((goal: number) => dispatch({ type: 'goal', goal }), []);
   const setProfile = useCallback((profile: Partial<LearnerProfile>) => dispatch({ type: 'profile', profile }), []);
@@ -616,6 +650,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       recordWriting,
       recordExercise,
       completeLesson,
+      completeTest,
       completeDialogue,
       setDailyGoal,
       setProfile,
@@ -643,6 +678,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     recordWriting,
     recordExercise,
     completeLesson,
+    completeTest,
     completeDialogue,
     setDailyGoal,
     setProfile,

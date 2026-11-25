@@ -1,13 +1,13 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import { Dumbbell, Flame, Star, Target, Trophy, Volume2 } from 'lucide-react';
+import { ClipboardCheck, Dumbbell, Flame, Star, Target, Trophy, Volume2 } from 'lucide-react';
 import { getItem } from '../data';
 import { getLetter } from '../data/he/alphabet';
-import type { LessonDef } from '../data/lessons';
+import { lessonsOfUnit, type LessonDef } from '../data/lessons';
 import { useLang } from '../i18n/LangContext';
 import { haptic } from '../lib/haptics';
 import { playCue } from '../lib/sfx';
 import { speak } from '../lib/tts';
-import { useProgress } from '../state/ProgressContext';
+import { TEST_PASS_SCORE, useProgress } from '../state/ProgressContext';
 
 /** What the learner had when the lesson opened, so the end screen can show what this lesson added. */
 export interface LessonStart {
@@ -23,6 +23,8 @@ interface Props {
   accuracy: number;
   start: LessonStart;
   onClose: () => void;
+  /** Opens the unit test; offered once every lesson of the unit is done and the test is not passed yet. */
+  onOpenTest?: () => void;
 }
 
 const RING_R = 42;
@@ -32,7 +34,7 @@ const RING_LEN = 2 * Math.PI * RING_R;
  * End-of-lesson celebration: earned XP, accuracy and streak, the daily-goal ring filling up from where
  * the lesson started, a level-up line, and the lesson's phrases (or letters) to hear once more.
  */
-export function LessonComplete({ lesson, subtitle, accuracy, start, onClose }: Props) {
+export function LessonComplete({ lesson, subtitle, accuracy, start, onClose, onOpenTest }: Props) {
   const { state, todayXp, activeStreak, studiedToday, level } = useProgress();
   const { tr } = useLang();
   const goal = state.dailyGoal;
@@ -56,6 +58,7 @@ export function LessonComplete({ lesson, subtitle, accuracy, start, onClose }: P
   const phrases = lesson && !lesson.letters ? lesson.itemIds.map((id) => getItem(id)).filter((i) => !!i) : [];
   const letters = lesson?.letters?.map((id) => getLetter(id)?.glyph).filter((g): g is string => !!g) ?? [];
   const isPractice = !lesson;
+  const testOpen = !!lesson && !!onOpenTest && lessonsOfUnit(lesson.unitId).every((l) => state.lessons[l.id]) && !state.tests[lesson.unitId]?.passedAt;
 
   return (
     <div className="pt-safe fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-slate-50" role="dialog" aria-modal="true" aria-label={subtitle} data-testid="lesson-complete">
@@ -145,6 +148,21 @@ export function LessonComplete({ lesson, subtitle, accuracy, start, onClose }: P
           </section>
         )}
 
+        {testOpen && (
+          <section className="flex items-center gap-3 rounded-2xl bg-brand-50 p-3 text-start ring-1 ring-brand-200" data-testid="test-offer">
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+              <ClipboardCheck className="size-5" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold text-slate-900">{tr('מבחן היחידה נפתח', 'The unit test is open')}</span>
+              <span className="block text-sm text-slate-600">{tr(`עוברים מ-${TEST_PASS_SCORE}% ומקבלים תעודה.`, `Pass with ${TEST_PASS_SCORE}% and get a certificate.`)}</span>
+            </span>
+            <button type="button" onClick={onOpenTest} className="min-h-11 shrink-0 rounded-xl bg-brand-600 px-3 text-sm font-bold text-white">
+              {tr('למבחן', 'Take it')}
+            </button>
+          </section>
+        )}
+
         <p className="text-sm text-slate-600">
           {isPractice
             ? tr('התוצאות עודכנו בהיסטוריה האישית שלכם – המילים והצלילים החלשים יחזרו שוב בקרוב.', 'Your results updated your personal history – weak words and sounds will come back soon.')
@@ -177,7 +195,7 @@ function Tile({ icon, value, label, tone, badge, testId }: { icon: ReactNode; va
 const CONFETTI_COLORS = ['bg-amber-400', 'bg-emerald-500', 'bg-sky-500', 'bg-pink-500', 'bg-violet-500', 'bg-orange-500'];
 
 /** A one-off burst of falling paper bits; hidden when the learner prefers reduced motion. */
-function Confetti({ big }: { big: boolean }) {
+export function Confetti({ big }: { big: boolean }) {
   const count = big ? 36 : 18;
   return (
     <div className="pointer-events-none fixed inset-x-0 top-0 z-10 h-0 overflow-visible" aria-hidden>

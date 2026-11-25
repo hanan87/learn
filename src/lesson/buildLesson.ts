@@ -4,7 +4,7 @@ import { lessonsOfUnit, type LessonDef } from '../data/lessons';
 import { getLetter, HE_LETTERS, type HeLetter } from '../data/he/alphabet';
 import { CONTRAST_GROUPS, type ContrastGroup, type MinimalPair } from '../data/minimalPairs';
 import { SOUND_INFO, type SoundKey } from '../data/sounds';
-import type { LearningItem, SoundTag } from '../data/types';
+import type { CourseUnitId, LearningItem, SoundTag } from '../data/types';
 import { detectSounds } from '../lib/phonetics';
 import { pick, sample, shuffle } from '../lib/random';
 import { mispronounce } from '../lib/simulate';
@@ -184,6 +184,29 @@ export function misreadings(notation: string): string[] {
   return [...out];
 }
 
+function letterSoundStep(letter: HeLetter, known: Set<string>): LessonStep {
+  return { kind: 'letter-sound', key: `sound-${letter.id}`, letterId: letter.id, optionIds: soundOptions(letter, known) };
+}
+
+/** Pick the transcription of a written word, among misreadings and other words the learner knows. */
+function readWordStep(item: LearningItem, knownWords: LearningItem[]): LessonStep {
+  const right = item.phoneticHebrew;
+  const options = [right];
+  const add = (o: string) => {
+    if (options.length < 4 && !options.some((x) => sameReading(x, o))) options.push(o);
+  };
+  sample(misreadings(right), 2).forEach(add);
+  shuffle(knownWords.filter((w) => w.id !== item.id)).forEach((w) => add(w.phoneticHebrew));
+  misreadings(right).forEach(add);
+  return { kind: 'read-word', key: `read-${item.id}`, itemId: item.id, options: shuffle(options) };
+}
+
+/** Hear a word and pick how it is written. */
+function hearWordStep(heard: LearningItem, knownWords: LearningItem[]): LessonStep {
+  const others = shuffle(knownWords.filter((w) => w.id !== heard.id && normalize(w.polish) !== normalize(heard.polish)));
+  return { kind: 'hear-word', key: `hear-${heard.id}`, itemId: heard.id, optionIds: shuffle([heard.id, ...others.slice(0, 3).map((w) => w.id)]) };
+}
+
 /** An Alef-Bet lesson: new letters, their sounds, then reading, hearing and writing the lesson's words. */
 function buildLetterLesson(lesson: LessonDef, letters: string[]): LessonStep[] {
   const earlier = lessonsOfUnit(lesson.unitId).filter((l) => l.number <= lesson.number);
@@ -195,30 +218,25 @@ function buildLetterLesson(lesson: LessonDef, letters: string[]): LessonStep[] {
   for (const id of letters) steps.push({ kind: 'letter-learn', key: `letter-${id}`, letterId: id });
   for (const id of shuffle(letters)) {
     const letter = getLetter(id);
-    if (letter && letter.quiz !== false) steps.push({ kind: 'letter-sound', key: `sound-${id}`, letterId: id, optionIds: soundOptions(letter, known) });
+    if (letter && letter.quiz !== false) steps.push(letterSoundStep(letter, known));
   }
 
   for (const item of words) steps.push({ kind: 'learn', key: `learn-${item.id}`, itemId: item.id });
-
-  for (const item of shuffle(words)) {
-    const right = item.phoneticHebrew;
-    const options = [right];
-    const add = (o: string) => {
-      if (options.length < 4 && !options.some((x) => sameReading(x, o))) options.push(o);
-    };
-    sample(misreadings(right), 2).forEach(add);
-    shuffle(knownWords.filter((w) => w.id !== item.id)).forEach((w) => add(w.phoneticHebrew));
-    misreadings(right).forEach(add);
-    steps.push({ kind: 'read-word', key: `read-${item.id}`, itemId: item.id, options: shuffle(options) });
-  }
-
-  const heard = pick(words);
-  const others = shuffle(knownWords.filter((w) => w.id !== heard.id && normalize(w.polish) !== normalize(heard.polish)));
-  steps.push({ kind: 'hear-word', key: `hear-${heard.id}`, itemId: heard.id, optionIds: shuffle([heard.id, ...others.slice(0, 3).map((w) => w.id)]) });
+  for (const item of shuffle(words)) steps.push(readWordStep(item, knownWords));
+  steps.push(hearWordStep(pick(words), knownWords));
 
   const writeItems = [...words].sort((a, b) => a.polish.length - b.polish.length).slice(0, 2);
   for (const item of writeItems) steps.push({ kind: 'write', key: `write-${item.id}`, itemId: item.id });
   return steps;
+}
+
+/** The minimal-pair group that fits a set of items: their sound tags first, then the sounds found in them. */
+function pairGroupFor(items: LearningItem[], unitId: string): ContrastGroup | null {
+  const tags = items.flatMap((i) => i.soundTags ?? []);
+  const sounds = items.flatMap((i) => detectSounds(i.polish));
+  const groupId =
+    tags.map((t) => TAG_TO_GROUP[t]).find(Boolean) ?? sounds.map((s) => SOUND_INFO[s].groupId).find(Boolean) ?? (unitId === UNITS[0].id ? CONTRAST_GROUPS[0].id : null);
+  return (groupId && CONTRAST_GROUPS.find((g) => g.id === groupId)) || null;
 }
 
 export function buildLesson(lesson: LessonDef): LessonStep[] {
@@ -231,11 +249,7 @@ export function buildLesson(lesson: LessonDef): LessonStep[] {
 
   // 2. Listening comprehension + one minimal pair from the lesson's sound features
   for (const item of shuffle(items)) steps.push(listenStep(item));
-  const tags = items.flatMap((i) => i.soundTags ?? []);
-  const sounds = items.flatMap((i) => detectSounds(i.polish));
-  const groupId =
-    tags.map((t) => TAG_TO_GROUP[t]).find(Boolean) ?? sounds.map((s) => SOUND_INFO[s].groupId).find(Boolean) ?? (lesson.unitId === UNITS[0].id ? CONTRAST_GROUPS[0].id : null);
-  const group = groupId ? CONTRAST_GROUPS.find((g) => g.id === groupId) : null;
+  const group = pairGroupFor(items, lesson.unitId);
   if (group) steps.push(pairStep(group));
 
   // 3. Reading & context
@@ -253,6 +267,74 @@ export function buildLesson(lesson: LessonDef): LessonStep[] {
 
   return steps;
 }
+
+/** Questions in a unit test (the passing score is TEST_PASS_SCORE in state/ProgressContext). */
+export const TEST_SIZE = 12;
+
+/** Route id of a unit's test, opened in the lesson player ("test-u2"). */
+export const testLessonId = (unitId: string) => `test-${unitId}`;
+
+/**
+ * End-of-unit test: twelve questions over every phrase of the unit, without the learn cards.
+ * Five listening (one a minimal pair when the unit has a sound contrast), three reading, two writing
+ * and two speaking from memory, each item used once per skill. The Alef-Bet unit asks four letter
+ * sounds, four written words to read, two heard words to find and two words to write.
+ */
+export function buildUnitTest(unitId: CourseUnitId): LessonStep[] {
+  const lessons = lessonsOfUnit(unitId);
+  const items = shuffle(lessons.flatMap((l) => l.itemIds).map((id) => getItem(id)!).filter(Boolean));
+  if (!items.length) return [];
+
+  if (lessons.some((l) => l.letters)) {
+    const letterIds = lessons.flatMap((l) => l.letters ?? []);
+    const known = new Set(letterIds);
+    const quizLetters = sample(letterIds.map((id) => getLetter(id)).filter((l): l is HeLetter => !!l && l.quiz !== false), 4);
+    // Words for reading and hearing are different ones; writing takes two short words from the rest.
+    const read = items.slice(0, 4);
+    const heard = items.slice(4, 6);
+    const write = [...items.slice(6)].sort((a, b) => a.polish.length - b.polish.length).slice(0, 2);
+    return [
+      ...quizLetters.map((l) => letterSoundStep(l, known)),
+      ...read.map((item) => readWordStep(item, items)),
+      ...heard.map((item) => hearWordStep(item, items)),
+      ...write.map((item): LessonStep => ({ kind: 'write', key: `write-${item.id}`, itemId: item.id })),
+    ];
+  }
+
+  const group = pairGroupFor(items, unitId);
+  const listen = items.slice(0, group ? 4 : 5).map((item) => listenStep(item));
+  if (group) listen.push(pairStep(group));
+  // Reading starts after the listening items, so the same phrase is not met twice in a row.
+  const reading = [...items.slice(5), ...items].slice(0, 3).map((item, i) => readingStep(item, i % 2 === 1));
+  const readIds = new Set(reading.map((s) => ('itemId' in s ? s.itemId : '')));
+  // Writing takes short phrases (typing on a phone), speaking the ones not written.
+  const writeItems = [...items].filter((i) => !readIds.has(i.id)).sort((a, b) => a.polish.length - b.polish.length).slice(0, 2);
+  const speakPool = items.filter((i) => !writeItems.includes(i) && !readIds.has(i.id));
+  const speak = (speakPool.length >= 2 ? speakPool : items.filter((i) => !writeItems.includes(i))).slice(0, 2);
+  return [
+    ...listen,
+    ...reading,
+    ...writeItems.map((item): LessonStep => ({ kind: 'write', key: `write-${item.id}`, itemId: item.id })),
+    ...speak.map((item): LessonStep => ({ kind: 'recall', key: `recall-${item.id}`, itemId: item.id })),
+  ];
+}
+
+/** Which skill a question checks, for the test intro and its summary. */
+export type TestSkill = 'listen' | 'read' | 'write' | 'speak';
+export const STEP_SKILL: Record<LessonStep['kind'], TestSkill | null> = {
+  learn: null,
+  'letter-learn': null,
+  'listen-meaning': 'listen',
+  'listen-pair': 'listen',
+  'hear-word': 'listen',
+  assemble: 'read',
+  'fill-blank': 'read',
+  'choose-spelling': 'read',
+  'letter-sound': 'read',
+  'read-word': 'read',
+  write: 'write',
+  recall: 'speak',
+};
 
 export const REINFORCEMENT_SIZE = 8;
 

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import {
+  Award,
   BellRing,
   BookOpen,
   Brain,
@@ -19,6 +20,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { CAN_DO } from '../data/canDo';
+import { Medal } from '../components/Certificate';
 import { UNITS } from '../data';
 import { LESSONS, lessonsOfUnit } from '../data/lessons';
 import { unitText } from '../data/types';
@@ -27,7 +29,7 @@ import { COURSE_INFO as C } from '../lib/course';
 import { todayKey } from '../lib/date';
 import { appUrl, downloadIcs, googleCalendarUrl, isTime, type Reminder } from '../lib/reminder';
 import { currentVacation, MAX_FREEZES, onVacation, VACATION_LENGTHS, FREEZE_EVERY } from '../lib/streak';
-import { masteryOf, SKILLS, useProgress, type Skill } from '../state/ProgressContext';
+import { masteryOf, SKILLS, TEST_PASS_SCORE, useProgress, type Skill } from '../state/ProgressContext';
 
 /**
  * My progress: the streak with its protection (freezes, vacation mode), a calendar of study days,
@@ -50,7 +52,7 @@ const keyDate = (key: string) => {
   return new Date(y, m - 1, d);
 };
 
-export function ProgressPage() {
+export function ProgressPage({ onOpenCertificate }: { onOpenCertificate: (unitId: string) => void }) {
   const { tr } = useLang();
   return (
     <div className="space-y-4 pt-2" data-testid="progress-page">
@@ -60,6 +62,7 @@ export function ProgressPage() {
       <WordsCard />
       <SkillsCard />
       <CanDoCard />
+      <CertificatesCard onOpen={onOpenCertificate} />
       <ReminderCard />
     </div>
   );
@@ -437,6 +440,51 @@ function CanDoCard() {
           );
         })}
       </ol>
+    </section>
+  );
+}
+
+// ---------- Certificates of passed unit tests ----------
+
+function CertificatesCard({ onOpen }: { onOpen: (unitId: string) => void }) {
+  const { tr, lang } = useLang();
+  const { state } = useProgress();
+  const passed = UNITS.filter((u) => state.tests[u.id]?.passedAt);
+  return (
+    <section className={card} data-testid="certificates">
+      <div className="flex items-baseline justify-between gap-2">
+        <CardTitle icon={Award} color="text-amber-600">
+          {tr('התעודות שלי', 'My certificates')}
+        </CardTitle>
+        <span className="text-sm text-slate-500 tabular-nums">
+          {passed.length}/{UNITS.length}
+        </span>
+      </div>
+      {passed.length === 0 ? (
+        <p className="text-sm text-slate-600">
+          {tr(`בסוף כל יחידה יש מבחן קצר. עוברים מ-${TEST_PASS_SCORE}% ומקבלים תעודה שאפשר לשמור ולשתף.`, `Each unit ends with a short test. Pass with ${TEST_PASS_SCORE}% to get a certificate you can save and share.`)}
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {passed.map((u) => {
+            const t = state.tests[u.id];
+            return (
+              <li key={u.id}>
+                <button type="button" onClick={() => onOpen(u.id)} className="flex min-h-14 w-full items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 text-start ring-1 ring-slate-200/70 hover:bg-white" data-testid={`certificate-${u.id}`}>
+                  <Medal unit={u} size={34} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-slate-900">{unitText(u, lang).title}</span>
+                    <span className="block text-sm text-slate-500">
+                      <span dir="ltr">{t.passScore ?? t.bestScore}%</span> · <span dir="ltr">{keyDate(t.passedAt!).toLocaleDateString(LOCALES[lang], { day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
+                    </span>
+                  </span>
+                  {lang === 'he' ? <ChevronLeft className="size-4 shrink-0 text-slate-400" aria-hidden /> : <ChevronRight className="size-4 shrink-0 text-slate-400" aria-hidden />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }

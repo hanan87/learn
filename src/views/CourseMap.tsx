@@ -2,32 +2,22 @@ import { CourseSwitch } from '../components/CourseSwitch';
 import { COURSE_INFO as C } from '../lib/course';
 import { Fragment, useState, type ReactNode } from 'react';
 import {
-  AudioLines,
-  BookA,
-  BookOpen,
-  Bus,
-  Plane,
+  Award,
   Check,
   CheckCircle2,
+  ClipboardCheck,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChartColumn,
-  Coffee,
-  Compass,
   Flame,
   Headphones,
-  HeartPulse,
   Lock,
-  MessageCircle,
   Play,
   RotateCcw,
-  ShoppingBag,
-  Smile,
   Snowflake,
   Star,
   Target,
-  Trophy,
   UserRound,
   X,
   type LucideIcon,
@@ -36,65 +26,23 @@ import { ProfileFields } from '../components/ProfileFields';
 import { displayName } from '../lib/personalize';
 import { UNITS, getItem } from '../data';
 import { LESSONS, lessonsOfUnit } from '../data/lessons';
-import { itemText, unitText, type UnitColor } from '../data/types';
+import { itemText, unitText, type Unit, type UnitColor } from '../data/types';
 import { PolishSyllables } from '../components/PolishSyllables';
 import { AlefBetChart } from '../components/AlefBet';
 import { ALEFBET_UNIT, getLetter } from '../data/he/alphabet';
 import { LOCALES, useLang } from '../i18n/LangContext';
-import { useProgress } from '../state/ProgressContext';
+import { TEST_PASS_SCORE, useProgress } from '../state/ProgressContext';
+import { TEST_SIZE, testLessonId } from '../lesson/buildLesson';
+import { Medal } from '../components/Certificate';
+import { UNIT_COLOR as COLOR, unitIcon } from '../components/unitStyle';
 
-/** Tile palette per unit color: tinted tile, icon, number, progress bar and the ring of an open tile. */
-const COLOR: Record<UnitColor, { tile: string; icon: string; num: string; bar: string; open: string }> = {
-  violet: { tile: 'bg-violet-50 ring-violet-200/70', icon: 'text-violet-600', num: 'text-violet-700', bar: 'bg-violet-500', open: 'ring-violet-500' },
-  orange: { tile: 'bg-orange-50 ring-orange-200/70', icon: 'text-orange-600', num: 'text-orange-700', bar: 'bg-orange-500', open: 'ring-orange-500' },
-  sky: { tile: 'bg-sky-50 ring-sky-200/70', icon: 'text-sky-600', num: 'text-sky-700', bar: 'bg-sky-500', open: 'ring-sky-500' },
-  amber: { tile: 'bg-amber-50 ring-amber-200/70', icon: 'text-amber-600', num: 'text-amber-700', bar: 'bg-amber-500', open: 'ring-amber-500' },
-  emerald: { tile: 'bg-emerald-50 ring-emerald-200/70', icon: 'text-emerald-600', num: 'text-emerald-700', bar: 'bg-emerald-500', open: 'ring-emerald-500' },
-  // "rose" units use the pink scale so red stays reserved for mistakes.
-  rose: { tile: 'bg-pink-50 ring-pink-200/70', icon: 'text-pink-600', num: 'text-pink-700', bar: 'bg-pink-500', open: 'ring-pink-500' },
-  red: { tile: 'bg-red-50 ring-red-200/70', icon: 'text-red-600', num: 'text-red-700', bar: 'bg-red-500', open: 'ring-red-500' },
-  teal: { tile: 'bg-teal-50 ring-teal-200/70', icon: 'text-teal-600', num: 'text-teal-700', bar: 'bg-teal-500', open: 'ring-teal-500' },
-};
-
-/** One icon per unit theme (both courses); unknown units fall back to a book. */
-const UNIT_ICON: Record<string, LucideIcon> = {
-  u1: AudioLines,
-  u2: Smile,
-  u3: Compass,
-  u4: Coffee,
-  u5: ShoppingBag,
-  u6: Bus,
-  u7: HeartPulse,
-  u8: MessageCircle,
-  m1: AudioLines,
-  m2: Smile,
-  m3: Compass,
-  m4: Coffee,
-  m5: ShoppingBag,
-  m6: Bus,
-  m7: HeartPulse,
-  m8: MessageCircle,
-  e1: AudioLines,
-  e2: Smile,
-  e3: Coffee,
-  e4: Compass,
-  e5: ShoppingBag,
-  e6: Plane,
-  h0: BookA,
-  h1: AudioLines,
-  h2: Smile,
-  h3: Coffee,
-  h4: ShoppingBag,
-  h5: Bus,
-  h6: HeartPulse,
-};
-const unitIcon = (id: string) => UNIT_ICON[id] ?? BookOpen;
 
 interface Props {
   onOpenLesson: (lessonId: string) => void;
   onOpenItem: (itemId: string) => void;
   onOpenHandsFree: () => void;
   onOpenProgress: () => void;
+  onOpenCertificate: (unitId: string) => void;
 }
 
 /** Big entry button for the audio-only (driving / walking) trainer – shared by the map and the review tab. */
@@ -159,7 +107,7 @@ function UnitRing({ done, total, color, Icon }: { done: number; total: number; c
   );
 }
 
-export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenProgress }: Props) {
+export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenProgress, onOpenCertificate }: Props) {
   const { state, todayXp, activeStreak, level, levelProgress, setProfile, freezesLeft } = useProgress();
   const { tr, lang } = useLang();
   // Shown once to learners who have not picked a gender yet; stays open while they type their name.
@@ -308,6 +256,7 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenPro
             const expanded = openUnit === unit.id;
             const allDone = doneLessons === lessons.length;
             const isCurrent = !allDone && nextUnit?.id === unit.id;
+            const passed = !!state.tests[unit.id]?.passedAt;
 
             return (
               <Fragment key={unit.id}>
@@ -318,17 +267,27 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenPro
                     aria-expanded={expanded}
                     data-testid={`unit-tile-${unit.id}`}
                     data-state={allDone ? 'done' : isCurrent ? 'current' : doneLessons > 0 ? 'started' : 'new'}
+                    data-test={passed ? 'passed' : allDone ? 'open' : 'locked'}
                     className={`flex h-full min-h-32 w-full flex-col justify-between gap-3 rounded-2xl p-3.5 text-start ring-1 transition active:scale-[0.98] ${c.tile} ${expanded ? `ring-2 ${c.open}` : ''} ${isCurrent ? 'shadow-md' : ''}`}
                   >
                     <span className="flex w-full items-start justify-between gap-2">
                       <UnitRing done={doneLessons} total={lessons.length} color={c} Icon={Icon} />
-                      {isCurrent ? (
+                      {passed ? (
+                        <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800" aria-hidden>
+                          <Award className="size-3.5" strokeWidth={2.4} />
+                          {tr('תעודה', 'Certificate')}
+                        </span>
+                      ) : allDone ? (
+                        <span className="rounded-full bg-brand-600 px-2 py-0.5 text-xs font-bold text-white" aria-hidden>
+                          {tr('מבחן', 'Test')}
+                        </span>
+                      ) : isCurrent ? (
                         <span className="rounded-full bg-brand-600 px-2 py-0.5 text-xs font-bold text-white" aria-hidden>
                           {tr('עכשיו', 'Up next')}
                         </span>
                       ) : (
                         <span className={`text-[13px] font-semibold tabular-nums ${c.num}`} aria-hidden>
-                          {allDone ? <Trophy className="size-4" /> : String(unit.order).padStart(2, '0')}
+                          {String(unit.order).padStart(2, '0')}
                         </span>
                       )}
                     </span>
@@ -338,6 +297,11 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenPro
                       </span>
                       <span className="line-clamp-2 block text-[15px] leading-snug font-bold text-slate-900">{ut.title}</span>
                       {isCurrent && <span className="sr-only"> · {tr('עכשיו', 'Up next')}</span>}
+                      {passed ? (
+                        <span className="sr-only"> · {tr('תעודה', 'Certificate')}</span>
+                      ) : (
+                        allDone && <span className="sr-only"> · {tr('מבחן היחידה נפתח', 'The unit test is open')}</span>
+                      )}
                       <span className="mt-1 flex items-center justify-between gap-2 text-xs text-slate-600">
                         <span className={`tabular-nums ${allDone ? `font-semibold ${c.num}` : ''}`}>
                           {doneLessons}/{lessons.length} {tr('שיעורים', 'lessons')}
@@ -354,6 +318,7 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenPro
                     unitIdx={openIdx}
                     onOpenLesson={onOpenLesson}
                     onOpenItem={onOpenItem}
+                    onOpenCertificate={onOpenCertificate}
                     onClose={() => setOpenUnit(null)}
                   />
                 )}
@@ -420,11 +385,13 @@ function UnitDetail({
   unitIdx,
   onOpenLesson,
   onOpenItem,
+  onOpenCertificate,
   onClose,
 }: {
   unitIdx: number;
   onOpenLesson: (lessonId: string) => void;
   onOpenItem: (itemId: string) => void;
+  onOpenCertificate: (unitId: string) => void;
   onClose: () => void;
 }) {
   const { state, isLearned } = useProgress();
@@ -496,6 +463,8 @@ function UnitDetail({
         })}
       </ol>
 
+      <TestRow unit={unit} onStart={() => onOpenLesson(testLessonId(unit.id))} onOpenCertificate={() => onOpenCertificate(unit.id)} />
+
       {unit.id === ALEFBET_UNIT && <AlefBetChart />}
 
       <div>
@@ -521,3 +490,71 @@ function UnitDetail({
     </li>
   );
 }
+
+/** The unit test under a unit's lessons: locked until every lesson is done, then open, then passed with its certificate. */
+function TestRow({ unit, onStart, onOpenCertificate }: { unit: Unit; onStart: () => void; onOpenCertificate: () => void }) {
+  const { state } = useProgress();
+  const { tr, lang } = useLang();
+  const lessons = lessonsOfUnit(unit.id);
+  const open = lessons.every((l) => state.lessons[l.id]);
+  const record = state.tests[unit.id];
+  const title = tr('מבחן סוף יחידה', 'Unit test');
+
+  if (record?.passedAt) {
+    const day = new Date(`${record.passedAt}T12:00:00`).toLocaleDateString(LOCALES[lang], { day: 'numeric', month: 'numeric', year: 'numeric' });
+    return (
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-200" data-testid="test-row" data-state="passed">
+        <Medal unit={unit} size={40} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-bold text-slate-900">{tr('עברתם את המבחן', 'Unit test passed')}</span>
+          <span className="block text-sm text-slate-600">
+            <span dir="ltr">{record.bestScore}%</span> · <span dir="ltr">{day}</span>
+          </span>
+        </span>
+        <span className="flex gap-1.5">
+          <button type="button" onClick={onOpenCertificate} className="flex min-h-11 items-center gap-1.5 rounded-xl bg-amber-600 px-3 text-sm font-bold text-white">
+            <Award className="size-4" aria-hidden /> {tr('תעודה', 'Certificate')}
+          </button>
+          <button type="button" onClick={onStart} className="flex min-h-11 items-center gap-1 rounded-xl px-2 text-xs text-slate-600 hover:bg-white hover:text-slate-900">
+            <RotateCcw className="size-3.5" aria-hidden /> {tr('שוב', 'Retake')}
+          </button>
+        </span>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-2.5 ring-1 ring-slate-200/70" data-testid="test-row" data-state="locked">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-slate-200 text-slate-400">
+          <Lock className="size-4" aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-slate-900">{title}</span>
+          <span className="block text-xs text-slate-500">{tr(`נפתח אחרי ${lessons.length} השיעורים`, `Opens after all ${lessons.length} lessons`)}</span>
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2.5 rounded-2xl bg-brand-50 p-3 ring-1 ring-brand-200" data-testid="test-row" data-state="open">
+      <div className="flex items-center gap-3">
+        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+          <ClipboardCheck className="size-5" aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-bold text-slate-900">{title}</span>
+          <span className="block text-sm text-slate-600">
+            {tr(`${TEST_SIZE} שאלות · עוברים מ-${TEST_PASS_SCORE}% · תעודה`, `${TEST_SIZE} questions · pass with ${TEST_PASS_SCORE}% · certificate`)}
+          </span>
+          {record && <span className="block text-sm font-semibold text-brand-700">{tr(`השיא שלכם עד עכשיו: ${record.bestScore}%`, `Your best so far: ${record.bestScore}%`)}</span>}
+        </span>
+      </div>
+      <button type="button" onClick={onStart} className="min-h-12 w-full rounded-xl bg-brand-600 font-bold text-white shadow-sm active:scale-[0.98]">
+        {tr('להתחיל את המבחן', 'Start the test')}
+      </button>
+    </div>
+  );
+}
+

@@ -55,6 +55,8 @@ export async function progress(page: Page, course: Course = 'pl') {
 export async function runLesson(page: Page, maxSteps = 60, onWriting?: () => Promise<void>) {
   for (let i = 0; i < maxSteps; i++) {
     if (await page.getByText(/Lesson complete!|Session complete!/).isVisible()) return true;
+    // A unit test ends on its result screen.
+    if (await page.locator('[data-testid=test-passed], [data-testid=test-failed]').isVisible()) return true;
     const stage = (await page.locator('header p').first().textContent()) ?? '';
 
     if (/Learn & shadow/.test(stage)) {
@@ -90,7 +92,7 @@ export async function runLesson(page: Page, maxSteps = 60, onWriting?: () => Pro
       const check = page.getByRole('button', { name: 'Check' });
       if (await check.isVisible()) await check.click();
     }
-    await page.getByRole('button', { name: /^(Continue|Finish \(\+)/ }).click();
+    await page.getByRole('button', { name: /^(Continue|Finish \(\+|See your result)/ }).click();
   }
   return false;
 }
