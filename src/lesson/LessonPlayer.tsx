@@ -12,7 +12,7 @@ import { STAGE_LABELS, buildLesson, buildReinforcementLesson, buildUnitTest, typ
 import { TestIntro, TestResult } from './UnitTestScreens';
 import { LearnStep } from './steps/LearnStep';
 import { HearWordStep, LetterLearnStep, LetterSoundStep, ReadWordStep } from './steps/LetterSteps';
-import { ListenMeaningStep, ListenPairStep } from './steps/ListenSteps';
+import { ListenMeaningStep, ListenPairStep, ListenPictureStep } from './steps/ListenSteps';
 import { AssembleStep, ChooseSpellingStep, FillBlankStep } from './steps/ReadingSteps';
 import { RecallStep } from './steps/RecallStep';
 import { WritingStep } from './steps/WritingStep';
@@ -294,6 +294,8 @@ function renderStep(step: LessonStep, answered: boolean, onAnswered: (r: StepRes
       return <ListenMeaningStep step={step} answered={answered} onAnswered={onAnswered} />;
     case 'listen-pair':
       return <ListenPairStep step={step} answered={answered} onAnswered={onAnswered} />;
+    case 'listen-picture':
+      return <ListenPictureStep step={step} answered={answered} onAnswered={onAnswered} />;
     case 'assemble':
       return <AssembleStep step={step} answered={answered} onAnswered={onAnswered} />;
     case 'fill-blank':

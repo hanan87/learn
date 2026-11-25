@@ -4,6 +4,8 @@ import { Lightbulb, MessageCircleQuestion, MicOff } from 'lucide-react';
 import { getItem, getSituation } from '../../data';
 import { itemText } from '../../data/types';
 import { FormalityBadge } from '../../components/FormalityBadge';
+import { ItemPicture } from '../../components/ItemPicture';
+import { pictureOf } from '../../data/pictures';
 import { Phonetic } from '../../components/Phonetic';
 import { PolishSyllables } from '../../components/PolishSyllables';
 import { PronunciationPractice } from '../../components/PronunciationPractice';
@@ -59,9 +61,16 @@ export function RecallStep({ step, answered, onAnswered }: StepProps<Step>) {
       <h2 className="flex items-center gap-2 text-xl font-bold">
         <MessageCircleQuestion className="size-6 text-brand-600" /> {tr(`אמרו ${C.inLang.he} – מהזיכרון`, `Say it ${C.inLang.en} – from memory`)}
       </h2>
-      <div className="space-y-2 rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-200">
-        <FormalityBadge formality={item.formality} />
-        <p className="text-lg leading-relaxed font-bold text-slate-900">{situation}</p>
+      <div className="flex items-center gap-3 rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-200">
+        {pictureOf(item.id) && (
+          <span className="grid size-24 shrink-0 place-items-center rounded-2xl bg-white ring-1 ring-indigo-200">
+            <ItemPicture itemId={item.id} className="size-20" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1 space-y-2">
+          <FormalityBadge formality={item.formality} />
+          <p className="text-lg leading-relaxed font-bold text-slate-900">{situation}</p>
+        </div>
       </div>
 
       {!answered && (

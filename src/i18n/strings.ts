@@ -702,6 +702,10 @@ const ROWS: Row[] = [
   ['Save as image', 'Zapisz obraz', 'Sačuvaj sliku'],
   ['The picture was saved to your downloads.', 'Obraz zapisano w pobranych plikach.', 'Slika je sačuvana u preuzimanjima.'],
   ['My certificates', 'Moje certyfikaty', 'Moji sertifikati'],
+  // --- Picture cards (data/pictures, lesson/steps/ListenSteps, views/Settings) ---
+  ['Listen and pick the picture', 'Posłuchaj i wybierz obrazek', 'Slušajte i izaberite sliku'],
+  ['What did you hear? Pick the picture', 'Co słyszysz? Wybierz obrazek', 'Šta ste čuli? Izaberite sliku'],
+  ['Pictures: Microsoft Fluent Emoji, MIT licence', 'Obrazki: Microsoft Fluent Emoji, licencja MIT', 'Slike: Microsoft Fluent Emoji, MIT licenca'],
   ['Each unit ends with a short test. Pass with {}% to get a certificate you can save and share.', 'Każdy dział kończy się krótkim testem. Zdobądź {1}%, a dostaniesz certyfikat, który możesz zapisać i udostępnić.', 'Svaka cjelina se završava kratkim testom. Osvojite {1}% i dobićete sertifikat koji možete sačuvati i podijeliti.'],
 
   // --- Native-speaker review (views/Review, Settings) ---

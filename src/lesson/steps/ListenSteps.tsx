@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Snail, Volume2 } from 'lucide-react';
+import { Check, Snail, Volume2 } from 'lucide-react';
 import { getItem } from '../../data';
 import { pairMeaning } from '../../data/minimalPairs';
 import { GROUP_SOUNDS } from '../../data/sounds';
 import { itemText } from '../../data/types';
+import { ItemPicture } from '../../components/ItemPicture';
 import { Phonetic } from '../../components/Phonetic';
 import { PolishSyllables } from '../../components/PolishSyllables';
 import { useLang } from '../../i18n/LangContext';
@@ -79,6 +80,68 @@ export function ListenMeaningStep({ step, answered, onAnswered }: StepProps<Mean
               }`}
             >
               {itemText(opt, lang).meaning}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+type PictureStep = Extract<LessonStep, { kind: 'listen-picture' }>;
+
+/** Stage 2c – hear the phrase and tap its picture: understanding without translation. */
+export function ListenPictureStep({ step, answered, onAnswered }: StepProps<PictureStep>) {
+  const item = getItem(step.itemId)!;
+  const { tr, lang } = useLang();
+  const { recordExercise } = useProgress();
+  const [picked, setPicked] = useState<string | null>(null);
+
+  const choose = (id: string) => {
+    if (answered) return;
+    setPicked(id);
+    const ok = id === item.id;
+    recordExercise(item.id, item.polish, ok, 'listen');
+    onAnswered({
+      correct: ok,
+      tone: ok ? 'success' : 'error',
+      title: ok ? tr('נכון!', 'Correct!') : tr('לא בדיוק', 'Not quite'),
+      detail: (
+        <div className="space-y-1">
+          <PolishSyllables notation={item.syllablesPolish} size="sm" />
+          <p>{itemText(item, lang).meaning}</p>
+        </div>
+      ),
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-bold">{tr('מה שמעתם? בחרו את התמונה', 'What did you hear? Pick the picture')}</h2>
+      <ListenButtons text={item.polish} />
+      <div className="grid grid-cols-2 gap-2.5" data-testid="picture-options">
+        {step.optionIds.map((id) => {
+          const opt = getItem(id);
+          if (!opt) return null;
+          const isRight = answered && id === item.id;
+          const isPicked = picked === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => choose(id)}
+              disabled={answered}
+              className={`relative grid h-36 place-items-center rounded-2xl ring-2 transition active:scale-[0.98] ${
+                isRight ? 'bg-emerald-50 ring-emerald-500' : isPicked ? 'animate-shake bg-rose-50 ring-rose-400' : 'bg-white ring-slate-200'
+              } ${answered && !isRight && !isPicked ? 'opacity-50' : ''}`}
+            >
+              {/* The picture names the option; its meaning shows only after the answer. */}
+              <ItemPicture itemId={id} className="size-24" alt={itemText(opt, lang).meaning} />
+              {isRight && (
+                <span className="absolute end-2 top-2 grid size-7 place-items-center rounded-full bg-emerald-500 text-white" aria-hidden>
+                  <Check className="size-4" strokeWidth={3} />
+                </span>
+              )}
             </button>
           );
         })}

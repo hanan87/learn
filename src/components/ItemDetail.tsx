@@ -3,6 +3,8 @@ import { itemText, type LearningItem } from '../data/types';
 import { useLang } from '../i18n/LangContext';
 import { useProgress } from '../state/ProgressContext';
 import { FormalityBadge } from './FormalityBadge';
+import { ItemPicture } from './ItemPicture';
+import { pictureOf } from '../data/pictures';
 import { GenderNote } from './GenderNote';
 import { ItemStats } from './ItemStats';
 import { Phonetic } from './Phonetic';
@@ -27,6 +29,11 @@ export function ItemDetail({ item, showPractice = true, showLearnButton = true }
   return (
     <div className="space-y-5">
       <div className="space-y-2 pt-2 text-center">
+        {pictureOf(item.id) && (
+          <div className="mx-auto mb-3 grid size-32 place-items-center rounded-[28px] bg-white shadow-sm ring-1 ring-slate-200/80">
+            <ItemPicture itemId={item.id} className="size-24" />
+          </div>
+        )}
         <div className="flex justify-center">
           <FormalityBadge formality={item.formality} />
         </div>

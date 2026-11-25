@@ -104,7 +104,8 @@ export default defineConfig(({ mode }) => {
           skipWaiting: true,
           clientsClaim: true,
           cleanupOutdatedCaches: true,
-          globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+          // The phrase pictures (public/pictures, under 1 MB together) are precached, so cards keep them offline.
+          globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2,webp}'],
           // The standalone HTML is a download, not part of the app shell.
           globIgnores: ['**/polish-learn-standalone.html'],
           maximumFileSizeToCacheInBytes: 5_000_000,

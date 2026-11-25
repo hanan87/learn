@@ -84,7 +84,8 @@ export async function runLesson(page: Page, maxSteps = 60, onWriting?: () => Pro
       const n = await options.count();
       for (let k = 0; k < n; k++) {
         const txt = ((await options.nth(k).textContent()) ?? '').trim();
-        if (txt && txt !== 'Check') {
+        // Picture options have no text, only an image.
+        if ((txt && txt !== 'Check') || (await options.nth(k).locator('img').count())) {
           await options.nth(k).click();
           break;
         }

@@ -34,6 +34,7 @@ import { LOCALES, useLang } from '../i18n/LangContext';
 import { TEST_PASS_SCORE, useProgress } from '../state/ProgressContext';
 import { TEST_SIZE, testLessonId } from '../lesson/buildLesson';
 import { Medal } from '../components/Certificate';
+import { ItemPicture } from '../components/ItemPicture';
 import { UNIT_COLOR as COLOR, unitIcon } from '../components/unitStyle';
 
 
@@ -477,6 +478,7 @@ function UnitDetail({
                 onClick={() => onOpenItem(item.id)}
                 className="flex w-full items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5 text-start ring-1 ring-slate-200/70 transition hover:bg-white"
               >
+                <ItemPicture itemId={item.id} className="size-9 shrink-0" />
                 <span className="min-w-0 flex-1">
                   <PolishSyllables notation={item.syllablesPolish} size="sm" showDots={false} className="truncate" />
                   <span className="block truncate text-xs text-slate-500">{itemText(item, lang).meaning}</span>

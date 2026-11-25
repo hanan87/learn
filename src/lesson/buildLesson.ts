@@ -1,6 +1,7 @@
 import { ALL_ITEMS, getItem, getUnit, getUnitOfItem, UNITS } from '../data';
 import { COURSE } from '../lib/course';
 import { lessonsOfUnit, type LessonDef } from '../data/lessons';
+import { pictureOf } from '../data/pictures';
 import { getLetter, HE_LETTERS, type HeLetter } from '../data/he/alphabet';
 import { CONTRAST_GROUPS, type ContrastGroup, type MinimalPair } from '../data/minimalPairs';
 import { SOUND_INFO, type SoundKey } from '../data/sounds';
@@ -28,6 +29,7 @@ import { itemWeakness, summarizeSounds, type ProgressState } from '../state/Prog
 export type LessonStep =
   | { kind: 'learn'; key: string; itemId: string }
   | { kind: 'listen-meaning'; key: string; itemId: string; optionIds: string[] }
+  | { kind: 'listen-picture'; key: string; itemId: string; optionIds: string[] }
   | { kind: 'listen-pair'; key: string; group: ContrastGroup; pair: MinimalPair; side: 'a' | 'b' }
   | { kind: 'assemble'; key: string; itemId: string; bank: string[] }
   | { kind: 'fill-blank'; key: string; itemId: string; blankIndex: number; options: string[] }
@@ -42,6 +44,7 @@ export type LessonStep =
 export const STAGE_LABELS: Record<LessonStep['kind'], { he: string; en: string }> = {
   learn: { he: 'לימוד והאזנה', en: 'Learn & shadow' },
   'listen-meaning': { he: 'הבנת הנשמע', en: 'Listening' },
+  'listen-picture': { he: 'שמיעה ותמונה', en: 'Listen and pick the picture' },
   'listen-pair': { he: 'זוג מינימלי', en: 'Minimal pair' },
   assemble: { he: 'הרכבת משפט', en: 'Build the sentence' },
   'fill-blank': { he: 'השלמת מילה', en: 'Fill the gap' },
@@ -108,6 +111,38 @@ function listenStep(item: LearningItem, keySuffix = ''): LessonStep {
     3,
   ).map((i) => i.id);
   return { kind: 'listen-meaning', key: `listen-${item.id}${keySuffix}`, itemId: item.id, optionIds: shuffle([item.id, ...distractors]) };
+}
+
+/**
+ * Hear the phrase, tap its picture among three others from the unit. Every option has a different
+ * picture; without three such distractors there is no picture question (null).
+ */
+function pictureStep(item: LearningItem): LessonStep | null {
+  const own = pictureOf(item.id);
+  if (!own) return null;
+  const seen = new Set([own]);
+  const distractors: string[] = [];
+  for (const other of shuffle(poolFor(item).filter((i) => i.id !== item.id && i.hebrew !== item.hebrew))) {
+    const pic = pictureOf(other.id);
+    if (pic && !seen.has(pic) && distractors.length < 3) {
+      seen.add(pic);
+      distractors.push(other.id);
+    }
+  }
+  if (distractors.length < 3) return null;
+  return { kind: 'listen-picture', key: `picture-${item.id}`, itemId: item.id, optionIds: shuffle([item.id, ...distractors]) };
+}
+
+/** Listening questions for a set of items: one of them, when it can, as a picture question. */
+function listeningSteps(items: LearningItem[]): LessonStep[] {
+  let picture: LessonStep | null = null;
+  return items.map((item) => {
+    if (!picture) {
+      picture = pictureStep(item);
+      if (picture) return picture;
+    }
+    return listenStep(item);
+  });
 }
 
 function readingStep(item: LearningItem, preferBlank: boolean): LessonStep {
@@ -247,8 +282,8 @@ export function buildLesson(lesson: LessonDef): LessonStep[] {
   // 1. Learn & Shadow
   for (const item of items) steps.push({ kind: 'learn', key: `learn-${item.id}`, itemId: item.id });
 
-  // 2. Listening comprehension + one minimal pair from the lesson's sound features
-  for (const item of shuffle(items)) steps.push(listenStep(item));
+  // 2. Listening comprehension (one question with pictures) + one minimal pair from the lesson's sound features
+  steps.push(...listeningSteps(shuffle(items)));
   const group = pairGroupFor(items, lesson.unitId);
   if (group) steps.push(pairStep(group));
 
@@ -302,7 +337,7 @@ export function buildUnitTest(unitId: CourseUnitId): LessonStep[] {
   }
 
   const group = pairGroupFor(items, unitId);
-  const listen = items.slice(0, group ? 4 : 5).map((item) => listenStep(item));
+  const listen = listeningSteps(items.slice(0, group ? 4 : 5));
   if (group) listen.push(pairStep(group));
   // Reading starts after the listening items, so the same phrase is not met twice in a row.
   const reading = [...items.slice(5), ...items].slice(0, 3).map((item, i) => readingStep(item, i % 2 === 1));
@@ -325,6 +360,7 @@ export const STEP_SKILL: Record<LessonStep['kind'], TestSkill | null> = {
   learn: null,
   'letter-learn': null,
   'listen-meaning': 'listen',
+  'listen-picture': 'listen',
   'listen-pair': 'listen',
   'hear-word': 'listen',
   assemble: 'read',

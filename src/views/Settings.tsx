@@ -61,6 +61,11 @@ export function Settings() {
         <p className="text-xs text-slate-500" data-testid="app-version">
           {tr('גרסה', 'Version')} {versionLabel(LOCALES[lang])}
         </p>
+        <p className="text-xs text-slate-500" data-testid="picture-credit">
+          <a href={`${import.meta.env.BASE_URL}pictures/LICENSE`} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+            {tr('תמונות: Microsoft Fluent Emoji, ברישיון MIT', 'Pictures: Microsoft Fluent Emoji, MIT licence')}
+          </a>
+        </p>
       </div>
 
       <section className={card} data-testid="course-settings">

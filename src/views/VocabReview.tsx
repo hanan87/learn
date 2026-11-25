@@ -35,6 +35,7 @@ import { shuffle } from '../lib/random';
 import { speak } from '../lib/tts';
 import { masteryOf, needsPractice, SRS_INTERVALS, summarizeSounds, useProgress } from '../state/ProgressContext';
 import { AddWordForm } from './AddWordForm';
+import { ItemPicture } from '../components/ItemPicture';
 
 type Direction = 'native-pl' | 'pl-native';
 type Filter = 'learned' | 'practice' | 'mine' | 'all';
@@ -250,7 +251,11 @@ function ReviewSession({ ids, direction, onExit }: { ids: string[]; direction: D
       <div key={item.id} className="animate-pop-in min-h-72 space-y-4 rounded-3xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
         <FormalityBadge formality={item.formality} />
         {direction === 'native-pl' ? (
-          <p className="text-2xl font-bold text-slate-900">{text.meaning}</p>
+          <div className="space-y-2">
+            {/* Recalling the phrase from its meaning: the picture is part of the cue. */}
+            <ItemPicture itemId={item.id} className="mx-auto size-24" />
+            <p className="text-2xl font-bold text-slate-900">{text.meaning}</p>
+          </div>
         ) : (
           <div className="space-y-2">
             <PolishSyllables notation={item.syllablesPolish} size="lg" />
@@ -261,7 +266,14 @@ function ReviewSession({ ids, direction, onExit }: { ids: string[]; direction: D
         )}
         {revealed ? (
           <div className="animate-pop-in space-y-2 border-t border-slate-100 pt-4">
-            {direction === 'native-pl' ? <PolishSyllables notation={item.syllablesPolish} size="lg" /> : <p className="text-xl font-bold">{text.meaning}</p>}
+            {direction === 'native-pl' ? (
+              <PolishSyllables notation={item.syllablesPolish} size="lg" />
+            ) : (
+              <>
+                <ItemPicture itemId={item.id} className="mx-auto size-20" />
+                <p className="text-xl font-bold">{text.meaning}</p>
+              </>
+            )}
             <Phonetic he={item.phoneticHebrew} en={item.phoneticEnglish} />
           </div>
         ) : (
@@ -400,6 +412,7 @@ function WordCard({ item, open, onToggle, onOpenItem, learned }: { item: Learnin
         <button type="button" onClick={() => speak(item.polish)} className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600 active:scale-95" aria-label={tr('השמע', 'Play')}>
           <Volume2 className="size-5" />
         </button>
+        <ItemPicture itemId={item.id} className="size-9 shrink-0" />
         <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-start" aria-expanded={open}>
           <PolishSyllables notation={item.syllablesPolish} size="sm" className="truncate" />
           <span className="block truncate text-sm text-slate-500">{text.meaning}</span>
