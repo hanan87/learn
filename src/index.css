@@ -194,3 +194,50 @@ h2.font-black,
 .animate-shake {
   animation: shake 0.45s both;
 }
+
+/* End-of-lesson celebration: the trophy pops in, and a short burst of confetti falls once. */
+@keyframes celebrate {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-celebrate {
+  animation: celebrate 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes confetti-fall {
+  from {
+    transform: translate3d(0, -1.5rem, 0) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(var(--drift), 70vh, 0) rotate(var(--spin));
+    opacity: 0;
+  }
+}
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  width: 0.5rem;
+  height: 0.8rem;
+  border-radius: 2px;
+  animation: confetti-fall var(--dur) cubic-bezier(0.2, 0.6, 0.4, 1) var(--delay) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-celebrate,
+  .animate-pop-in {
+    animation: none;
+  }
+  .confetti-piece {
+    display: none;
+  }
+}

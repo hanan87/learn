@@ -3,11 +3,14 @@ import { useLang } from '../i18n/LangContext';
 
 export type TabId = 'map' | 'lab' | 'say' | 'vocab' | 'talk';
 
-/** he/en name the screen (page title); the short labels fit under the icons in the bottom bar. */
-export const TABS: { id: TabId; he: string; en: string; shortHe: string; shortEn: string; icon: LucideIcon }[] = [
+/**
+ * he/en name the screen (page title); the short labels fit under the icons in the bottom bar.
+ * shortPl/shortCnr replace a Polish or Montenegrin label that would wrap to two lines on a phone.
+ */
+export const TABS: { id: TabId; he: string; en: string; shortHe: string; shortEn: string; shortPl?: string; shortCnr?: string; icon: LucideIcon }[] = [
   { id: 'map', he: 'מפת הקורס', en: 'Course map', shortHe: 'קורס', shortEn: 'Course', icon: Map },
   { id: 'lab', he: 'מעבדת צלילים', en: 'Sound lab', shortHe: 'צלילים', shortEn: 'Sounds', icon: AudioLines },
-  { id: 'say', he: 'איך אומרים?', en: 'How to say', shortHe: 'איך אומרים?', shortEn: 'How to say', icon: Languages },
+  { id: 'say', he: 'איך אומרים?', en: 'How to say', shortHe: 'איך אומרים?', shortEn: 'How to say', shortPl: 'Powiedz to', shortCnr: 'Kako reći', icon: Languages },
   { id: 'vocab', he: 'אוצר מילים וחזרה', en: 'Words & review', shortHe: 'מילים', shortEn: 'Words', icon: BookOpenCheck },
   { id: 'talk', he: 'סימולציית שיחה', en: 'Voice roleplay', shortHe: 'שיחות', shortEn: 'Talk', icon: MessagesSquare },
 ];
@@ -45,7 +48,7 @@ export function BottomNav({ active, onChange, dueCount }: Props) {
                   style={isActive ? { fill: 'currentColor', fillOpacity: 0.14 } : undefined}
                 />
                 <span className="text-center">
-                  {loc({ he: labels.shortHe, en: labels.shortEn })}
+                  {loc({ he: labels.shortHe, en: labels.shortEn, ...(labels.shortPl && { pl: labels.shortPl }), ...(labels.shortCnr && { cnr: labels.shortCnr }) })}
                 </span>
                 {id === 'vocab' && dueCount > 0 && (
                   <span className="absolute top-1 left-1/2 ms-3 min-w-5 rounded-full bg-rose-600 px-1.5 text-[10px] leading-5 font-bold text-white ring-2 ring-white">{dueCount}</span>

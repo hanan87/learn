@@ -31,7 +31,7 @@ export function CourseSwitch({
             onClick={() => id !== value && pick(id)}
             aria-pressed={id === value}
             data-testid={`course-pill-${id}`}
-            className={`flex items-center gap-1.5 rounded-[0.625rem] px-2.5 py-1.5 transition ${id === value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+            className={`relative flex items-center gap-1.5 rounded-[0.625rem] px-2.5 py-1.5 transition after:absolute after:inset-x-0 after:-inset-y-2 ${id === value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
           >
             <span className="h-2.5 w-3.5 shrink-0 rounded-[3px] ring-1 ring-black/10" style={{ background: COURSES[id].flag }} aria-hidden />
             {COURSES[id].name.native}

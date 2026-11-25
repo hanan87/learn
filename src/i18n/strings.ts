@@ -656,6 +656,15 @@ const ROWS: Row[] = [
   ['English practice – 5 minutes', 'Angielski – 5 minut ćwiczeń', 'Engleski – 5 minuta vježbe'],
   ['Open the app and do a short lesson.', 'Otwórz aplikację i zrób krótką lekcję.', 'Otvorite aplikaciju i uradite kratku lekciju.'],
 
+  // --- Lesson end screen and unit tiles (lesson/LessonComplete, views/CourseMap) ---
+  ['Daily goal reached!', 'Cel dzienny osiągnięty!', 'Dnevni cilj ostvaren!'],
+  ["{} XP to today's goal", 'Jeszcze {1} XP do dzisiejszego celu', 'Još {1} XP do današnjeg cilja'],
+  ['Day {} of your streak!', 'Dzień {1} serii!', '{1}. dan niza!'],
+  ['You reached level {}!', 'Awans na poziom {1}!', 'Prešli ste na nivo {1}!'],
+  ['Phrases from this lesson', 'Zwroty z tej lekcji', 'Izrazi iz ove lekcije'],
+  ['Letters from this lesson', 'Litery z tej lekcji', 'Slova iz ove lekcije'],
+  ['Up next', 'Teraz', 'Sada'],
+
   // --- Native-speaker review (views/Review, Settings) ---
   ['Native-speaker review', 'Korekta przez native speakera', 'Provjera od strane izvornog govornika'],
   [

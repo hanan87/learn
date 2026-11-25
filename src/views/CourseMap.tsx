@@ -139,8 +139,28 @@ function Stat({ icon, value, label, bar, corner, onClick }: { icon: ReactNode; v
   );
 }
 
+/** A unit's icon inside a ring that fills with its completed lessons; a finished unit gets a solid badge. */
+function UnitRing({ done, total, color, Icon }: { done: number; total: number; color: (typeof COLOR)[UnitColor]; Icon: LucideIcon }) {
+  const r = 21;
+  const len = 2 * Math.PI * r;
+  const complete = done >= total;
+  return (
+    <span className={`relative grid size-12 shrink-0 place-items-center ${color.icon}`} aria-hidden>
+      <svg viewBox="0 0 48 48" className="absolute inset-0 size-full -rotate-90">
+        <circle cx="24" cy="24" r={r} fill="none" strokeWidth="3.5" className="stroke-slate-200/80" />
+        {done > 0 && (
+          <circle cx="24" cy="24" r={r} fill="none" strokeWidth="3.5" strokeLinecap="round" stroke="currentColor" strokeDasharray={len} strokeDashoffset={len * (1 - Math.min(1, done / total))} />
+        )}
+      </svg>
+      <span className={`grid size-9 place-items-center rounded-full shadow-xs ${complete ? `${color.bar} text-white` : 'bg-white'}`}>
+        <Icon className="size-[18px]" />
+      </span>
+    </span>
+  );
+}
+
 export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenProgress }: Props) {
-  const { state, isLearned, todayXp, activeStreak, level, levelProgress, setProfile, freezesLeft } = useProgress();
+  const { state, todayXp, activeStreak, level, levelProgress, setProfile, freezesLeft } = useProgress();
   const { tr, lang } = useLang();
   // Shown once to learners who have not picked a gender yet; stays open while they type their name.
   const [profileOpen, setProfileOpen] = useState(() => state.profile.gender === null);
@@ -217,7 +237,7 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenPro
         <button
           type="button"
           onClick={onOpenProgress}
-          className="flex w-full items-center gap-2 rounded-xl px-1 py-1.5 text-start text-sm font-semibold text-brand-700 hover:text-brand-800"
+          className="flex min-h-11 w-full items-center gap-2 rounded-xl px-1 text-start text-sm font-semibold text-brand-700 hover:text-brand-800"
           data-testid="open-progress"
         >
           <ChartColumn className="size-4 shrink-0" aria-hidden />
@@ -244,7 +264,7 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenPro
           <button
             type="button"
             onClick={() => setProfileOpen(false)}
-            className="absolute end-2 top-2 grid size-9 place-items-center rounded-xl text-slate-400 hover:bg-slate-100"
+            className="absolute end-1.5 top-1.5 grid size-11 place-items-center rounded-xl text-slate-400 hover:bg-slate-100"
             aria-label={tr('סגור', 'Close')}
           >
             <X className="size-4" />
@@ -284,11 +304,10 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenPro
             const Icon = unitIcon(unit.id);
             const ut = unitText(unit, lang);
             const lessons = lessonsOfUnit(unit.id);
-            const learnedCount = unit.items.filter((i) => isLearned(i.id)).length;
             const doneLessons = lessons.filter((l) => state.lessons[l.id]).length;
-            const pct = Math.round((learnedCount / unit.items.length) * 100);
             const expanded = openUnit === unit.id;
             const allDone = doneLessons === lessons.length;
+            const isCurrent = !allDone && nextUnit?.id === unit.id;
 
             return (
               <Fragment key={unit.id}>
@@ -297,27 +316,31 @@ export function CourseMap({ onOpenLesson, onOpenItem, onOpenHandsFree, onOpenPro
                     type="button"
                     onClick={() => setOpenUnit(expanded ? null : unit.id)}
                     aria-expanded={expanded}
-                    className={`flex h-full min-h-32 w-full flex-col justify-between gap-3 rounded-2xl p-3.5 text-start ring-1 transition active:scale-[0.98] ${c.tile} ${expanded ? `ring-2 ${c.open}` : ''}`}
+                    data-testid={`unit-tile-${unit.id}`}
+                    data-state={allDone ? 'done' : isCurrent ? 'current' : doneLessons > 0 ? 'started' : 'new'}
+                    className={`flex h-full min-h-32 w-full flex-col justify-between gap-3 rounded-2xl p-3.5 text-start ring-1 transition active:scale-[0.98] ${c.tile} ${expanded ? `ring-2 ${c.open}` : ''} ${isCurrent ? 'shadow-md' : ''}`}
                   >
-                    <span className="flex w-full items-center justify-between">
-                      <span className={`grid size-10 place-items-center rounded-xl bg-white shadow-xs ${c.icon}`}>
-                        <Icon className="size-5" aria-hidden />
-                      </span>
-                      <span className={`text-[13px] font-semibold tabular-nums ${c.num}`} aria-hidden>
-                        {allDone ? <Trophy className="size-4" /> : String(unit.order).padStart(2, '0')}
-                      </span>
+                    <span className="flex w-full items-start justify-between gap-2">
+                      <UnitRing done={doneLessons} total={lessons.length} color={c} Icon={Icon} />
+                      {isCurrent ? (
+                        <span className="rounded-full bg-brand-600 px-2 py-0.5 text-xs font-bold text-white" aria-hidden>
+                          {tr('עכשיו', 'Up next')}
+                        </span>
+                      ) : (
+                        <span className={`text-[13px] font-semibold tabular-nums ${c.num}`} aria-hidden>
+                          {allDone ? <Trophy className="size-4" /> : String(unit.order).padStart(2, '0')}
+                        </span>
+                      )}
                     </span>
                     <span className="block w-full">
                       <span className="sr-only">
                         {tr('יחידה', 'Unit')} {unit.order}:{' '}
                       </span>
                       <span className="line-clamp-2 block text-[15px] leading-snug font-bold text-slate-900">{ut.title}</span>
-                      <span className="mt-1 flex items-center gap-2 text-xs text-slate-600">
-                        <span className="tabular-nums">
+                      {isCurrent && <span className="sr-only"> · {tr('עכשיו', 'Up next')}</span>}
+                      <span className="mt-1 flex items-center justify-between gap-2 text-xs text-slate-600">
+                        <span className={`tabular-nums ${allDone ? `font-semibold ${c.num}` : ''}`}>
                           {doneLessons}/{lessons.length} {tr('שיעורים', 'lessons')}
-                        </span>
-                        <span className="h-1 flex-1 overflow-hidden rounded-full bg-white/80" aria-hidden>
-                          <span className={`block h-full rounded-full ${c.bar}`} style={{ width: `${pct}%` }} />
                         </span>
                         <ChevronDown className={`size-4 shrink-0 text-slate-400 transition ${expanded ? 'rotate-180' : ''}`} aria-hidden />
                       </span>
@@ -422,7 +445,7 @@ function UnitDetail({
           <h3 className="text-lg leading-snug font-bold text-slate-900">{ut.title}</h3>
           <p className="text-sm text-slate-500">{ut.subtitle}</p>
         </div>
-        <button type="button" onClick={onClose} className="grid size-9 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-slate-100" aria-label={tr('סגור', 'Close')}>
+        <button type="button" onClick={onClose} className="-me-2 -mt-1 grid size-11 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-slate-100" aria-label={tr('סגור', 'Close')}>
           <X className="size-4" />
         </button>
       </div>
@@ -464,7 +487,7 @@ function UnitDetail({
                 </span>
               </span>
               {done && (
-                <button type="button" onClick={() => onOpenLesson(lesson.id)} className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-slate-500 hover:bg-white hover:text-slate-800">
+                <button type="button" onClick={() => onOpenLesson(lesson.id)} className="flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-xs text-slate-500 hover:bg-white hover:text-slate-800">
                   <RotateCcw className="size-3.5" /> {tr('חזרה', 'Replay')}
                 </button>
               )}

@@ -12,6 +12,7 @@ import { RATE_SLOW, speak } from '../../lib/tts';
 import { useProgress } from '../../state/ProgressContext';
 import type { LessonStep } from '../buildLesson';
 import type { StepProps } from '../types';
+import { StepAction } from './StepAction';
 
 type Step = Extract<LessonStep, { kind: 'write' }>;
 
@@ -109,9 +110,11 @@ export function WritingStep({ step, answered, onAnswered }: StepProps<Step>) {
       />
       {!answered && <PolishKeyboard inputRef={inputRef} value={value} onChange={setValue} />}
       {!answered && (
-        <button type="button" disabled={!value.trim()} onClick={check} className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md active:scale-[0.98] disabled:bg-slate-300 disabled:shadow-none">
-          {tr('בדיקה', 'Check')}
-        </button>
+        <StepAction>
+          <button type="button" disabled={!value.trim()} onClick={check} className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md active:scale-[0.98] disabled:bg-slate-300 disabled:shadow-none">
+            {tr('בדיקה', 'Check')}
+          </button>
+        </StepAction>
       )}
     </div>
   );

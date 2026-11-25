@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Dumbbell, Info, Star, Target, Trophy, X, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
 import { getUnit } from '../data';
 import { getLesson } from '../data/lessons';
 import { StandaloneDownload } from '../components/StandaloneDownload';
@@ -7,6 +7,7 @@ import { useLang } from '../i18n/LangContext';
 import { stopSpeaking } from '../lib/tts';
 import { useMic } from '../state/MicContext';
 import { XP, useProgress } from '../state/ProgressContext';
+import { LessonComplete, type LessonStart } from './LessonComplete';
 import { STAGE_LABELS, buildLesson, buildReinforcementLesson, type LessonStep } from './buildLesson';
 import { LearnStep } from './steps/LearnStep';
 import { HearWordStep, LetterLearnStep, LetterSoundStep, ReadWordStep } from './steps/LetterSteps';
@@ -41,7 +42,7 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
   const [requeued, setRequeued] = useState<Set<string>>(new Set());
   const [confirmExit, setConfirmExit] = useState(false);
   const [done, setDone] = useState(false);
-  const startXp = useRef(progress.state.xp);
+  const start = useRef<LessonStart>({ xp: progress.state.xp, todayXp: progress.todayXp, studiedToday: progress.studiedToday, level: progress.level });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,36 +127,7 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
   const pct = done ? 100 : Math.min(100, (index / Math.max(queue.length, baseLength)) * 100);
 
   if (done) {
-    const earned = progress.state.xp - startXp.current;
-    return (
-      <div className="fixed inset-0 z-50 flex min-h-dvh flex-col items-center justify-center gap-6 bg-slate-50 p-6 text-center">
-        {isPractice ? <Dumbbell className="size-20 text-indigo-500" /> : <Trophy className="size-20 text-amber-500" />}
-        <div>
-          <p className="text-3xl font-black text-slate-900">{isPractice ? tr('האימון הושלם!', 'Session complete!') : tr('השיעור הושלם!', 'Lesson complete!')}</p>
-          <p className="mt-1 text-slate-600">{subtitle}</p>
-        </div>
-        <div className="grid w-full max-w-sm grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-white p-4 ring-2 ring-amber-300">
-            <Star className="mx-auto size-6 fill-amber-400 text-amber-500" />
-            <p className="mt-1 text-2xl font-black">+{earned}</p>
-            <p className="text-xs text-slate-500">XP</p>
-          </div>
-          <div className="rounded-2xl bg-white p-4 ring-2 ring-emerald-300">
-            <Target className="mx-auto size-6 text-emerald-600" />
-            <p className="mt-1 text-2xl font-black">{accuracyOf(graded)}%</p>
-            <p className="text-xs text-slate-500">{tr('דיוק', 'Accuracy')}</p>
-          </div>
-        </div>
-        <p className="max-w-sm text-sm text-slate-600">
-          {isPractice
-            ? tr('התוצאות עודכנו בהיסטוריה האישית שלכם – המילים והצלילים החלשים יחזרו שוב בקרוב.', 'Your results updated your personal history – weak words and sounds will come back soon.')
-            : tr('כל המילים מהשיעור נוספו למאגר החזרה המרווחת ויחזרו אליכם מחר.', 'All words from this lesson were added to your spaced-repetition deck and will return tomorrow.')}
-        </p>
-        <button type="button" onClick={onClose} className="w-full max-w-sm rounded-2xl bg-emerald-600 py-4 text-lg font-bold text-white shadow-md active:scale-[0.98]">
-          {tr('המשך', 'Continue')}
-        </button>
-      </div>
-    );
+    return <LessonComplete lesson={lesson} subtitle={subtitle} accuracy={accuracyOf(graded)} start={start.current} onClose={onClose} />;
   }
 
   const footerTone = result
@@ -171,7 +143,7 @@ export function LessonPlayer({ lessonId, onClose }: Props) {
           <button
             type="button"
             onClick={() => setConfirmExit(true)}
-            className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200/80 hover:text-slate-900"
+            className="grid size-11 shrink-0 place-items-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200/80 hover:text-slate-900"
             aria-label={tr('יציאה מהשיעור', 'Exit lesson')}
           >
             <X className="size-5" />

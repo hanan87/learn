@@ -11,6 +11,7 @@ import { useLang } from '../../i18n/LangContext';
 import { parseSyllables } from '../../lib/syllables';
 import type { LessonStep } from '../buildLesson';
 import type { StepProps } from '../types';
+import { StepAction } from './StepAction';
 
 type Step = Extract<LessonStep, { kind: 'recall' }>;
 
@@ -95,19 +96,21 @@ export function RecallStep({ step, answered, onAnswered }: StepProps<Step>) {
       />
 
       {!answered && (
-        <div className="flex flex-col gap-2">
-          <button
-            type="button"
-            disabled={bestScore === null}
-            onClick={finish}
-            className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md active:scale-[0.98] disabled:bg-slate-300 disabled:shadow-none"
-          >
-            {bestScore === null ? tr('הקליטו את עצמכם כדי להמשיך', 'Record yourself to continue') : tr(`סיום (ציון מיטבי: ${bestScore}%)`, `Finish (best score: ${bestScore}%)`)}
-          </button>
-          <button type="button" onClick={skip} className="mx-auto flex items-center gap-1.5 py-2 text-sm text-slate-500">
-            <MicOff className="size-4" /> {tr('לא יכול/ה לדבר עכשיו', "Can't speak right now")}
-          </button>
-        </div>
+        <StepAction>
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              disabled={bestScore === null}
+              onClick={finish}
+              className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md active:scale-[0.98] disabled:bg-slate-300 disabled:shadow-none"
+            >
+              {bestScore === null ? tr('הקליטו את עצמכם כדי להמשיך', 'Record yourself to continue') : tr(`סיום (ציון מיטבי: ${bestScore}%)`, `Finish (best score: ${bestScore}%)`)}
+            </button>
+            <button type="button" onClick={skip} className="mx-auto flex min-h-11 items-center gap-1.5 px-3 text-sm text-slate-500">
+              <MicOff className="size-4" /> {tr('לא יכול/ה לדבר עכשיו', "Can't speak right now")}
+            </button>
+          </div>
+        </StepAction>
       )}
     </div>
   );

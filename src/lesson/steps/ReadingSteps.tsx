@@ -11,6 +11,7 @@ import { speak } from '../../lib/tts';
 import { useProgress } from '../../state/ProgressContext';
 import { tokens, type LessonStep } from '../buildLesson';
 import type { StepProps } from '../types';
+import { StepAction } from './StepAction';
 
 function ContextBox({ itemId }: { itemId: string }) {
   const item = getItem(itemId)!;
@@ -33,9 +34,11 @@ function ContextBox({ itemId }: { itemId: string }) {
 function CheckButton({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
   const { tr } = useLang();
   return (
-    <button type="button" disabled={disabled} onClick={onClick} className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md transition active:scale-[0.98] disabled:bg-slate-300 disabled:shadow-none">
-      {tr('בדיקה', 'Check')}
-    </button>
+    <StepAction>
+      <button type="button" disabled={disabled} onClick={onClick} className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md transition active:scale-[0.98] disabled:bg-slate-300 disabled:shadow-none">
+        {tr('בדיקה', 'Check')}
+      </button>
+    </StepAction>
   );
 }
 

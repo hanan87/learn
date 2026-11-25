@@ -12,6 +12,7 @@ import { useProgress } from '../../state/ProgressContext';
 import type { LessonStep } from '../buildLesson';
 import type { StepProps } from '../types';
 import { ListenButtons } from './ListenSteps';
+import { StepAction } from './StepAction';
 
 /** Alef-Bet steps (Hebrew course): meet a letter, name its sound, read a word, find a word by ear. */
 
@@ -60,13 +61,15 @@ export function LetterLearnStep({ step, answered, onAnswered }: StepProps<LearnL
       </div>
       <LetterExample letter={letter} />
       {!answered && (
-        <button
-          type="button"
-          onClick={() => onAnswered({ correct: null, tone: 'neutral', title: '' })}
-          className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md active:scale-[0.98]"
-        >
-          {tr('הבנתי, המשך', 'Got it, continue')}
-        </button>
+        <StepAction>
+          <button
+            type="button"
+            onClick={() => onAnswered({ correct: null, tone: 'neutral', title: '' })}
+            className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md active:scale-[0.98]"
+          >
+            {tr('הבנתי, המשך', 'Got it, continue')}
+          </button>
+        </StepAction>
       )}
     </div>
   );

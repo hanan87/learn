@@ -5,6 +5,7 @@ import { useLang } from '../../i18n/LangContext';
 import { speak } from '../../lib/tts';
 import type { LessonStep } from '../buildLesson';
 import type { StepProps } from '../types';
+import { StepAction } from './StepAction';
 
 type Step = Extract<LessonStep, { kind: 'learn' }>;
 
@@ -25,13 +26,15 @@ export function LearnStep({ step, answered, onAnswered }: StepProps<Step>) {
       </p>
       <ItemDetail item={item} showLearnButton={false} />
       {!answered && (
-        <button
-          type="button"
-          onClick={() => onAnswered({ correct: null, tone: 'neutral', title: '' })}
-          className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md active:scale-[0.98]"
-        >
-          {tr('הבנתי, המשך', 'Got it, continue')}
-        </button>
+        <StepAction>
+          <button
+            type="button"
+            onClick={() => onAnswered({ correct: null, tone: 'neutral', title: '' })}
+            className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-bold text-white shadow-md active:scale-[0.98]"
+          >
+            {tr('הבנתי, המשך', 'Got it, continue')}
+          </button>
+        </StepAction>
       )}
     </div>
   );
