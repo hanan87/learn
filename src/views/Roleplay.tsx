@@ -1,6 +1,6 @@
 import { COURSE_INFO as C } from '../lib/course';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, BedDouble, Bus, Coffee, Handshake, Mic, Pill, RotateCcw, ShoppingBasket, TrainFront, Trophy, User, Volume2, XCircle, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BedDouble, Bus, Coffee, Handshake, MessagesSquare, Mic, Pill, RotateCcw, ShoppingBasket, TrainFront, Trophy, User, Volume2, XCircle, type LucideIcon } from 'lucide-react';
 import { ROLEPLAYS, type Bilingual, type Roleplay as RoleplayT, type RoleplayOption } from '../data/dialogues';
 import { STORIES } from '../data/stories';
 import { StoryIcon } from '../components/StoryIcon';
@@ -14,6 +14,9 @@ import { toEnglishPhonetic, toHebrewPhonetic, toSyllableNotation } from '../lib/
 import { shuffle } from '../lib/random';
 import { speak } from '../lib/tts';
 import { useProgress } from '../state/ProgressContext';
+import { CHAT_TOPICS, TOPIC_PICTURE, type ChatTopic } from '../lib/chat';
+import { pictureUrl } from '../data/pictures';
+import { TOPIC_LABEL } from './FreeChat';
 
 /** Score needed for the spoken reply to move the conversation forward. */
 export const ROLEPLAY_PASS = 70;
@@ -29,7 +32,7 @@ const ICONS: Record<string, LucideIcon> = {
   apoteka: Pill,
 };
 
-export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void }) {
+export function Roleplay({ onOpenStory, onOpenChat }: { onOpenStory: (id: string) => void; onOpenChat: (topic: ChatTopic) => void }) {
   const { state } = useProgress();
   const { tr, loc } = useLang();
   const { tx } = usePersonal();
@@ -39,6 +42,7 @@ export function Roleplay({ onOpenStory }: { onOpenStory: (id: string) => void })
 
   return (
     <div className="space-y-4">
+      <FreeChatCard onOpen={onOpenChat} />
       {STORIES.length > 0 && (
       <section className="space-y-3" data-testid="stories">
         <h2 className="text-lg font-black">{tr('סיפורים קצרים', 'Mini stories')}</h2>
@@ -369,3 +373,40 @@ function RoleplayRunner({ scenario, onExit }: { scenario: RoleplayT; onExit: () 
     </div>
   );
 }
+
+/** "Free conversation": a topic opens a chat with the course's partner (views/FreeChat). */
+function FreeChatCard({ onOpen }: { onOpen: (topic: ChatTopic) => void }) {
+  const { tr, loc } = useLang();
+  return (
+    <section className="space-y-3 rounded-3xl bg-white p-4 shadow-sm ring-[1.5px] ring-brand-200" data-testid="free-chat-card">
+      <div className="flex items-center gap-3">
+        <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-600 text-white">
+          <MessagesSquare className="size-6" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-lg font-black text-slate-900">{tr('שיחה חופשית', 'Free conversation')}</h2>
+          <p className="text-sm leading-snug text-slate-600">
+            {tr('מדברים עם בן שיחה על מה שתרצו. הוא מתאים את עצמו למה שכבר למדתם.', 'Talk with a conversation partner about anything you like. They keep to what you have already learned.')}
+          </p>
+        </div>
+      </div>
+      <ul className="grid grid-cols-2 gap-2">
+        {CHAT_TOPICS.map((t) => (
+          <li key={t}>
+            <button
+              type="button"
+              onClick={() => onOpen(t)}
+              className="flex min-h-14 w-full items-center gap-2 rounded-2xl bg-slate-50 px-2.5 py-2 text-start ring-1 ring-slate-200/80 transition hover:bg-white active:scale-[0.98]"
+              data-testid={`chat-topic-${t}`}
+            >
+              <img src={pictureUrl(TOPIC_PICTURE[t])} alt="" className="size-9 shrink-0" />
+              <span className="text-sm leading-tight font-semibold text-slate-900">{loc(TOPIC_LABEL[t])}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-slate-500">{tr('צריך אינטרנט · מופעל על ידי Google Gemini בחינם', 'Needs internet · powered by Google Gemini, free')}</p>
+    </section>
+  );
+}
+

@@ -14,6 +14,8 @@ import { useHashRoute } from './hooks/useHashRoute';
 import { useLang } from './i18n/LangContext';
 import { LessonPlayer } from './lesson/LessonPlayer';
 import { PlacementTest } from './lesson/PlacementTest';
+import { FreeChat } from './views/FreeChat';
+import { isChatTopic } from './lib/chat';
 import { ttsSupported } from './lib/env';
 import { hasPolishVoice, loadVoices } from './lib/tts';
 import { useMic } from './state/MicContext';
@@ -49,6 +51,7 @@ const TAB_IDS = TABS.map((t) => t.id);
  *   #/story/<storyId>                          – mini story
  *   #/blitz                                    – 60-second Speed Blitz
  *   #/placement                                – placement test (English course): where to start
+ *   #/chat/<topic>                             – free conversation with a partner (Gemini through the voice server)
  *   #/review[/<pl|cnr>[/<sectionId>]]          – native-speaker review of the Polish / Montenegrin texts
  */
 export function App() {
@@ -90,6 +93,7 @@ export function App() {
     return <HandsFree key={source} source={source} onExit={() => navigate(source, true)} />;
   }
   if (segments[0] === 'blitz') return <SpeedBlitz onExit={() => navigate('vocab', true)} />;
+  if (segments[0] === 'chat' && isChatTopic(segments[1])) return <FreeChat key={segments[1]} topic={segments[1]} onExit={() => navigate('talk', true)} />;
   if (segments[0] === 'placement') return <PlacementTest onClose={() => navigate('map', true)} onOpenLesson={(id) => navigate(`lesson/${id}`, true)} />;
   const story = segments[0] === 'story' ? getStory(segments[1] ?? '') : undefined;
   if (story) return <StoryPlayer key={story.id} story={story} onExit={() => navigate('talk', true)} />;
@@ -138,7 +142,7 @@ export function App() {
             onOpenBlitz={() => navigate('blitz')}
           />}
         {tab === 'say' && <SayIt onOpenItem={openItem} />}
-        {tab === 'talk' && <Roleplay onOpenStory={(id) => navigate(`story/${id}`)} />}
+        {tab === 'talk' && <Roleplay onOpenStory={(id) => navigate(`story/${id}`)} onOpenChat={(topic) => navigate(`chat/${topic}`)} />}
       </main>
       <BottomNav active={tab} onChange={(t) => navigate(t)} dueCount={dueItemIds().length} />
       <Sheet open={!!item} onClose={closeSheet} title={item?.polish}>

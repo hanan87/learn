@@ -53,6 +53,8 @@ export const XP = {
   testAttempt: 10,
   /** Finishing the placement test. */
   placement: 20,
+  /** A free conversation of at least two turns. */
+  chat: 25,
 } as const;
 
 /** The score that passes a unit test (lesson/buildLesson builds its questions). */
