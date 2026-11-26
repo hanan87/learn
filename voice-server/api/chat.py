@@ -49,6 +49,8 @@ LANGUAGE = {
 UI_LANGUAGE = {"he": "Hebrew", "en": "English", "pl": "Polish", "cnr": "Montenegrin (Latin script)"}
 PLACE = {"pl": "Kraków", "cnr": "Kotor", "en": "New York", "he": "Tel Aviv"}
 PARTNER = {"pl": "Ola", "cnr": "Milica", "en": "Emma", "he": "Noa"}
+# Service roles speak politely to the learner (Pan/Pani, Vi); new acquaintances may be informal.
+POLITE = {"cafe", "travel", "pharmacy", "holiday"}
 TOPIC = {
     "cafe": "a waitress at a café; the learner is a customer ordering drinks and something to eat",
     "meet": "a friendly local the learner has just met; small talk about names, where you are from, work and free time",
@@ -129,15 +131,22 @@ def instructions(r: dict) -> str:
     if r["name"]:
         learner.append(f"The learner's name is {r['name']}.")
     known = " | ".join(r["known"]) or "(nothing yet: use the very simplest words)"
+    register = (
+        "Speak politely, as you would to a customer or a stranger (the formal you where the language has one)."
+        if r["topic"] in POLITE
+        else "You may speak informally, as to a new friend."
+    )
     return f"""You are {name}, {TOPIC[r['topic']]}, in {PLACE[r['course']]}. You are having a spoken conversation with someone learning {lang}; their own language is {ui}. {' '.join(learner)}
 
 Answer with JSON only:
 - "reply": your next turn, only in {lang}. One or two short sentences, at most 14 words in total. Simple everyday words, present tense where you can, and prefer the words of the learner's phrases below. End with one easy question that keeps the conversation going, unless it has come to a close. Stay in your role and in the setting; never mention being an AI and never switch languages. If the learner goes off topic or says something rude, gently steer back. If the learner writes in {ui} or mixes languages, still answer in {lang}.
 - "translation": your reply translated into {ui}.
-- "correction": look ONLY at the learner's last message. If it has a real mistake (a wrong word, ending, gender or word order, or words that are not {lang}), give "better": the natural corrected sentence in {lang}, and "note": one short explanation in {ui}, at most 12 words. Ignore punctuation, capital letters and missing accent marks. Leave "correction" out when the message is fine or there is no learner message yet.
-- "suggestions": three different short answers (2 to 6 words) the learner could say next, in {lang}, very simple, each with its "translation" in {ui}.
+- "correction": look ONLY at the learner's last message. If it has a real mistake (a wrong word, ending, gender or word order, or words that are not {lang}), give "better": the natural corrected sentence in {lang}, and "note": one short, friendly explanation in {ui}, at most 12 words, in plain words without grammar terms (say "after poproszę the word changes to kawę", not the name of a case). Ignore punctuation, capital letters and missing accent marks. Leave "correction" out when the message is fine or there is no learner message yet.
+- "suggestions": three different short answers (2 to 6 words) the learner could say next, in {lang}, very simple, each with its "translation" in {ui}. Prefer phrases from the learner's list.
 - "words": up to three words or expressions from your reply that are not in the learner's phrases, each with its "translation" in {ui}.
 - "end": true only when the conversation has come to a natural close; after 8 to 12 exchanges, wrap up politely and say goodbye.
+
+The learner copies every {lang} sentence you write (the reply, "better" and the suggestions), so each one must be perfectly correct: check every word ending, gender and spelling before you answer. {register}
 
 The learner's phrases: {known}"""
 
@@ -187,7 +196,7 @@ def ask_gemini(r: dict, key: str) -> dict:
         "systemInstruction": {"parts": [{"text": instructions(r)}]},
         "contents": [{"role": "user", "parts": [{"text": transcript(r)}]}],
         "generationConfig": {
-            "temperature": 0.8,
+            "temperature": 0.5,
             "maxOutputTokens": 900,
             "responseMimeType": "application/json",
             "responseSchema": SCHEMA,
