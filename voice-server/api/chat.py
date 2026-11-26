@@ -49,6 +49,23 @@ LANGUAGE = {
 UI_LANGUAGE = {"he": "Hebrew", "en": "English", "pl": "Polish", "cnr": "Montenegrin (Latin script)"}
 PLACE = {"pl": "Kraków", "cnr": "Kotor", "en": "New York", "he": "Tel Aviv"}
 PARTNER = {"pl": "Ola", "cnr": "Milica", "en": "Emma", "he": "Noa"}
+# How to address a man or a woman, per language: the free model needs the forms spelled out.
+GENDER_FORMS = {
+    "he": {"m": "masculine forms: אַתָּה, לְךָ, רוֹצֶה, צָרִיךְ", "f": "feminine forms: אַתְּ, לָךְ, רוֹצָה, צְרִיכָה (never לְךָ or אַתָּה)"},
+    "pl": {"m": "masculine forms when the learner talks about himself: chciałem, byłem, gotowy", "f": "feminine forms when the learner talks about herself: chciałam, byłam, gotowa"},
+    "cnr": {"m": "masculine forms: htio bih, bio sam, gladan sam", "f": "feminine forms: htjela bih, bila sam, gladna sam"},
+    "en": {"m": "", "f": ""},
+}
+# A natural first question for each setting.
+OPENING = {
+    "cafe": "what they would like to order",
+    "meet": "their name or how they are",
+    "travel": "where they are going",
+    "holiday": "how they like the weather or the sea",
+    "pharmacy": "how you can help them",
+    "free": "how they are and what they would like to talk about",
+}
+
 # Service roles speak politely to the learner (Pan/Pani, Vi); new acquaintances may be informal.
 POLITE = {"cafe", "travel", "pharmacy", "holiday"}
 TOPIC = {
@@ -127,7 +144,8 @@ def instructions(r: dict) -> str:
     name = PARTNER[r["course"]]
     learner = []
     if r["gender"]:
-        learner.append(f"The learner is a {'man' if r['gender'] == 'm' else 'woman'}: address them and correct them with the matching gendered forms.")
+        forms = GENDER_FORMS[r["course"]][r["gender"]]
+        learner.append(f"The learner is a {'man' if r['gender'] == 'm' else 'woman'}: address them and correct them with the matching gendered forms{' – ' + forms if forms else ''}.")
     if r["name"]:
         learner.append(f"The learner's name is {r['name']}.")
     known = " | ".join(r["known"]) or "(nothing yet: use the very simplest words)"
@@ -154,7 +172,7 @@ The learner's phrases: {known}"""
 def transcript(r: dict) -> str:
     name = PARTNER[r["course"]]
     if not r["history"]:
-        return "The conversation starts now. Greet the learner in one short sentence and ask a first easy question that fits the setting."
+        return f"The conversation starts now. Greet the learner in one short sentence and ask them {OPENING[r['topic']]}."
     lines = [f"{name if t['role'] == 'partner' else 'Learner'}: {t['text']}" for t in r["history"]]
     return "The conversation so far:\n" + "\n".join(lines) + "\n\nWrite your next turn."
 
