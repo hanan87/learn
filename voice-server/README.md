@@ -23,6 +23,7 @@ gentle correction of the learner's last sentence, three answer ideas and the new
 
 - The key lives only in the Vercel project: Settings → Environment Variables → `GEMINI_API_KEY`
   (created at aistudio.google.com/apikey). It never reaches the browser; never commit it.
+  A new or changed key takes effect after the next deployment (a push to main, or Redeploy in Vercel).
 - `GEMINI_MODEL` may name a model; otherwise `gemini-flash-lite-latest` is used, then
   `gemini-flash-latest`.
 - Answers: 429 `quota` when the free daily allowance is used up, 503 `not_configured` without a key,
