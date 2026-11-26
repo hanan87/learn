@@ -70,11 +70,11 @@ export class ChatError extends Error {
   }
 }
 
+/** The learner's name is never sent: Gemini's free tier must not receive personal details. Gender only picks grammar forms. */
 export interface ChatRequest {
   topic: ChatTopic;
   ui: Lang;
   gender: Gender | null;
-  name: string;
   /** Phrases the learner already knows, so the partner keeps to familiar words. */
   known: string[];
   history: ChatLine[];

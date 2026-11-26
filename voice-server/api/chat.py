@@ -7,8 +7,8 @@ The Gemini key lives only in the Vercel project's environment (GEMINI_API_KEY); 
 browser. GEMINI_MODEL may name a model; otherwise the free Flash-Lite model is used, then Flash.
 
 POST /api/chat
-  {"course": "pl", "ui": "he", "topic": "cafe", "gender": "f", "name": "Yael",
-   "known": ["Dzień dobry", "Poproszę kawę", …],
+  {"course": "pl", "ui": "he", "topic": "cafe", "gender": "f",
+   "known":["Dzień dobry", "Poproszę kawę", …],
    "history": [{"role": "partner", "text": "Dzień dobry! Co podać?"}, {"role": "learner", "text": "…"}]}
   → 200 {"reply", "translation", "correction"?: {"better", "note"}, "suggestions": [{"text", "translation"}],
          "words": [{"text", "translation"}], "end": bool}
@@ -132,9 +132,10 @@ def validate(origin: str, body: bytes):
         "course": course,
         "ui": ui,
         "topic": topic,
+        # Gender only picks grammar forms. A name, if an old app version still sends one, is dropped:
+        # Gemini's free tier must not receive personal details.
         "gender": req.get("gender") if req.get("gender") in ("m", "f") else None,
-        "name": clean(req.get("name"), 30),
-        "known": [k for k in (clean(k, 80) for k in known[:MAX_KNOWN]) if k],
+        "known":[k for k in (clean(k, 80) for k in known[:MAX_KNOWN]) if k],
         "history": turns,
     }
 
@@ -146,9 +147,7 @@ def instructions(r: dict) -> str:
     if r["gender"]:
         forms = GENDER_FORMS[r["course"]][r["gender"]]
         learner.append(f"The learner is a {'man' if r['gender'] == 'm' else 'woman'}: address them and correct them with the matching gendered forms{' – ' + forms if forms else ''}.")
-    if r["name"]:
-        learner.append(f"The learner's name is {r['name']}.")
-    known = " | ".join(r["known"]) or "(nothing yet: use the very simplest words)"
+    known =" | ".join(r["known"]) or "(nothing yet: use the very simplest words)"
     register = (
         "Speak politely, as you would to a customer or a stranger (the formal you where the language has one)."
         if r["topic"] in POLITE

@@ -51,6 +51,8 @@ test('a free conversation: topic, chat with a correction and hints, then the sum
   const partner = page.getByTestId('chat-partner');
   await expect(partner.first()).toContainText('Dzień dobry! Co podać?');
   expect(bodies[0]).toMatchObject({ course: 'pl', ui: 'en', topic: 'cafe', history: [] });
+  // The learner's name never goes to Gemini's free tier.
+  expect(bodies[0]).not.toHaveProperty('name');
   expect(bodies[0].known.length).toBeGreaterThan(0);
   await partner.first().getByRole('button', { name: 'Translate' }).click();
   await expect(page.getByTestId('chat-translation')).toHaveText('Good morning! What can I get you?');

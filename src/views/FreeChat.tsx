@@ -98,7 +98,6 @@ export function FreeChat({ topic, onExit }: { topic: ChatTopic; onExit: () => vo
         topic,
         ui: lang,
         gender: state.profile.gender,
-        name: state.profile.name.trim(),
         known,
         history: history.map((m) => ({ role: m.role, text: m.text })),
       });
