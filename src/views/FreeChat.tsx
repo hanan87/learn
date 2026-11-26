@@ -6,7 +6,7 @@ import { Sheet } from '../components/Sheet';
 import { useSpeechRecorder } from '../hooks/useSpeechRecorder';
 import { useLang } from '../i18n/LangContext';
 import type { Lang } from '../i18n/lang';
-import { ChatError, PARTNER, TOPIC_PICTURE, chatTurn, type ChatPair, type ChatProblem, type ChatTopic } from '../lib/chat';
+import { ChatError, PARTNER, TOPIC_PICTURE, chatTurn, confirmChatAdult, isChatAdult, type ChatPair, type ChatProblem, type ChatTopic } from '../lib/chat';
 import { COURSE_INFO as C } from '../lib/course';
 import { makeCustomItem } from '../lib/customItem';
 import { speak, stopSpeaking } from '../lib/tts';
@@ -67,6 +67,7 @@ export function FreeChat({ topic, onExit }: { topic: ChatTopic; onExit: () => vo
   const [draft, setDraft] = useState('');
   const [heardNothing, setHeardNothing] = useState(false);
   const [summary, setSummary] = useState(false);
+  const [adult, setAdult] = useState(isChatAdult);
   const messagesRef = useRef<Msg[]>([]);
   const idRef = useRef(0);
   const started = useRef(false);
@@ -120,13 +121,15 @@ export function FreeChat({ topic, onExit }: { topic: ChatTopic; onExit: () => vo
     }
   };
 
+  useEffect(() => () => stopSpeaking(), []);
+
+  // The partner opens the conversation once the learner has confirmed their age.
   useEffect(() => {
-    if (started.current) return;
+    if (!adult || started.current) return;
     started.current = true;
     ask([]);
-    return () => stopSpeaking();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [adult]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
@@ -172,6 +175,19 @@ export function FreeChat({ topic, onExit }: { topic: ChatTopic; onExit: () => vo
     setSummary(false);
     ask([]);
   };
+
+  if (!adult) {
+    return (
+      <AgeCheck
+        topic={topic}
+        onConfirm={() => {
+          confirmChatAdult();
+          setAdult(true);
+        }}
+        onExit={onExit}
+      />
+    );
+  }
 
   if (summary) {
     return <ChatSummary turns={learnerTurns} earned={learnerTurns >= 2 ? XP.chat : 0} words={words} corrections={corrections} topic={topic} onAgain={restart} onExit={onExit} />;
@@ -483,6 +499,39 @@ function ChatSummary({
           </button>
           <button type="button" onClick={onExit} className="min-h-12 w-full rounded-2xl font-semibold text-slate-600 hover:bg-white">
             {tr('סיום', 'Finish')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Asked once per device before the first conversation: Gemini's terms require users aged 18 or older. */
+function AgeCheck({ topic, onConfirm, onExit }: { topic: ChatTopic; onConfirm: () => void; onExit: () => void }) {
+  const { tr } = useLang();
+  return (
+    <div className="pt-safe fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-slate-50" role="dialog" aria-modal="true" aria-labelledby="chat-age-title" data-testid="chat-age">
+      <div className="mx-auto flex min-h-full max-w-md flex-col gap-4 px-4 pt-10">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <span className="grid size-20 place-items-center rounded-full bg-amber-50 ring-8 ring-amber-50/60">
+            <img src={pictureUrl(TOPIC_PICTURE[topic])} alt="" className="size-12" />
+          </span>
+          <h2 id="chat-age-title" className="mt-2 text-2xl font-black text-slate-900">
+            {tr('השיחה החופשית מיועדת לגילאי 18 ומעלה', 'Free conversation is for ages 18 and up')}
+          </h2>
+          <p className="leading-relaxed text-slate-600">
+            {tr(
+              'השיחה מתנהלת מול Gemini, הבינה המלאכותית של Google, שעשויה להשתמש בשיחות כדי לשפר את המוצרים שלה. עובדים שלה עשויים לקרוא אותן, ולכן אל תכתבו בשיחה פרטים אישיים.',
+              "The conversation runs on Gemini, Google's AI, which may use the conversations to improve its products. Its reviewers may read them, so don't write personal details in the chat.",
+            )}
+          </p>
+        </div>
+        <div className="sticky bottom-0 mt-auto -mx-4 space-y-2 bg-linear-to-t from-slate-50 from-65% to-transparent px-4 pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <button type="button" onClick={onConfirm} className="w-full rounded-2xl bg-brand-600 py-4 font-bold text-white shadow-md" data-testid="chat-age-yes">
+            {tr('אני בגיל 18 ומעלה', "I'm 18 or older")}
+          </button>
+          <button type="button" onClick={onExit} className="min-h-12 w-full rounded-2xl font-semibold text-slate-600 hover:bg-white" data-testid="chat-age-no">
+            {tr('חזרה', 'Back')}
           </button>
         </div>
       </div>

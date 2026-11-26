@@ -743,6 +743,13 @@ const ROWS: Row[] = [
   ['At the pharmacy', 'W aptece', 'U apoteci'],
   ['Free topic', 'Dowolny temat', 'Slobodna tema'],
   ['Leave the conversation', 'Wyjdź z rozmowy', 'Izađite iz razgovora'],
+  ['Free conversation is for ages 18 and up', 'Swobodna rozmowa jest dla osób od 18 lat', 'Slobodan razgovor je za osobe od 18 godina'],
+  [
+    "The conversation runs on Gemini, Google's AI, which may use the conversations to improve its products. Its reviewers may read them, so don't write personal details in the chat.",
+    'Rozmowę prowadzi Gemini, sztuczna inteligencja Google, która może wykorzystywać rozmowy do ulepszania swoich produktów. Pracownicy Google mogą je czytać, więc nie podawaj w rozmowie danych osobowych.',
+    'Razgovor vodi Gemini, Googleova vještačka inteligencija, koja može koristiti razgovore da poboljša svoje proizvode. Zaposleni u Googleu ih mogu čitati, zato u razgovoru ne pišite lične podatke.',
+  ],
+  ["I'm 18 or older", 'Mam co najmniej 18 lat', 'Imam 18 ili više godina'],
   ['Turn {}', 'Tura {1}', 'Red {1}'],
   ['Finish', 'Zakończ', 'Završite'],
   ['Translate', 'Przetłumacz', 'Prevedite'],

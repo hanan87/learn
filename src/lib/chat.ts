@@ -25,6 +25,26 @@ export const TOPIC_PICTURE: Record<ChatTopic, string> = {
   free: 'Speech balloon',
 };
 
+/**
+ * Gemini's terms allow its API only for users aged 18 or older, so the chat asks once per device
+ * (also on a direct #/chat link) and remembers the answer. A "no" is not stored: it simply leaves.
+ */
+const ADULT_KEY = 'polish-learn:chat-adult';
+export function isChatAdult(): boolean {
+  try {
+    return localStorage.getItem(ADULT_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+export function confirmChatAdult(): void {
+  try {
+    localStorage.setItem(ADULT_KEY, '1');
+  } catch {
+    // Storage is blocked: the question simply comes back next time.
+  }
+}
+
 export interface ChatLine {
   role: 'partner' | 'learner';
   text: string;

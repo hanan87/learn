@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { CHAT_TOPICS, CHAT_URL, PARTNER, TOPIC_PICTURE, isChatTopic } from '../../src/lib/chat';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { CHAT_TOPICS, CHAT_URL, PARTNER, TOPIC_PICTURE, confirmChatAdult, isChatAdult, isChatTopic } from '../../src/lib/chat';
 import { PICTURES } from '../../src/data/pictures';
 import { makeCustomItem } from '../../src/lib/customItem';
 import { uiText } from '../../src/i18n/strings';
@@ -33,8 +33,32 @@ describe('free conversation', () => {
     expect(cnr.loc?.pl?.meaning).toBe('oczywiście');
   });
 
+  describe('age check', () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('is asked until the learner confirms, then remembered', () => {
+      const data = new Map<string, string>();
+      vi.stubGlobal('localStorage', { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) });
+      expect(isChatAdult()).toBe(false);
+      confirmChatAdult();
+      expect(isChatAdult()).toBe(true);
+      expect(data.get('polish-learn:chat-adult')).toBe('1');
+    });
+
+    it('is asked again, without crashing, when storage is blocked', () => {
+      const blocked = () => {
+        throw new Error('blocked');
+      };
+      vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
+      expect(() => confirmChatAdult()).not.toThrow();
+      expect(isChatAdult()).toBe(false);
+    });
+  });
+
   it('speaks Polish and Montenegrin', () => {
     const lines: [string, string, string][] = [
+      ['Free conversation is for ages 18 and up', 'Swobodna rozmowa jest dla osób od 18 lat', 'Slobodan razgovor je za osobe od 18 godina'],
+      ["I'm 18 or older", 'Mam co najmniej 18 lat', 'Imam 18 ili više godina'],
       ['Free conversation', 'Swobodna rozmowa', 'Slobodan razgovor'],
       ['At the pharmacy', 'W aptece', 'U apoteci'],
       ['Turn 3', 'Tura 3', 'Red 3'],

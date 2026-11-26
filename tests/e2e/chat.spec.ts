@@ -43,6 +43,11 @@ test('a free conversation: topic, chat with a correction and hints, then the sum
   await page.getByTestId('chat-topic-cafe').click();
   await expect(page).toHaveURL(/#\/chat\/cafe$/);
 
+  // The age question comes first; nothing is sent to the partner before the answer.
+  await expect(page.getByTestId('chat-age')).toContainText('Free conversation is for ages 18 and up');
+  expect(bodies).toHaveLength(0);
+  await page.getByTestId('chat-age-yes').click();
+
   const partner = page.getByTestId('chat-partner');
   await expect(partner.first()).toContainText('Dzień dobry! Co podać?');
   expect(bodies[0]).toMatchObject({ course: 'pl', ui: 'en', topic: 'cafe', history: [] });
@@ -93,6 +98,7 @@ for (const [status, problem, text] of [
     const errors = await openApp(page, { lang: 'en', course: 'cnr' });
     await page.route(CHAT, (route) => route.fulfill({ status, json: { error: problem } }));
     await page.goto('/#/chat/meet');
+    await page.getByTestId('chat-age-yes').click();
     const card = page.getByTestId('chat-problem');
     await expect(card).toHaveAttribute('data-problem', problem);
     await expect(card).toContainText(text);
@@ -101,6 +107,28 @@ for (const [status, problem, text] of [
     expectNoErrors(errors.filter((e) => !/status of (429|503)/.test(e)));
   });
 }
+
+test('the age question: "Back" leaves without a request, "18 or older" is asked only once', async ({ page }) => {
+  const bodies: Body[] = [];
+  const errors = await openApp(page, { lang: 'he', course: 'en', hash: '#/talk' });
+  await mockChat(page, bodies);
+  await page.getByTestId('chat-topic-meet').click();
+  const age = page.getByTestId('chat-age');
+  await expect(age).toContainText('השיחה החופשית מיועדת לגילאי 18 ומעלה');
+  await age.getByRole('button', { name: 'חזרה' }).click();
+  await expect(page).toHaveURL(/#\/talk$/);
+  expect(bodies).toHaveLength(0);
+
+  // A direct link asks too; after "yes" the chat starts, and the next one does not ask again.
+  await page.goto('/#/chat/cafe');
+  await page.getByTestId('chat-age-yes').click();
+  await expect(page.getByTestId('chat-partner').first()).toBeVisible();
+  expect(bodies).toHaveLength(1);
+  await page.goto('/#/chat/free');
+  await expect(page.getByTestId('chat-partner').first()).toBeVisible();
+  await expect(page.getByTestId('chat-age')).toHaveCount(0);
+  expectNoErrors(errors);
+});
 
 test('the Talk tab offers the topics in every course, in the interface language', async ({ page }) => {
   const errors = await openApp(page, { lang: 'cnr', course: 'he', hash: '#/talk' });
