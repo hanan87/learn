@@ -1,10 +1,10 @@
 [project]
 name = "learn-voice"
 version = "1.0.0"
-description = "Free natural voice for phrases the learning app has no recording of"
+description = "Free natural voice and conversation partner for the learning app"
 requires-python = ">=3.12"
 dependencies = ["edge-tts==7.3.1"]
 
-# Vercel's Python runtime: the BaseHTTPRequestHandler class in api/tts.py serves the requests.
+# Vercel's Python runtime: api/app.py routes /api/chat to the conversation partner, the rest to the voice.
 [tool.vercel]
-entrypoint = "api.tts:handler"
+entrypoint = "api.app:handler"
